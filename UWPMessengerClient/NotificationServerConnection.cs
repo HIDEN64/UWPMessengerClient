@@ -35,21 +35,47 @@ namespace UWPMessengerClient
             {
                 /*sequence of commands to login to escargot, sends them then reads the 
                 response and stores it in the output buffer*/
-                output_buffer_array = new string[6];
+                output_buffer_array = new string[11];
+                int currentIndex = 0;
                 NSSocket.NSConnectSocket();
                 NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");
-                output_buffer_array[0] = NSSocket.ReceiveMessage();
+                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
                 NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.1 msmsgs\r\n");
-                output_buffer_array[1] = NSSocket.ReceiveMessage();
+                currentIndex++;
+                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
                 NSSocket.SendCommand($"USR 3 TWN I {email}\r\n");
-                output_buffer_array[2] = NSSocket.ReceiveMessage();
+                currentIndex++;
+                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
                 Task<string> token_task = getNexusTokenAsync(httpClient);
                 token = token_task.Result;
                 NSSocket.SendCommand($"USR 4 TWN S t={token}\r\n");
-                output_buffer_array[3] = NSSocket.ReceiveMessage();
-                NSSocket.SendCommand("SYN 5 0\r\n");
-                output_buffer_array[4] = NSSocket.ReceiveMessage();
-                output_buffer_array[4] += NSSocket.ReceiveMessage();
+                currentIndex++;
+                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                NSSocket.SendCommand("SYN 5 0 0\r\n");
+                currentIndex++;
+                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                currentIndex++;
+                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                currentIndex++;
+                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                NSSocket.SendCommand("CHG 6 NLN 0\r\n");
+                currentIndex++;
+                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                currentIndex++;
+                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                currentIndex++;
+                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                for (int i = 0;i<output_buffer_array.Length; ++i)
+                {
+                    try
+                    {
+                        output_buffer_array[i] = output_buffer_array[i].Replace("\0", "");
+                    }
+                    catch (NullReferenceException)
+                    {
+                        output_buffer_array[i] = "";
+                    }
+                }
             });
             return output_buffer_array;
         }

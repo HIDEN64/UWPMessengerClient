@@ -24,6 +24,7 @@ namespace UWPMessengerClient
         {
             //creates a tcp socket then connects it to the server
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket.ReceiveTimeout = 10000;
             IPHostEntry iPHostEntry = Dns.GetHostEntry(server_address);
             IPAddress iPAddress = iPHostEntry.AddressList[0];
             IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, server_port);
@@ -40,8 +41,23 @@ namespace UWPMessengerClient
         {
             int size = 0;
             byte[] received_bytes = new byte[message_size];
-            size = socket.Receive(received_bytes);
-            return Encoding.ASCII.GetString(received_bytes);
+            try
+            {
+                size = socket.Receive(received_bytes);
+            }
+            catch (SocketException e)
+            {
+                return "Socket exception: " + e.Message + "\n";
+            }
+            if (size != 0)
+            {
+                string received_bytes_string = Encoding.ASCII.GetString(received_bytes);
+                return received_bytes_string;
+            }
+            else
+            {
+                return "";
+            }
         }
 
         public void CloseSocket()
