@@ -12,11 +12,12 @@ namespace UWPMessengerClient
     {
         private Socket socket;
         private string server_address = "";
-        private static int port = 1863;
+        private static int server_port = 0;
 
-        public SocketCommands(string address)
+        public SocketCommands(string address, int port)
         {
             server_address = address;
+            server_port = port;
         }
 
         public void NSConnectSocket()
@@ -25,7 +26,7 @@ namespace UWPMessengerClient
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             IPHostEntry iPHostEntry = Dns.GetHostEntry(server_address);
             IPAddress iPAddress = iPHostEntry.AddressList[0];
-            IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, port);
+            IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, server_port);
             socket.Connect(iPEndPoint);
         }
 

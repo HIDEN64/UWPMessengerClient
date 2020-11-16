@@ -15,6 +15,7 @@ namespace UWPMessengerClient
         private readonly string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
         //notification server(escargot) address
         private readonly string NSaddress = "m1.escargot.log1p.xyz";
+        private readonly int port = 1863;
         private string email;
         private string password;
         private string token;
@@ -29,7 +30,7 @@ namespace UWPMessengerClient
         public async Task<string[]> login_to_messengerAsync()
         {
             HttpClient httpClient = new HttpClient();
-            SocketCommands NSSocket = new SocketCommands(NSaddress);
+            SocketCommands NSSocket = new SocketCommands(NSaddress, port);
             await Task.Run(() =>
             {
                 /*sequence of commands to login to escargot, sends them then reads the 
