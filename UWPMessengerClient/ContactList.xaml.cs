@@ -12,14 +12,14 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using System.Threading.Tasks;
-using System.Net.Http;
 
 namespace UWPMessengerClient
 {
-    public sealed partial class MainPage : Page
+    public sealed partial class ContactList : Page
     {
-        public MainPage()
+        NotificationServerConnection notificationServerConnection;
+
+        public ContactList()
         {
             this.InitializeComponent();
         }

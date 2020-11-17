@@ -12,14 +12,25 @@ namespace UWPMessengerClient
 {
     class NotificationServerConnection
     {
+        private SocketCommands NSSocket;
+        private HttpClient httpClient;
         private readonly string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
         //notification server(escargot) address
         private readonly string NSaddress = "m1.escargot.log1p.xyz";
+        //uncomment below and comment above to use localserver
+        //private readonly string NSaddress = "127.0.0.1";
         private readonly int port = 1863;
         private string email;
         private string password;
         private string token;
-        string[] output_buffer_array;
+        private string[] _output_buffer_array;
+        public string[] output_buffer_array
+        {
+            get
+            {
+                return _output_buffer_array;
+            }
+        }
 
         public NotificationServerConnection(string escargot_email, string escargot_password)
         {
@@ -27,52 +38,59 @@ namespace UWPMessengerClient
             password = escargot_password;
         }
 
-        public async Task<string[]> login_to_messengerAsync()
+        public async Task login_to_messengerAsync()
         {
-            HttpClient httpClient = new HttpClient();
-            SocketCommands NSSocket = new SocketCommands(NSaddress, port);
-            await Task.Run(() =>
+            httpClient = new HttpClient();
+            NSSocket = new SocketCommands(NSaddress, port);
+            Action loginAction = new Action(() =>
             {
                 /*sequence of commands to login to escargot, sends them then reads the 
                 response and stores it in the output buffer array*/
-                output_buffer_array = new string[6];
+                _output_buffer_array = new string[6];
                 int currentIndex = 0;
                 NSSocket.NSConnectSocket();
-                NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");
-                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
-                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.1 msmsgs\r\n");
+                NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");//send msnp version
+                _output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.1 msmsgs\r\n");//send client information
                 currentIndex++;
-                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
-                NSSocket.SendCommand($"USR 3 TWN I {email}\r\n");
+                _output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                NSSocket.SendCommand($"USR 3 TWN I {email}\r\n");//sends email to get a string for use in authentication
                 currentIndex++;
-                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                _output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
                 Task<string> token_task = getNexusTokenAsync(httpClient);
                 token = token_task.Result;
-                NSSocket.SendCommand($"USR 4 TWN S t={token}\r\n");
+                NSSocket.SendCommand($"USR 4 TWN S t={token}\r\n");//sending authentication token
                 currentIndex++;
-                System.Threading.Thread.Sleep(3000);
-                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
-                NSSocket.SendCommand("SYN 5 0 0\r\n");
+                System.Threading.Thread.Sleep(3000);//3 second sleep so there's time for the server to send all comands
+                _output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                NSSocket.SendCommand("SYN 5 0 0\r\n");//sync contact list
                 currentIndex++;
-                System.Threading.Thread.Sleep(3000);
-                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
-                NSSocket.SendCommand("CHG 6 NLN 0\r\n");
+                System.Threading.Thread.Sleep(3000);//3 second sleep so there's time for the server to send all comands
+                _output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                NSSocket.SendCommand("CHG 6 NLN 0\r\n");//set presence as available
                 currentIndex++;
-                System.Threading.Thread.Sleep(3000);
-                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
-                for (int i = 0;i<output_buffer_array.Length; ++i)
+                System.Threading.Thread.Sleep(3000);//3 second sleep so there's time for the server to send all comands
+                _output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
+                for (int i = 0;i<_output_buffer_array.Length; ++i)
                 {
                     try
                     {
-                        output_buffer_array[i] = output_buffer_array[i].Replace("\0", "");
+                        _output_buffer_array[i] = _output_buffer_array[i].Replace("\0", "");
                     }
                     catch (NullReferenceException)
                     {
-                        output_buffer_array[i] = "";
+                        _output_buffer_array[i] = "";
                     }
                 }
             });
-            return output_buffer_array;
+            try
+            {
+                await Task.Run(loginAction);
+            }
+            catch (AggregateException e)
+            {
+                _output_buffer_array[5] = e.Message;
+            }
         }
 
         public async Task<string> getNexusTokenAsync(HttpClient httpClient)
@@ -86,6 +104,8 @@ namespace UWPMessengerClient
             string[] SplitHeadersString = headersString.Split("DALogin=");
             string DALogin = SplitHeadersString[1];
             DALogin = DALogin.Remove(DALogin.IndexOf("\r"));
+            //to use local nexus server uncomment
+            //DALogin = "http://localhost/login";
             string email_encoded = HttpUtility.UrlEncode(email);
             string password_encoded = HttpUtility.UrlEncode(password);
             //makes a request to the login address and gets the from-PP header
@@ -99,6 +119,15 @@ namespace UWPMessengerClient
             string fromPP = fromPP_split[1];
             fromPP = fromPP.Remove(fromPP.IndexOf("'\r"));
             return fromPP;
+        }
+
+        public async Task ChangePresence(string status)
+        {
+            Action changePresence = new Action(() =>
+            {
+                NSSocket.SendCommand($"CHG 7 {status} 0\r\n");
+            });
+            await Task.Run(changePresence);
         }
     }
 }

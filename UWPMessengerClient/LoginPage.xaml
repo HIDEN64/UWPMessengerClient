@@ -10,26 +10,24 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="5"/>
+            <RowDefinition Height="15"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="5"/>
+            <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="5"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="15"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="15"/>
         </Grid.ColumnDefinitions>
-        <TextBlock Name="Title" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Text="UWP Messenger Client" FontSize="60" FontFamily="Segoe UI" HorizontalAlignment="Center"/>
-        <StackPanel Padding="6" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2" HorizontalAlignment="Center">
+        <TextBlock Name="Title" Grid.Row="1" Grid.Column="1" Text="UWP Messenger Client" FontSize="60" FontFamily="Segoe UI" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+        <StackPanel Padding="6" Grid.Row="2" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Center">
             <TextBox x:Name="Email_box" Margin="5" Header="Enter your email:" FontSize="20" FontWeight="Normal" AutomationProperties.IsRequiredForForm="True"/>
             <PasswordBox x:Name="Password_box" Margin="5" Header="Enter your password:" InputScope="EmailSmtpAddress" FontSize="20" AutomationProperties.IsRequiredForForm="True"/>
             <Button Margin="10"  Name="Login" Content="Login" HorizontalAlignment="Center" FontSize="20" Click="Login_Click"/>
         </StackPanel>
-        <ProgressRing Grid.Row="4" Grid.Column="3" Name="loginProgress" Width="100" Height="100"></ProgressRing>
+        <ProgressRing Grid.Row="4" Grid.Column="1" Name="loginProgress" Width="80" Height="80"></ProgressRing>
     </Grid>
 </Page>

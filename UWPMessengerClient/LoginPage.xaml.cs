@@ -31,23 +31,24 @@ namespace UWPMessengerClient
             string email = Email_box.Text;
             string password = Password_box.Password;
             NotificationServerConnection notificationServerConnection = new NotificationServerConnection(email, password);
-            string[] output_buffer_array = await notificationServerConnection.login_to_messengerAsync();
+            await notificationServerConnection.login_to_messengerAsync();
             string output_buffer = "";
-            foreach (string outputLine in output_buffer_array)
+            foreach (string outputLine in notificationServerConnection.output_buffer_array)
             {
                 output_buffer += outputLine;
             }
-            this.Frame.Navigate(typeof(MainPage), output_buffer);
+            //this.Frame.Navigate(typeof(MainPage), output_buffer);
+            this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
             disable_progress_ring();
         }
 
-        public void enable_progress_ring()
+        private void enable_progress_ring()
         {
             loginProgress.IsActive = true;
             loginProgress.Visibility = Visibility.Visible;
         }
 
-        public void disable_progress_ring()
+        private void disable_progress_ring()
         {
             loginProgress.Visibility = Visibility.Collapsed;
             loginProgress.IsActive = false;
