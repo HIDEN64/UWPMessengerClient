@@ -15,13 +15,8 @@ using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 using System.Net.Http;
 
-// O modelo de item de Página em Branco está documentado em https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x416
-
 namespace UWPMessengerClient
 {
-    /// <summary>
-    /// Uma página vazia que pode ser usada isoladamente ou navegada dentro de um Quadro.
-    /// </summary>
     public sealed partial class MainPage : Page
     {
         public MainPage()
@@ -29,28 +24,13 @@ namespace UWPMessengerClient
             this.InitializeComponent();
         }
 
-        private async void Login_Click(object sender, RoutedEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            string email = Email_box.Text;
-            string password = Password_box.Password;
-            NotificationServerConnection notificationServerConnection = new NotificationServerConnection(email, password);
-            string[] output_buffer_array = await notificationServerConnection.login_to_messengerAsync();
-            string output_buffer = "";
-            foreach (string outputLine in output_buffer_array)
+            if (e.Parameter is string)
             {
-                output_buffer += outputLine;
+                Output.Text = e.Parameter.ToString();
             }
-            set_output_text(output_buffer);
-        }
-
-        public void set_output_text(string OutputText)
-        {
-            Output.Text = OutputText;
-        }
-
-        public string get_output_text()
-        {
-            return Output.Text;
+            base.OnNavigatedTo(e);
         }
     }
 }

@@ -1,0 +1,56 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Foundation;
+using Windows.Foundation.Collections;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Navigation;
+using System.Threading.Tasks;
+using System.Net.Http;
+
+namespace UWPMessengerClient
+{
+    public sealed partial class LoginPage : Page
+    {
+        public LoginPage()
+        {
+            this.InitializeComponent();
+        }
+
+        private async void Login_Click(object sender, RoutedEventArgs e)
+        {
+            Login.Visibility = Visibility.Collapsed;
+            enable_progress_ring();
+            string email = Email_box.Text;
+            string password = Password_box.Password;
+            NotificationServerConnection notificationServerConnection = new NotificationServerConnection(email, password);
+            string[] output_buffer_array = await notificationServerConnection.login_to_messengerAsync();
+            string output_buffer = "";
+            foreach (string outputLine in output_buffer_array)
+            {
+                output_buffer += outputLine;
+            }
+            this.Frame.Navigate(typeof(MainPage), output_buffer);
+            disable_progress_ring();
+        }
+
+        public void enable_progress_ring()
+        {
+            loginProgress.IsActive = true;
+            loginProgress.Visibility = Visibility.Visible;
+        }
+
+        public void disable_progress_ring()
+        {
+            loginProgress.Visibility = Visibility.Collapsed;
+            loginProgress.IsActive = false;
+        }
+    }
+}
