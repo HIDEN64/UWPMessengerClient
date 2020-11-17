@@ -34,8 +34,8 @@ namespace UWPMessengerClient
             await Task.Run(() =>
             {
                 /*sequence of commands to login to escargot, sends them then reads the 
-                response and stores it in the output buffer*/
-                output_buffer_array = new string[11];
+                response and stores it in the output buffer array*/
+                output_buffer_array = new string[6];
                 int currentIndex = 0;
                 NSSocket.NSConnectSocket();
                 NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");
@@ -50,20 +50,15 @@ namespace UWPMessengerClient
                 token = token_task.Result;
                 NSSocket.SendCommand($"USR 4 TWN S t={token}\r\n");
                 currentIndex++;
+                System.Threading.Thread.Sleep(3000);
                 output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
                 NSSocket.SendCommand("SYN 5 0 0\r\n");
                 currentIndex++;
-                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
-                currentIndex++;
-                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
-                currentIndex++;
+                System.Threading.Thread.Sleep(3000);
                 output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
                 NSSocket.SendCommand("CHG 6 NLN 0\r\n");
                 currentIndex++;
-                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
-                currentIndex++;
-                output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
-                currentIndex++;
+                System.Threading.Thread.Sleep(3000);
                 output_buffer_array[currentIndex] = NSSocket.ReceiveMessage();
                 for (int i = 0;i<output_buffer_array.Length; ++i)
                 {

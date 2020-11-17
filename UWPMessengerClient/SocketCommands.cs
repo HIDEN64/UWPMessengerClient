@@ -43,7 +43,11 @@ namespace UWPMessengerClient
             byte[] received_bytes = new byte[message_size];
             try
             {
-                size = socket.Receive(received_bytes);
+                do
+                {
+                    size = socket.Receive(received_bytes);
+                }
+                while (socket.Available != 0);
             }
             catch (SocketException e)
             {
