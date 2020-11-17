@@ -23,5 +23,28 @@ namespace UWPMessengerClient
         {
             this.InitializeComponent();
         }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            notificationServerConnection = (NotificationServerConnection)e.Parameter;
+            base.OnNavigatedTo(e);
+        }
+
+        private async void Presence_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            string selectedStatus = e.AddedItems[0].ToString();
+            switch (selectedStatus)
+            {
+                case "Available":
+                    await notificationServerConnection.ChangePresence(PresenceStatuses.Available);
+                    break;
+                case "Busy":
+                    await notificationServerConnection.ChangePresence(PresenceStatuses.Busy);
+                    break;
+                case "Away":
+                    await notificationServerConnection.ChangePresence(PresenceStatuses.Away);
+                    break;
+            }
+        }
     }
 }

@@ -11,6 +11,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="15"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
@@ -19,5 +20,11 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="15"/>
         </Grid.ColumnDefinitions>
+        <ComboBox x:Name="Presence" FontSize="20" Header="Set your presence status" PlaceholderText="Statuses" 
+                  Grid.Column="1" Grid.Row="1" SelectionChanged="Presence_SelectionChanged">
+            <x:String>Available</x:String>
+            <x:String>Busy</x:String>
+            <x:String>Away</x:String>
+        </ComboBox>
     </Grid>
 </Page>
