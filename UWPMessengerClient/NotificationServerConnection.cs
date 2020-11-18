@@ -16,9 +16,9 @@ namespace UWPMessengerClient
         private HttpClient httpClient;
         private readonly string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
         //notification server(escargot) address
-        //private readonly string NSaddress = "m1.escargot.log1p.xyz";
+        private readonly string NSaddress = "m1.escargot.log1p.xyz";
         //uncomment below and comment above to use localserver
-        private readonly string NSaddress = "127.0.0.1";
+        //private readonly string NSaddress = "127.0.0.1";
         private readonly int port = 1863;
         private string email;
         private string password;
@@ -66,7 +66,7 @@ namespace UWPMessengerClient
             string DALogin = SplitHeadersString[1];
             DALogin = DALogin.Remove(DALogin.IndexOf("\r"));
             //to use local nexus server uncomment
-            DALogin = "http://localhost/login";
+            //DALogin = "http://localhost/login";
             string email_encoded = HttpUtility.UrlEncode(email);
             string password_encoded = HttpUtility.UrlEncode(password);
             //makes a request to the login address and gets the from-PP header
