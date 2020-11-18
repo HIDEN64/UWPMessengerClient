@@ -23,7 +23,7 @@ namespace UWPMessengerClient
         private string email;
         private string password;
         private byte[] received_bytes = new byte[4096];
-        private string output;
+        private string output_string;
         private string token;
 
         public NotificationServerConnection(string escargot_email, string escargot_password)
@@ -85,8 +85,8 @@ namespace UWPMessengerClient
         public static void ReceivingCallback(IAsyncResult asyncResult)
         {
             NotificationServerConnection NServerConnection = (NotificationServerConnection)asyncResult.AsyncState;
-            NServerConnection.output = Encoding.ASCII.GetString(NServerConnection.received_bytes);
             int bytes_read = NServerConnection.NSSocket.StopReceiving(asyncResult);
+            NServerConnection.output_string = Encoding.ASCII.GetString(NServerConnection.received_bytes, 0, bytes_read);
             if (bytes_read > 0)
             {
                 NServerConnection.NSSocket.BeginReceiving(NServerConnection.received_bytes, new AsyncCallback(ReceivingCallback), NServerConnection);
