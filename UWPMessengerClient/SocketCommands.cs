@@ -37,16 +37,6 @@ namespace UWPMessengerClient
             socket.Send(message);
         }
 
-        public void BeginReceiving(byte[] buffer, AsyncCallback asyncCallback, object stateObject)
-        {
-            socket.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, asyncCallback, stateObject);
-        }
-
-        public int StopReceiving(IAsyncResult ar)
-        {
-            return socket.EndReceive(ar);
-        }
-
         public string ReceiveMessage(int message_size = 4096)
         {
             int size = 0;
