@@ -26,18 +26,11 @@ namespace UWPMessengerClient
 
         private async void Login_Click(object sender, RoutedEventArgs e)
         {
-            Login.Visibility = Visibility.Collapsed;
             enable_progress_ring();
             string email = Email_box.Text;
             string password = Password_box.Password;
             NotificationServerConnection notificationServerConnection = new NotificationServerConnection(email, password);
             await notificationServerConnection.login_to_messengerAsync();
-            string output_buffer = "";
-            foreach (string outputLine in notificationServerConnection.output_buffer_array)
-            {
-                output_buffer += outputLine;
-            }
-            //this.Frame.Navigate(typeof(MainPage), output_buffer);
             this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
             disable_progress_ring();
         }
