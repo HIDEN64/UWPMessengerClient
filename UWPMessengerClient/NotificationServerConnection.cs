@@ -108,9 +108,9 @@ namespace UWPMessengerClient
         {
             string[] LSTResponses = output_string.Split("LST ");
             //ensuring the last element of the LSTResponses array is just the LST response
-            int rnIndex = LSTResponses[LSTResponses.Length - 1].IndexOf("\r\n");
+            int rnIndex = LSTResponses.Last().IndexOf("\r\n");
             rnIndex += 2;//count for the \r and \n characters
-            if (rnIndex != LSTResponses[LSTResponses.Length - 1].Length)
+            if (rnIndex != LSTResponses.Last().Length)
             {
                 LSTResponses[LSTResponses.Length - 1] = LSTResponses[LSTResponses.Length - 1].Remove(rnIndex);
             }
@@ -141,11 +141,11 @@ namespace UWPMessengerClient
         {
             string[] ILNResponses = output_string.Split("ILN");
             //ensuring the last element of the ILNReponses array is just the ILN response
-            int rnIndex = ILNResponses[ILNResponses.Length - 1].IndexOf("\r\n");
+            int rnIndex = ILNResponses.Last().IndexOf("\r\n");
             rnIndex += 2;//count for the \r and \n characters
-            if (rnIndex != ILNResponses[ILNResponses.Length - 1].Length)
+            if (rnIndex != ILNResponses.Last().Length)
             {
-                ILNResponses[ILNResponses.Length - 1] = ILNResponses[ILNResponses.Length - 1].Remove(rnIndex);
+                ILNResponses[ILNResponses.Length - 1] = ILNResponses.Last().Remove(rnIndex);
             }
             for (int i = 1; i < ILNResponses.Length; i++)
             {
