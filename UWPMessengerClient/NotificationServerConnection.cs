@@ -14,17 +14,20 @@ namespace UWPMessengerClient
     {
         private SocketCommands NSSocket;
         private HttpClient httpClient;
-        private readonly string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
-        //notification server(escargot) address
+        //notification server(escargot) address and nexus address
         private readonly string NSaddress = "m1.escargot.log1p.xyz";
+        private readonly string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
         //uncomment below and comment above to use localserver
         //private readonly string NSaddress = "127.0.0.1";
+        //private readonly string nexus_address = "http://localhost/nexus-mock";
         private readonly int port = 1863;
         private string email;
         private string password;
         private byte[] received_bytes = new byte[4096];
         private string output_string;
         private string token;
+        private List<Contact> _contact_list = new List<Contact>();
+        public List<Contact> contact_list { get => _contact_list; }
 
         public NotificationServerConnection(string escargot_email, string escargot_password)
         {
@@ -87,9 +90,76 @@ namespace UWPMessengerClient
             NotificationServerConnection NServerConnection = (NotificationServerConnection)asyncResult.AsyncState;
             int bytes_read = NServerConnection.NSSocket.StopReceiving(asyncResult);
             NServerConnection.output_string = Encoding.ASCII.GetString(NServerConnection.received_bytes, 0, bytes_read);
+            if (NServerConnection.output_string.Contains("LST "))
+            {
+                NServerConnection.CreateContactList();
+            }
+            if (NServerConnection.output_string.Contains("ILN"))
+            {
+                NServerConnection.SetInitialContactPresence();
+            }
             if (bytes_read > 0)
             {
                 NServerConnection.NSSocket.BeginReceiving(NServerConnection.received_bytes, new AsyncCallback(ReceivingCallback), NServerConnection);
+            }
+        }
+
+        public void CreateContactList()
+        {
+            string[] LSTResponses = output_string.Split("LST ");
+            //ensuring the last element of the LSTResponses array is just the LST response
+            int rnIndex = LSTResponses[LSTResponses.Length - 1].IndexOf("\r\n");
+            rnIndex += 2;//count for the \r and \n characters
+            if (rnIndex != LSTResponses[LSTResponses.Length - 1].Length)
+            {
+                LSTResponses[LSTResponses.Length - 1] = LSTResponses[LSTResponses.Length - 1].Remove(rnIndex);
+            }
+            string email, displayName, guid;
+            int listbit = 0;
+            for (int i = 1; i < LSTResponses.Length; i++)
+            {
+                email = LSTResponses[i].Split("N=")[1];
+                email = email.Remove(email.IndexOf(" "));
+                displayName = LSTResponses[i].Split("F=")[1];
+                displayName = displayName.Remove(displayName.IndexOf(" "));
+                guid = LSTResponses[i].Split("C=")[1];
+                guid = guid.Remove(guid.IndexOf(" "));
+                string[] LSTAndParams = LSTResponses[i].Split(" ");
+                if (int.TryParse(LSTAndParams[LSTAndParams.Length - 2], out listbit))
+                {
+                    int.TryParse(LSTAndParams[LSTAndParams.Length - 3], out listbit);
+                }
+                else
+                {
+                    int.TryParse(LSTAndParams[LSTAndParams.Length - 4], out listbit);
+                }
+                contact_list.Add(new Contact(listbit) { displayName = displayName, email = email, GUID = guid });
+            }
+        }
+
+        public void SetInitialContactPresence()
+        {
+            string[] ILNResponses = output_string.Split("ILN");
+            //ensuring the last element of the ILNReponses array is just the ILN response
+            int rnIndex = ILNResponses[ILNResponses.Length - 1].IndexOf("\r\n");
+            rnIndex += 2;//count for the \r and \n characters
+            if (rnIndex != ILNResponses[ILNResponses.Length - 1].Length)
+            {
+                ILNResponses[ILNResponses.Length - 1] = ILNResponses[ILNResponses.Length - 1].Remove(rnIndex);
+            }
+            for (int i = 1; i < ILNResponses.Length; i++)
+            {
+                //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
+                string[] ILNParams = ILNResponses[i].Split(" ");
+                string status = ILNParams[2];
+                string email = ILNParams[3];
+                var contactWithPresence = from contact in contact_list
+                                          where contact.email == email
+                                          select contact;
+                foreach (Contact contact in contactWithPresence)
+                {
+                    contact.presenceStatus = status;
+                }
             }
         }
 
