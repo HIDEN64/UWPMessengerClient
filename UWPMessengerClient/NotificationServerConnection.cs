@@ -7,6 +7,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Web;
+using Windows.UI.Core;
+using System.Collections.ObjectModel;
 
 namespace UWPMessengerClient
 {
@@ -26,8 +28,8 @@ namespace UWPMessengerClient
         private byte[] received_bytes = new byte[4096];
         private string output_string;
         private string token;
-        private List<Contact> _contact_list = new List<Contact>();
-        public List<Contact> contact_list { get => _contact_list; }
+        private ObservableCollection<Contact> _contact_list = new ObservableCollection<Contact>();
+        public ObservableCollection<Contact> contact_list { get => _contact_list; set { _contact_list = value; } }
 
         public NotificationServerConnection(string escargot_email, string escargot_password)
         {
@@ -102,7 +104,7 @@ namespace UWPMessengerClient
             {
                 NServerConnection.SetContactPresence();
             }
-            if (NServerConnection.output_string.StartsWith("FLN"))
+            if (NServerConnection.output_string.StartsWith("FLN "))
             {
                 NServerConnection.SetContactOffline();
             }
@@ -123,25 +125,28 @@ namespace UWPMessengerClient
             }
             string email, displayName, guid;
             int listbit = 0;
-            for (int i = 1; i < LSTResponses.Length; i++)
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
-                email = LSTResponses[i].Split("N=")[1];
-                email = email.Remove(email.IndexOf(" "));
-                displayName = LSTResponses[i].Split("F=")[1];
-                displayName = displayName.Remove(displayName.IndexOf(" "));
-                guid = LSTResponses[i].Split("C=")[1];
-                guid = guid.Remove(guid.IndexOf(" "));
-                string[] LSTAndParams = LSTResponses[i].Split(" ");
-                if (int.TryParse(LSTAndParams[LSTAndParams.Length - 2], out listbit))
+                for (int i = 1; i < LSTResponses.Length; i++)
                 {
-                    int.TryParse(LSTAndParams[LSTAndParams.Length - 3], out listbit);
+                    email = LSTResponses[i].Split("N=")[1];
+                    email = email.Remove(email.IndexOf(" "));
+                    displayName = LSTResponses[i].Split("F=")[1];
+                    displayName = displayName.Remove(displayName.IndexOf(" "));
+                    guid = LSTResponses[i].Split("C=")[1];
+                    guid = guid.Remove(guid.IndexOf(" "));
+                    string[] LSTAndParams = LSTResponses[i].Split(" ");
+                    if (int.TryParse(LSTAndParams[LSTAndParams.Length - 2], out listbit))
+                    {
+                        int.TryParse(LSTAndParams[LSTAndParams.Length - 3], out listbit);
+                    }
+                    else
+                    {
+                        int.TryParse(LSTAndParams[LSTAndParams.Length - 4], out listbit);
+                    }
+                    contact_list.Add(new Contact(listbit) { displayName = displayName, email = email, GUID = guid });
                 }
-                else
-                {
-                    int.TryParse(LSTAndParams[LSTAndParams.Length - 4], out listbit);
-                }
-                contact_list.Add(new Contact(listbit) { displayName = displayName, email = email, GUID = guid });
-            }
+            });
         }
 
         public void SetInitialContactPresence()
@@ -153,20 +158,23 @@ namespace UWPMessengerClient
             {
                 ILNResponses[ILNResponses.Length - 1] = ILNResponses.Last().Remove(rnIndex);
             }
-            for (int i = 1; i < ILNResponses.Length; i++)
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
-                string[] ILNParams = ILNResponses[i].Split(" ");
-                string status = ILNParams[1];
-                string email = ILNParams[2];
-                var contactWithPresence = from contact in contact_list
-                                          where contact.email == email
-                                          select contact;
-                foreach (Contact contact in contactWithPresence)
+                for (int i = 1; i < ILNResponses.Length; i++)
                 {
-                    contact.presenceStatus = status;
+                    //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
+                    string[] ILNParams = ILNResponses[i].Split(" ");
+                    string status = ILNParams[1];
+                    string email = ILNParams[2];
+                    var contactWithPresence = from contact in contact_list
+                                              where contact.email == email
+                                              select contact;
+                    foreach (Contact contact in contactWithPresence)
+                    {
+                        contact.presenceStatus = status;
+                    }
                 }
-            }
+            });
         }
 
         public void SetContactPresence()
@@ -179,22 +187,25 @@ namespace UWPMessengerClient
             {
                 NLNResponses[NLNResponses.Length - 1] = NLNResponses.Last().Remove(rnIndex);
             }
-            for (int i = 1; i < NLNResponses.Length; i++)
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
-                string[] NLNParams = NLNResponses[i].Split(" ");
-                string status = NLNParams[0];
-                string email = NLNParams[1];
-                string displayName = NLNParams[2];
-                var contactWithPresence = from contact in contact_list
-                                          where contact.email == email
-                                          select contact;
-                foreach (Contact contact in contactWithPresence)
+                for (int i = 1; i < NLNResponses.Length; i++)
                 {
-                    contact.presenceStatus = status;
-                    contact.displayName = displayName;
+                    //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
+                    string[] NLNParams = NLNResponses[i].Split(" ");
+                    string status = NLNParams[0];
+                    string email = NLNParams[1];
+                    string displayName = NLNParams[2];
+                    var contactWithPresence = from contact in contact_list
+                                              where contact.email == email
+                                              select contact;
+                    foreach (Contact contact in contactWithPresence)
+                    {
+                        contact.presenceStatus = status;
+                        contact.displayName = displayName;
+                    }
                 }
-            }
+            });
         }
 
         public void SetContactOffline()
@@ -206,18 +217,21 @@ namespace UWPMessengerClient
             {
                 FLNResponses[FLNResponses.Length - 1] = FLNResponses.Last().Remove(rnIndex);
             }
-            for (int i = 1; i < FLNResponses.Length; i++)
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                //for each FLN response gets the email, does a LINQ query in the contact list and sets the contact's status to offline
-                string email = FLNResponses[i];
-                var contactWithPresence = from contact in contact_list
-                                            where contact.email == email
-                                            select contact;
-                foreach (Contact contact in contactWithPresence)
+                for (int i = 1; i < FLNResponses.Length; i++)
                 {
-                    contact.presenceStatus = null;
+                    //for each FLN response gets the email, does a LINQ query in the contact list and sets the contact's status to offline
+                    string email = FLNResponses[i];
+                    var contactWithPresence = from contact in contact_list
+                                              where contact.email == email
+                                              select contact;
+                    foreach (Contact contact in contactWithPresence)
+                    {
+                        contact.presenceStatus = null;
+                    }
                 }
-            }
+            });
         }
 
         public async Task ChangePresence(string status)

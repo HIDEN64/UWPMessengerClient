@@ -12,6 +12,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="15"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
@@ -20,11 +22,22 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="15"/>
         </Grid.ColumnDefinitions>
-        <ComboBox x:Name="Presence" FontSize="20" Header="Set your presence status" PlaceholderText="Statuses" 
+        <ComboBox x:Name="Presence" FontSize="16" Header="Set your presence status" PlaceholderText="Available" 
                   Grid.Column="1" Grid.Row="1" SelectionChanged="Presence_SelectionChanged">
             <x:String>Available</x:String>
             <x:String>Busy</x:String>
             <x:String>Away</x:String>
         </ComboBox>
+        <ListView ItemsSource="{x:Bind notificationServerConnection.contact_list, Mode=OneWay}" HorizontalAlignment="Left"
+                  Grid.Row="3" Grid.Column="1" Grid.RowSpan="2">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:Contact">
+                    <StackPanel Margin="3">
+                        <TextBlock Text="{x:Bind displayName, Mode=OneWay}" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="{x:Bind presenceStatus, Mode=OneWay}" FontSize="14"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
     </Grid>
 </Page>
