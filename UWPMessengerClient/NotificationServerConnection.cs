@@ -46,7 +46,7 @@ namespace UWPMessengerClient
                 //begin receiving from escargot
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");//send msnp version
-                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.1 msmsgs\r\n");//send client information
+                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.3 msmsgs\r\n");//send client information
                 NSSocket.SendCommand($"USR 3 TWN I {email}\r\n");//sends email to get a string for use in authentication
                 Task<string> token_task = GetNexusTokenAsync(httpClient);
                 token = token_task.Result;
@@ -94,9 +94,17 @@ namespace UWPMessengerClient
             {
                 NServerConnection.CreateContactList();
             }
-            if (NServerConnection.output_string.Contains("ILN"))
+            if (NServerConnection.output_string.Contains("ILN "))
             {
                 NServerConnection.SetInitialContactPresence();
+            }
+            if (NServerConnection.output_string.StartsWith("NLN "))
+            {
+                NServerConnection.SetContactPresence();
+            }
+            if (NServerConnection.output_string.StartsWith("FLN"))
+            {
+                NServerConnection.SetContactOffline();
             }
             if (bytes_read > 0)
             {
@@ -109,7 +117,6 @@ namespace UWPMessengerClient
             string[] LSTResponses = output_string.Split("LST ");
             //ensuring the last element of the LSTResponses array is just the LST response
             int rnIndex = LSTResponses.Last().IndexOf("\r\n");
-            rnIndex += 2;//count for the \r and \n characters
             if (rnIndex != LSTResponses.Last().Length)
             {
                 LSTResponses[LSTResponses.Length - 1] = LSTResponses[LSTResponses.Length - 1].Remove(rnIndex);
@@ -139,10 +146,9 @@ namespace UWPMessengerClient
 
         public void SetInitialContactPresence()
         {
-            string[] ILNResponses = output_string.Split("ILN");
+            string[] ILNResponses = output_string.Split("ILN ");
             //ensuring the last element of the ILNReponses array is just the ILN response
             int rnIndex = ILNResponses.Last().IndexOf("\r\n");
-            rnIndex += 2;//count for the \r and \n characters
             if (rnIndex != ILNResponses.Last().Length)
             {
                 ILNResponses[ILNResponses.Length - 1] = ILNResponses.Last().Remove(rnIndex);
@@ -151,14 +157,65 @@ namespace UWPMessengerClient
             {
                 //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
                 string[] ILNParams = ILNResponses[i].Split(" ");
-                string status = ILNParams[2];
-                string email = ILNParams[3];
+                string status = ILNParams[1];
+                string email = ILNParams[2];
                 var contactWithPresence = from contact in contact_list
                                           where contact.email == email
                                           select contact;
                 foreach (Contact contact in contactWithPresence)
                 {
                     contact.presenceStatus = status;
+                }
+            }
+        }
+
+        public void SetContactPresence()
+        {
+            string[] NLNResponses = output_string.Split("NLN ", 2);
+            //ensuring the last element of the NLNReponses array is just the NLN response
+            int rnIndex = NLNResponses.Last().IndexOf("\r\n");
+            rnIndex += 2;//count for the \r and \n characters
+            if (rnIndex != NLNResponses.Last().Length)
+            {
+                NLNResponses[NLNResponses.Length - 1] = NLNResponses.Last().Remove(rnIndex);
+            }
+            for (int i = 1; i < NLNResponses.Length; i++)
+            {
+                //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
+                string[] NLNParams = NLNResponses[i].Split(" ");
+                string status = NLNParams[0];
+                string email = NLNParams[1];
+                string displayName = NLNParams[2];
+                var contactWithPresence = from contact in contact_list
+                                          where contact.email == email
+                                          select contact;
+                foreach (Contact contact in contactWithPresence)
+                {
+                    contact.presenceStatus = status;
+                    contact.displayName = displayName;
+                }
+            }
+        }
+
+        public void SetContactOffline()
+        {
+            string[] FLNResponses = output_string.Split("FLN ", 2);
+            //ensuring the last element of the FLNReponses array is just the FLN response
+            int rnIndex = FLNResponses.Last().IndexOf("\r\n");
+            if (rnIndex != FLNResponses.Last().Length)
+            {
+                FLNResponses[FLNResponses.Length - 1] = FLNResponses.Last().Remove(rnIndex);
+            }
+            for (int i = 1; i < FLNResponses.Length; i++)
+            {
+                //for each FLN response gets the email, does a LINQ query in the contact list and sets the contact's status to offline
+                string email = FLNResponses[i];
+                var contactWithPresence = from contact in contact_list
+                                            where contact.email == email
+                                            select contact;
+                foreach (Contact contact in contactWithPresence)
+                {
+                    contact.presenceStatus = null;
                 }
             }
         }
