@@ -46,7 +46,7 @@ namespace UWPMessengerClient
             return fullStatus;
         }
 
-        public Object ConvertBack(object value, Type targetType, object parameter, string language)
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
             throw new NotImplementedException();
         }

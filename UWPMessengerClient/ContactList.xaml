@@ -9,6 +9,7 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <UserControl.Resources>
         <local:StatusConverter x:Key="StatusConverter"/>
+        <local:UrlDecodingConverter x:Key="UrlDecodingConverter"/>
     </UserControl.Resources>
 
     <Grid>
@@ -27,7 +28,7 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="15"/>
         </Grid.ColumnDefinitions>
-        <TextBlock Text="{x:Bind notificationServerConnection.userInfo.displayName, Mode=OneWay}" FontSize="36" 
+        <TextBlock Text="{x:Bind notificationServerConnection.userInfo.displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="36" 
                    FontWeight="Bold" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="1"/>
         <ComboBox x:Name="Presence" FontSize="16" Header="Set your presence status" PlaceholderText="Available" 
                   Grid.Column="1" Grid.Row="3" SelectionChanged="Presence_SelectionChanged">
@@ -40,7 +41,7 @@
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:Contact">
                     <StackPanel Margin="3">
-                        <TextBlock Text="{x:Bind displayName, Mode=OneWay}" FontSize="18" FontWeight="Bold"/>
+                        <TextBlock Text="{x:Bind displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="18" FontWeight="Bold"/>
                         <TextBlock Text="{x:Bind presenceStatus, Converter={StaticResource StatusConverter}, Mode=OneWay}" FontSize="14"/>
                     </StackPanel>
                 </DataTemplate>

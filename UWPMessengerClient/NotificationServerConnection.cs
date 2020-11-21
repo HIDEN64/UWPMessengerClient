@@ -30,7 +30,7 @@ namespace UWPMessengerClient
         private string token;
         private ObservableCollection<Contact> _contact_list = new ObservableCollection<Contact>();
         public ObservableCollection<Contact> contact_list { get => _contact_list; set { _contact_list = value; } }
-        public UserInfo userInfo = new UserInfo();
+        public UserInfo userInfo { get; set; } = new UserInfo();
 
         public NotificationServerConnection(string escargot_email, string escargot_password)
         {
@@ -124,7 +124,7 @@ namespace UWPMessengerClient
             string[] LSTResponses = output_string.Split("LST ");
             //ensuring the last element of the LSTResponses array is just the LST response
             int rnIndex = LSTResponses.Last().IndexOf("\r\n");
-            if (rnIndex != LSTResponses.Last().Length)
+            if (rnIndex != LSTResponses.Last().Length && rnIndex > 0)
             {
                 LSTResponses[LSTResponses.Length - 1] = LSTResponses[LSTResponses.Length - 1].Remove(rnIndex);
             }
@@ -159,7 +159,7 @@ namespace UWPMessengerClient
             string[] ILNResponses = output_string.Split("ILN ");
             //ensuring the last element of the ILNReponses array is just the ILN response
             int rnIndex = ILNResponses.Last().IndexOf("\r\n");
-            if (rnIndex != ILNResponses.Last().Length)
+            if (rnIndex != ILNResponses.Last().Length && rnIndex > 0)
             {
                 ILNResponses[ILNResponses.Length - 1] = ILNResponses.Last().Remove(rnIndex);
             }
@@ -188,7 +188,7 @@ namespace UWPMessengerClient
             //ensuring the last element of the NLNReponses array is just the NLN response
             int rnIndex = NLNResponses.Last().IndexOf("\r\n");
             rnIndex += 2;//count for the \r and \n characters
-            if (rnIndex != NLNResponses.Last().Length)
+            if (rnIndex != NLNResponses.Last().Length && rnIndex > 0)
             {
                 NLNResponses[NLNResponses.Length - 1] = NLNResponses.Last().Remove(rnIndex);
             }
@@ -218,7 +218,7 @@ namespace UWPMessengerClient
             string[] FLNResponses = output_string.Split("FLN ", 2);
             //ensuring the last element of the FLNReponses array is just the FLN response
             int rnIndex = FLNResponses.Last().IndexOf("\r\n");
-            if (rnIndex != FLNResponses.Last().Length)
+            if (rnIndex != FLNResponses.Last().Length && rnIndex > 0)
             {
                 FLNResponses[FLNResponses.Length - 1] = FLNResponses.Last().Remove(rnIndex);
             }
@@ -244,7 +244,7 @@ namespace UWPMessengerClient
             string[] PRPParams = output_string.Split("PRP MFN ", 2);
             //ensuring the last element of the PRPReponses array is just the PRP response
             int rnIndex = PRPParams.Last().IndexOf("\r\n");
-            if (rnIndex != PRPParams.Last().Length)
+            if (rnIndex != PRPParams.Last().Length && rnIndex > 0)
             {
                 PRPParams[PRPParams.Length - 1] = PRPParams.Last().Remove(rnIndex);
             }
