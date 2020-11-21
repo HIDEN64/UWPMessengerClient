@@ -30,6 +30,7 @@ namespace UWPMessengerClient
         private string token;
         private ObservableCollection<Contact> _contact_list = new ObservableCollection<Contact>();
         public ObservableCollection<Contact> contact_list { get => _contact_list; set { _contact_list = value; } }
+        public UserInfo userInfo = new UserInfo();
 
         public NotificationServerConnection(string escargot_email, string escargot_password)
         {
@@ -99,6 +100,10 @@ namespace UWPMessengerClient
             if (NServerConnection.output_string.Contains("ILN "))
             {
                 NServerConnection.SetInitialContactPresence();
+            }
+            if (NServerConnection.output_string.Contains("PRP MFN"))
+            {
+                NServerConnection.GetUserDisplayName();
             }
             if (NServerConnection.output_string.StartsWith("NLN "))
             {
@@ -231,6 +236,21 @@ namespace UWPMessengerClient
                         contact.presenceStatus = null;
                     }
                 }
+            });
+        }
+
+        public void GetUserDisplayName()
+        {
+            string[] PRPParams = output_string.Split("PRP MFN ", 2);
+            //ensuring the last element of the PRPReponses array is just the PRP response
+            int rnIndex = PRPParams.Last().IndexOf("\r\n");
+            if (rnIndex != PRPParams.Last().Length)
+            {
+                PRPParams[PRPParams.Length - 1] = PRPParams.Last().Remove(rnIndex);
+            }
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                userInfo.displayName = PRPParams[1];
             });
         }
 

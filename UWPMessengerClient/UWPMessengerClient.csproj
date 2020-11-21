@@ -133,6 +133,8 @@
     <Compile Include="PresenceStatuses.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SocketCommands.cs" />
+    <Compile Include="StatusConverter.cs" />
+    <Compile Include="UserInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

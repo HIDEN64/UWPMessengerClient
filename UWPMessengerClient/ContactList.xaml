@@ -7,10 +7,15 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <UserControl.Resources>
+        <local:StatusConverter x:Key="StatusConverter"/>
+    </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="15"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="10"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="10"/>
             <RowDefinition Height="auto"/>
@@ -22,19 +27,21 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="15"/>
         </Grid.ColumnDefinitions>
+        <TextBlock Text="{x:Bind notificationServerConnection.userInfo.displayName, Mode=OneWay}" FontSize="36" 
+                   FontWeight="Bold" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="1"/>
         <ComboBox x:Name="Presence" FontSize="16" Header="Set your presence status" PlaceholderText="Available" 
-                  Grid.Column="1" Grid.Row="1" SelectionChanged="Presence_SelectionChanged">
+                  Grid.Column="1" Grid.Row="3" SelectionChanged="Presence_SelectionChanged">
             <x:String>Available</x:String>
             <x:String>Busy</x:String>
             <x:String>Away</x:String>
         </ComboBox>
-        <ListView ItemsSource="{x:Bind notificationServerConnection.contact_list, Mode=OneWay}" HorizontalAlignment="Left"
-                  Grid.Row="3" Grid.Column="1" Grid.RowSpan="2">
+        <ListView ItemsSource="{x:Bind notificationServerConnection.contact_list, Mode=OneWay}" HorizontalAlignment="Stretch"
+                  Grid.Row="5" Grid.Column="1" Grid.RowSpan="2">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:Contact">
                     <StackPanel Margin="3">
                         <TextBlock Text="{x:Bind displayName, Mode=OneWay}" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock Text="{x:Bind presenceStatus, Mode=OneWay}" FontSize="14"/>
+                        <TextBlock Text="{x:Bind presenceStatus, Converter={StaticResource StatusConverter}, Mode=OneWay}" FontSize="14"/>
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
