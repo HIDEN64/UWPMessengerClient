@@ -130,6 +130,7 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="NotificationServerConnection.cs" />
+    <Compile Include="NotificationServerConnection.ReceivingCallback.cs" />
     <Compile Include="PresenceStatuses.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SocketCommands.cs" />
