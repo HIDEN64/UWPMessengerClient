@@ -13,6 +13,7 @@ namespace UWPMessengerClient
         private byte[] received_bytes = new byte[4096];
         private string output_string;
         public ObservableCollection<Contact> contact_list { get; set; } = new ObservableCollection<Contact>();
+        public ObservableCollection<Contact> contacts_in_forward_list { get; set; } = new ObservableCollection<Contact>();
         public UserInfo userInfo { get; set; } = new UserInfo();
 
         public static void ReceivingCallback(IAsyncResult asyncResult)
@@ -78,6 +79,7 @@ namespace UWPMessengerClient
                     }
                     contact_list.Add(new Contact(listbit) { displayName = displayName, email = email, GUID = guid });
                 }
+                FillForwardListCollection();
             });
         }
 
@@ -179,6 +181,17 @@ namespace UWPMessengerClient
             {
                 userInfo.displayName = PRPParams[1];
             });
+        }
+
+        public void FillForwardListCollection()
+        {
+            foreach (Contact contact in contact_list)
+            {
+                if (contact.onForward == true)
+                {
+                    contacts_in_forward_list.Add(contact);
+                }
+            }
         }
     }
 }
