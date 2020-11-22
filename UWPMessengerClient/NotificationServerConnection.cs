@@ -33,14 +33,14 @@ namespace UWPMessengerClient
             password = escargot_password;
         }
 
-        public async Task login_to_messengerAsync()
+        public async Task LoginToMessengerAsync()
         {
             httpClient = new HttpClient();
             NSSocket = new SocketCommands(NSaddress, port);
             Action loginAction = new Action(() =>
             {
                 //sequence of commands to login to escargot
-                NSSocket.NSConnectSocket();
+                NSSocket.ConnectSocket();
                 //begin receiving from escargot
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");//send msnp version
@@ -90,6 +90,11 @@ namespace UWPMessengerClient
                 NSSocket.SendCommand($"CHG 7 {status} 0\r\n");
             });
             await Task.Run(changePresence);
+        }
+
+        public async Task InitiateSB()
+        {
+            await Task.Run(() => NSSocket.SendCommand("XFR 8 SB\r\n"));
         }
     }
 }

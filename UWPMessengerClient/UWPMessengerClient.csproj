@@ -135,6 +135,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SocketCommands.cs" />
     <Compile Include="StatusConverter.cs" />
+    <Compile Include="SwitchboardConnection.cs" />
+    <Compile Include="SwitchboardConnection.ReceivingCallback.cs" />
     <Compile Include="UrlDecodingConverter.cs" />
     <Compile Include="UserInfo.cs" />
   </ItemGroup>

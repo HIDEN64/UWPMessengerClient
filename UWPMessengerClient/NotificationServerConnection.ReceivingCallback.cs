@@ -15,6 +15,7 @@ namespace UWPMessengerClient
         public ObservableCollection<Contact> contact_list { get; set; } = new ObservableCollection<Contact>();
         public ObservableCollection<Contact> contacts_in_forward_list { get; set; } = new ObservableCollection<Contact>();
         public UserInfo userInfo { get; set; } = new UserInfo();
+        public SwitchboardConnection SBConnection { get; set; }
 
         public static void ReceivingCallback(IAsyncResult asyncResult)
         {
@@ -40,6 +41,10 @@ namespace UWPMessengerClient
             if (NServerConnection.output_string.StartsWith("FLN "))
             {
                 NServerConnection.SetContactOffline();
+            }
+            if (NServerConnection.output_string.StartsWith("XFR "))
+            {
+                NServerConnection.ConnectToSwitchboard();
             }
             if (bytes_read > 0)
             {
@@ -192,6 +197,24 @@ namespace UWPMessengerClient
                     contacts_in_forward_list.Add(contact);
                 }
             }
+        }
+
+        public void ConnectToSwitchboard()
+        {
+            string[] XFRResponse = output_string.Split("XFR ", 2);
+            //ensuring the last element of the XFRReponse array is just the XFR response
+            int rnIndex = XFRResponse.Last().IndexOf("\r\n");
+            if (rnIndex != XFRResponse.Last().Length && rnIndex > 0)
+            {
+                XFRResponse[XFRResponse.Length - 1] = XFRResponse.Last().Remove(rnIndex);
+            }
+            string[] XFRParams = XFRResponse[1].Split(" ");
+            string[] address_and_port = XFRParams[1].Split(":");
+            string sb_address = address_and_port[0];
+            int sb_port;
+            int.TryParse(address_and_port[1], out sb_port);
+            string trID = XFRParams.Last();
+            SBConnection = new SwitchboardConnection(sb_address, sb_port, email, trID);
         }
     }
 }

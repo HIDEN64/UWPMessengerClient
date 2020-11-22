@@ -20,7 +20,7 @@ namespace UWPMessengerClient
             server_port = port;
         }
 
-        public void NSConnectSocket()
+        public void ConnectSocket()
         {
             //creates a tcp socket then connects it to the server
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);

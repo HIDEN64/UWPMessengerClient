@@ -30,7 +30,7 @@ namespace UWPMessengerClient
             string email = Email_box.Text;
             string password = Password_box.Password;
             NotificationServerConnection notificationServerConnection = new NotificationServerConnection(email, password);
-            await notificationServerConnection.login_to_messengerAsync();
+            await notificationServerConnection.LoginToMessengerAsync();
             this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
             disable_progress_ring();
         }
