@@ -7,23 +7,24 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Web;
+using Windows.UI.Core;
+using System.Collections.ObjectModel;
 
 namespace UWPMessengerClient
 {
-    class NotificationServerConnection
+    partial class NotificationServerConnection
     {
         private SocketCommands NSSocket;
         private HttpClient httpClient;
-        private readonly string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
-        //notification server(escargot) address
+        //notification server(escargot) address and nexus address
         private readonly string NSaddress = "m1.escargot.log1p.xyz";
+        private readonly string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
         //uncomment below and comment above to use localserver
         //private readonly string NSaddress = "127.0.0.1";
+        //private readonly string nexus_address = "http://localhost/nexus-mock";
         private readonly int port = 1863;
         private string email;
         private string password;
-        private byte[] received_bytes = new byte[4096];
-        private string output_string;
         private string token;
 
         public NotificationServerConnection(string escargot_email, string escargot_password)
@@ -43,7 +44,7 @@ namespace UWPMessengerClient
                 //begin receiving from escargot
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");//send msnp version
-                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.1 msmsgs\r\n");//send client information
+                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.3 msmsgs\r\n");//send client information
                 NSSocket.SendCommand($"USR 3 TWN I {email}\r\n");//sends email to get a string for use in authentication
                 Task<string> token_task = GetNexusTokenAsync(httpClient);
                 token = token_task.Result;
@@ -80,17 +81,6 @@ namespace UWPMessengerClient
             string fromPP = fromPP_split[1];
             fromPP = fromPP.Remove(fromPP.IndexOf("'\r"));
             return fromPP;
-        }
-
-        public static void ReceivingCallback(IAsyncResult asyncResult)
-        {
-            NotificationServerConnection NServerConnection = (NotificationServerConnection)asyncResult.AsyncState;
-            int bytes_read = NServerConnection.NSSocket.StopReceiving(asyncResult);
-            NServerConnection.output_string = Encoding.ASCII.GetString(NServerConnection.received_bytes, 0, bytes_read);
-            if (bytes_read > 0)
-            {
-                NServerConnection.NSSocket.BeginReceiving(NServerConnection.received_bytes, new AsyncCallback(ReceivingCallback), NServerConnection);
-            }
         }
 
         public async Task ChangePresence(string status)
