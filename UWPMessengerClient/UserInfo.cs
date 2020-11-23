@@ -11,7 +11,7 @@ namespace UWPMessengerClient
     public class UserInfo : INotifyPropertyChanged
     {
         private string _displayName;
-        private static string _personalMessage;
+        private string _personalMessage;
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
