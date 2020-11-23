@@ -46,6 +46,10 @@ namespace UWPMessengerClient
             {
                 var task = NServerConnection.ConnectToSwitchboard();
             }
+            if (NServerConnection.output_string.StartsWith("RNG "))
+            {
+                NServerConnection.JoinSwitchboard();
+            }
             if (bytes_read > 0)
             {
                 NServerConnection.NSSocket.BeginReceiving(NServerConnection.received_bytes, new AsyncCallback(ReceivingCallback), NServerConnection);
@@ -217,6 +221,27 @@ namespace UWPMessengerClient
             SBConnection.SetAddressPortAndTrID(sb_address, sb_port, trID);
             await SBConnection.LoginToNewSwitchboardAsync();
             await SBConnection.InvitePrincipal(contacts_in_forward_list[ContactIndexToChat].email, contacts_in_forward_list[ContactIndexToChat].displayName);
+        }
+
+        public void JoinSwitchboard()
+        {
+            string[] RNGResponse = output_string.Split("RNG ", 2);
+            //ensuring the last element of the RNGReponse array is just the RNG response
+            int rnIndex = RNGResponse.Last().IndexOf("\r\n");
+            if (rnIndex != RNGResponse.Last().Length && rnIndex > 0)
+            {
+                RNGResponse[RNGResponse.Length - 1] = RNGResponse.Last().Remove(rnIndex);
+            }
+            string[] RNGParams = RNGResponse[1].Split(" ");
+            string sessionID = RNGParams[0];
+            string[] address_and_port = RNGParams[1].Split(":");
+            int sb_port;
+            string sb_address = address_and_port[0];
+            int.TryParse(address_and_port[1], out sb_port);
+            string trID = RNGParams[3];
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, trID, userInfo.displayName, sessionID);
+            SBConnection = switchboardConnection;
+            _ = SBConnection.AnswerRNG();
         }
     }
 }

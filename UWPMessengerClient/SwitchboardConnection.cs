@@ -14,6 +14,7 @@ namespace UWPMessengerClient
         private int SBPort = 0;
         private string UserEmail;
         private string TrID;
+        private string SessionID;
         public UserInfo PrincipalInfo { get; set; } = new UserInfo();
         public UserInfo userInfo { get; set; } = new UserInfo();
         public bool connected { get; set; }
@@ -33,6 +34,16 @@ namespace UWPMessengerClient
             SBPort = port;
             UserEmail = email;
             TrID = trID;
+            userInfo.displayName = userDisplayName;
+        }
+
+        public SwitchboardConnection(string address, int port, string email, string trID, string userDisplayName, string sessionID)
+        {
+            SBAddress = address;
+            SBPort = port;
+            UserEmail = email;
+            TrID = trID;
+            SessionID = sessionID;
             userInfo.displayName = userDisplayName;
         }
 
@@ -107,6 +118,18 @@ namespace UWPMessengerClient
                     });
                 });
             }
+        }
+
+        public async Task AnswerRNG()
+        {
+            await Task.Run(() =>
+            {
+                SBSocket = new SocketCommands(SBAddress, SBPort);
+                SBSocket.ConnectSocket();
+                SBSocket.BeginReceiving(outputBuffer, new AsyncCallback(ReceivingCallback), this);
+                SBSocket.SendCommand($"ANS 1 {UserEmail} {TrID} {SessionID}\r\n");
+                connected = true;
+            });
         }
 
         ~SwitchboardConnection()
