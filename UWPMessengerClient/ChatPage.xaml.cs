@@ -33,7 +33,7 @@ namespace UWPMessengerClient
 
         private async void sendButton_Click(object sender, RoutedEventArgs e)
         {
-            if (switchboardConnection != null && switchboardConnection.connected)
+            if (switchboardConnection != null && switchboardConnection.connected && messageBox.Text != "")
             {
                 await switchboardConnection.SendMessage(messageBox.Text);
                 messageBox.Text = "";

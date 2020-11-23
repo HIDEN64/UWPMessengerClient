@@ -22,7 +22,8 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="15"/>
         </Grid.ColumnDefinitions>
-        <TextBlock Name="Title" Grid.Row="1" Grid.Column="1" Text="UWP Messenger Client" FontSize="60" FontFamily="Segoe UI" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+        <TextBlock Name="Title" Grid.Row="1" Grid.Column="1" Text="UWP Messenger Client" FontSize="40" 
+                   TextWrapping="Wrap" FontFamily="Segoe UI" HorizontalAlignment="Center" VerticalAlignment="Top"/>
         <StackPanel Padding="6" Grid.Row="2" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Center">
             <TextBox x:Name="Email_box" Margin="5" Header="Enter your email:" FontSize="20" FontWeight="Normal" AutomationProperties.IsRequiredForForm="True"/>
             <PasswordBox x:Name="Password_box" Margin="5" Header="Enter your password:" InputScope="EmailSmtpAddress" FontSize="20" AutomationProperties.IsRequiredForForm="True"/>

@@ -13,8 +13,9 @@ namespace UWPMessengerClient
         private string SBAddress;
         private int SBPort = 0;
         private string UserEmail;
-        private string UserDisplayName;
         private string TrID;
+        public UserInfo PrincipalInfo { get; set; } = new UserInfo();
+        public UserInfo userInfo { get; set; } = new UserInfo();
         public bool connected { get; set; }
         public int principalsConnected { get; set; }
         public string outputString { get; set; }
@@ -23,7 +24,7 @@ namespace UWPMessengerClient
         public SwitchboardConnection(string email, string userDisplayName)
         {
             UserEmail = email;
-            UserDisplayName = userDisplayName;
+            userInfo.displayName = userDisplayName;
         }
 
         public SwitchboardConnection(string address, int port, string email, string trID, string userDisplayName)
@@ -32,7 +33,7 @@ namespace UWPMessengerClient
             SBPort = port;
             UserEmail = email;
             TrID = trID;
-            UserDisplayName = userDisplayName;
+            userInfo.displayName = userDisplayName;
         }
 
         public void SetAddressPortAndTrID(string address, int port, string trID)
@@ -71,6 +72,26 @@ namespace UWPMessengerClient
             }
         }
 
+        public async Task InvitePrincipal(string principal_email, string principal_display_name)
+        {
+            if (connected == true)
+            {
+                await Task.Run(() =>
+                {
+                    SBSocket.SendCommand($"CAL 2 {principal_email}\r\n");
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        PrincipalInfo.displayName = principal_display_name;
+                    });
+                    principalsConnected++;
+                });
+            }
+            else
+            {
+                throw new Exception();
+            }
+        }
+
         public async Task SendMessage(string message_text)
         {
             if (connected == true && principalsConnected > 0)
@@ -82,7 +103,7 @@ namespace UWPMessengerClient
                     SBSocket.SendCommand($"MSG 3 N {msg_length}\r\n{message}");
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        MessageList.Add(new Message() { message_text = message_text, sender = UserDisplayName});
+                        MessageList.Add(new Message() { message_text = message_text, sender = userInfo.displayName });
                     });
                 });
             }

@@ -216,7 +216,7 @@ namespace UWPMessengerClient
             string trID = XFRParams.Last();
             SBConnection.SetAddressPortAndTrID(sb_address, sb_port, trID);
             await SBConnection.LoginToNewSwitchboardAsync();
-            await SBConnection.InvitePrincipal(contacts_in_forward_list[ContactIndexToChat].email);
+            await SBConnection.InvitePrincipal(contacts_in_forward_list[ContactIndexToChat].email, contacts_in_forward_list[ContactIndexToChat].displayName);
         }
     }
 }
