@@ -8,7 +8,7 @@ using System.Collections.ObjectModel;
 
 namespace UWPMessengerClient
 {
-    partial class NotificationServerConnection
+    public partial class NotificationServerConnection
     {
         private byte[] received_bytes = new byte[4096];
         private string output_string;
@@ -44,7 +44,7 @@ namespace UWPMessengerClient
             }
             if (NServerConnection.output_string.StartsWith("XFR "))
             {
-                NServerConnection.ConnectToSwitchboard();
+                var task = NServerConnection.ConnectToSwitchboard();
             }
             if (bytes_read > 0)
             {
@@ -199,7 +199,7 @@ namespace UWPMessengerClient
             }
         }
 
-        public void ConnectToSwitchboard()
+        public async Task ConnectToSwitchboard()
         {
             string[] XFRResponse = output_string.Split("XFR ", 2);
             //ensuring the last element of the XFRReponse array is just the XFR response
@@ -209,12 +209,14 @@ namespace UWPMessengerClient
                 XFRResponse[XFRResponse.Length - 1] = XFRResponse.Last().Remove(rnIndex);
             }
             string[] XFRParams = XFRResponse[1].Split(" ");
-            string[] address_and_port = XFRParams[1].Split(":");
+            string[] address_and_port = XFRParams[2].Split(":");
             string sb_address = address_and_port[0];
             int sb_port;
             int.TryParse(address_and_port[1], out sb_port);
             string trID = XFRParams.Last();
-            SBConnection = new SwitchboardConnection(sb_address, sb_port, email, trID);
+            SBConnection.SetAddressPortAndTrID(sb_address, sb_port, trID);
+            await SBConnection.LoginToNewSwitchboardAsync();
+            await SBConnection.InvitePrincipal(contacts_in_forward_list[ContactIndexToChat].email);
         }
     }
 }

@@ -12,7 +12,7 @@ using System.Collections.ObjectModel;
 
 namespace UWPMessengerClient
 {
-    partial class NotificationServerConnection
+    public partial class NotificationServerConnection
     {
         private SocketCommands NSSocket;
         private HttpClient httpClient;
@@ -26,6 +26,7 @@ namespace UWPMessengerClient
         private string email;
         private string password;
         private string token;
+        public int ContactIndexToChat { get; set; }
 
         public NotificationServerConnection(string escargot_email, string escargot_password)
         {
@@ -95,6 +96,8 @@ namespace UWPMessengerClient
         public async Task InitiateSB()
         {
             await Task.Run(() => NSSocket.SendCommand("XFR 8 SB\r\n"));
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
+            SBConnection = switchboardConnection;
         }
     }
 }

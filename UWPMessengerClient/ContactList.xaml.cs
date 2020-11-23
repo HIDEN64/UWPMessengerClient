@@ -12,12 +12,13 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using System.Threading.Tasks;
 
 namespace UWPMessengerClient
 {
     public sealed partial class ContactList : Page
     {
-        NotificationServerConnection notificationServerConnection;
+        private NotificationServerConnection notificationServerConnection;
 
         public ContactList()
         {
@@ -45,6 +46,13 @@ namespace UWPMessengerClient
                     await notificationServerConnection.ChangePresence(PresenceStatuses.Away);
                     break;
             }
+        }
+
+        private async void start_chat_button_Click(object sender, RoutedEventArgs e)
+        {
+            notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
+            await notificationServerConnection.InitiateSB();
+            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection.SBConnection);
         }
     }
 }

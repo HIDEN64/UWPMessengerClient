@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace UWPMessengerClient
 {
-    class Contact : INotifyPropertyChanged
+    public class Contact : INotifyPropertyChanged
     {
         private string _email;
         private string _displayName;

@@ -8,10 +8,10 @@ using System.Runtime.CompilerServices;
 
 namespace UWPMessengerClient
 {
-    public class UserInfo : INotifyPropertyChanged
+    public class Message : INotifyPropertyChanged
     {
-        private string _displayName;
-        private static string _personalMessage;
+        private string _message_text;
+        private string _sender;
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -19,22 +19,22 @@ namespace UWPMessengerClient
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public string displayName
+        public string message_text
         {
-            get => _displayName;
+            get => _message_text;
             set
             {
-                _displayName = value;
+                _message_text = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public string personalMessage
+        public string sender
         {
-            get => _personalMessage;
+            get => _sender;
             set
             {
-                _personalMessage = value;
+                _sender = value;
                 NotifyPropertyChanged();
             }
         }

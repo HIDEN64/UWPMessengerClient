@@ -20,6 +20,8 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="10"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
@@ -36,8 +38,8 @@
             <x:String>Busy</x:String>
             <x:String>Away</x:String>
         </ComboBox>
-        <ListView ItemsSource="{x:Bind notificationServerConnection.contacts_in_forward_list, Mode=OneWay}" HorizontalAlignment="Stretch"
-                  Grid.Row="5" Grid.Column="1" Grid.RowSpan="2">
+        <ListView x:Name="contactListView" ItemsSource="{x:Bind notificationServerConnection.contacts_in_forward_list, Mode=OneWay}" HorizontalAlignment="Stretch"
+                  Grid.Row="5" Grid.Column="1">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:Contact">
                     <StackPanel Margin="3">
@@ -47,5 +49,7 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+        <Button x:Name="start_chat_button" Content="Chat with selected user" HorizontalAlignment="Left"
+                Grid.Row="7" Grid.Column="1" Click="start_chat_button_Click"/>
     </Grid>
 </Page>
