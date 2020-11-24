@@ -8,14 +8,14 @@
 
   <Identity
     Name="ebfbd652-1534-400b-b3b4-1d7bde9ad2d6"
-    Publisher="CN=vinicius"
-    Version="1.0.0.0" />
+    Publisher="CN=campos"
+    Version="0.3.2.0" />
 
   <mp:PhoneIdentity PhoneProductId="ebfbd652-1534-400b-b3b4-1d7bde9ad2d6" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>UWPMessengerClient</DisplayName>
-    <PublisherDisplayName>vinicius</PublisherDisplayName>
+    <PublisherDisplayName>Campos</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 

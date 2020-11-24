@@ -30,7 +30,19 @@ namespace UWPMessengerClient
             string email = Email_box.Text;
             string password = Password_box.Password;
             NotificationServerConnection notificationServerConnection = new NotificationServerConnection(email, password);
-            await notificationServerConnection.LoginToMessengerAsync();
+            try
+            {
+                await notificationServerConnection.LoginToMessengerAsync();
+            }
+            catch (AggregateException ex)
+            {
+                for (int i = 0; i < ex.InnerExceptions.Count; i++)
+                {
+                    await ShowLoginErrorDialog(ex.InnerExceptions[i].Message);
+                }
+                disable_progress_ring();
+                return;
+            }
             this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
             disable_progress_ring();
         }
@@ -45,6 +57,17 @@ namespace UWPMessengerClient
         {
             loginProgress.Visibility = Visibility.Collapsed;
             loginProgress.IsActive = false;
+        }
+
+        public async Task ShowLoginErrorDialog(string error)
+        {
+            ContentDialog loginErrorDialog = new ContentDialog
+            {
+                Title = "Login error",
+                Content = "There was an error logging in: " + error,
+                CloseButtonText = "Close"
+            };
+            ContentDialogResult loginErrorResult = await loginErrorDialog.ShowAsync();
         }
     }
 }
