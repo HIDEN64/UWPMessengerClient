@@ -50,8 +50,11 @@ namespace UWPMessengerClient
 
         private async void start_chat_button_Click(object sender, RoutedEventArgs e)
         {
-            notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
-            await notificationServerConnection.InitiateSB();
+            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
+            {
+                notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
+                await notificationServerConnection.InitiateSB();
+            }
             this.Frame.Navigate(typeof(ChatPage), notificationServerConnection.SBConnection);
         }
     }

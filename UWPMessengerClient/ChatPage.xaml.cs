@@ -28,6 +28,7 @@ namespace UWPMessengerClient
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             switchboardConnection = (SwitchboardConnection)e.Parameter;
+            BackButton.IsEnabled = this.Frame.CanGoBack;
             base.OnNavigatedTo(e);
         }
 
@@ -37,6 +38,14 @@ namespace UWPMessengerClient
             {
                 await switchboardConnection.SendMessage(messageBox.Text);
                 messageBox.Text = "";
+            }
+        }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.Frame.CanGoBack)
+            {
+                this.Frame.GoBack();
             }
         }
     }
