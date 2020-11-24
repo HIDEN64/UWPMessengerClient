@@ -45,7 +45,7 @@ namespace UWPMessengerClient
                 //begin receiving from escargot
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");//send msnp version
-                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.3 msmsgs\r\n");//send client information
+                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.4 msmsgs\r\n");//send client information
                 NSSocket.SendCommand($"USR 3 TWN I {email}\r\n");//sends email to get a string for use in authentication
                 Task<string> token_task = GetNexusTokenAsync(httpClient);
                 token = token_task.Result;
