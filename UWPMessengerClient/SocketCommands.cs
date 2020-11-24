@@ -33,7 +33,12 @@ namespace UWPMessengerClient
 
         public void SendCommand(string msg)
         {
-            byte[] message = Encoding.ASCII.GetBytes(msg);
+            byte[] message = Encoding.UTF8.GetBytes(msg);
+            socket.Send(message);
+        }
+
+        public void SendCommand(byte[] message)
+        {
             socket.Send(message);
         }
 
@@ -65,7 +70,7 @@ namespace UWPMessengerClient
             }
             if (size != 0)
             {
-                string received_bytes_string = Encoding.ASCII.GetString(received_bytes);
+                string received_bytes_string = Encoding.UTF8.GetString(received_bytes);
                 return received_bytes_string;
             }
             else

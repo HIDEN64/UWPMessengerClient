@@ -110,8 +110,8 @@ namespace UWPMessengerClient
                 await Task.Run(() => 
                 {
                     string message = "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nX-MMS-IM-Format: FN=Arial; EF=; CO=0; CS=0; PF=22\r\n\r\n" + message_text;
-                    int msg_length = message.Length;
-                    SBSocket.SendCommand($"MSG 3 N {msg_length}\r\n{message}");
+                    byte[] byte_message = Encoding.UTF8.GetBytes(message);
+                    SBSocket.SendCommand($"MSG 3 N {byte_message.Length}\r\n{message}");
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         MessageList.Add(new Message() { message_text = message_text, sender = userInfo.displayName });

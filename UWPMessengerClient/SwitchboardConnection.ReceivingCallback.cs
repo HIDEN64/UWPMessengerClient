@@ -17,7 +17,7 @@ namespace UWPMessengerClient
         {
             SwitchboardConnection switchboardConnection = (SwitchboardConnection)asyncResult.AsyncState;
             int bytes_received = switchboardConnection.SBSocket.StopReceiving(asyncResult);
-            switchboardConnection.outputString = Encoding.ASCII.GetString(switchboardConnection.outputBuffer, 0, bytes_received);
+            switchboardConnection.outputString = Encoding.UTF8.GetString(switchboardConnection.outputBuffer, 0, bytes_received);
             if (switchboardConnection.outputString.StartsWith("MSG") && !switchboardConnection.outputString.Contains("TypingUser"))
             {
                 AddMessageToList();

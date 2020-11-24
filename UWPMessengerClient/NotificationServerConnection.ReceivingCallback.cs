@@ -21,7 +21,7 @@ namespace UWPMessengerClient
         {
             NotificationServerConnection NServerConnection = (NotificationServerConnection)asyncResult.AsyncState;
             int bytes_read = NServerConnection.NSSocket.StopReceiving(asyncResult);
-            NServerConnection.output_string = Encoding.ASCII.GetString(NServerConnection.received_bytes, 0, bytes_read);
+            NServerConnection.output_string = Encoding.UTF8.GetString(NServerConnection.received_bytes, 0, bytes_read);
             if (NServerConnection.output_string.Contains("LST "))
             {
                 NServerConnection.CreateContactList();
