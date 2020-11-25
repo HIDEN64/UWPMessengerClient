@@ -47,6 +47,11 @@
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsStackPanel ItemsUpdatingScrollMode="KeepLastItemInView"/>
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
         </ListView>
         <Button x:Name="start_chat_button" Content="Chat with selected user" HorizontalAlignment="Left"
                 Grid.Row="7" Grid.Column="1" Click="start_chat_button_Click"/>

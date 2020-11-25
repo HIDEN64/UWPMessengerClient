@@ -43,6 +43,11 @@
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsStackPanel ItemsUpdatingScrollMode="KeepLastItemInView"/>
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
         </ListView>
         <TextBox x:Name="messageBox" Grid.Column="1" Grid.Row="6" Margin="5" Grid.ColumnSpan="2"/>
         <Button x:Name="sendButton" Content="Send" HorizontalAlignment="Left" Grid.Row="7" Grid.Column="1"
