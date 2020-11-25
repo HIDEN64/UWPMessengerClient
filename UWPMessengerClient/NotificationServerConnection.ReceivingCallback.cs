@@ -239,7 +239,8 @@ namespace UWPMessengerClient
             string sb_address = address_and_port[0];
             int.TryParse(address_and_port[1], out sb_port);
             string trID = RNGParams[3];
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, trID, userInfo.displayName, sessionID);
+            string principalName = RNGParams[5];
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, trID, userInfo.displayName, principalName, sessionID);
             SBConnection = switchboardConnection;
             _ = SBConnection.AnswerRNG();
         }

@@ -22,6 +22,14 @@ namespace UWPMessengerClient
             {
                 AddMessageToList();
             }
+            if (switchboardConnection.outputString.Contains("OK"))
+            {
+                connected = true;
+            }
+            if (switchboardConnection.outputString.StartsWith("JOI") || switchboardConnection.outputString.StartsWith("IRO"))
+            {
+                principalsConnected++;
+            }
             if (bytes_received > 0)
             {
                 SBSocket.BeginReceiving(outputBuffer, new AsyncCallback(ReceivingCallback), switchboardConnection);
@@ -38,11 +46,15 @@ namespace UWPMessengerClient
                 .AddText(senderDisplayName)
                 .AddText(messageText)
                 .GetToastContent();
-            var notif = new ToastNotification(content.GetXml());
+            try
+            {
+                var notif = new ToastNotification(content.GetXml());
+                ToastNotificationManager.CreateToastNotifier().Show(notif);
+            }
+            catch (ArgumentException) { }
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 MessageList.Add(new Message() { message_text = messageText, sender = senderDisplayName });
-                ToastNotificationManager.CreateToastNotifier().Show(notif);
             });
         }
     }

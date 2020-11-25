@@ -37,7 +37,7 @@ namespace UWPMessengerClient
             userInfo.displayName = userDisplayName;
         }
 
-        public SwitchboardConnection(string address, int port, string email, string trID, string userDisplayName, string sessionID)
+        public SwitchboardConnection(string address, int port, string email, string trID, string userDisplayName, string principalDisplayName, string sessionID)
         {
             SBAddress = address;
             SBPort = port;
@@ -45,6 +45,7 @@ namespace UWPMessengerClient
             TrID = trID;
             SessionID = sessionID;
             userInfo.displayName = userDisplayName;
+            PrincipalInfo.displayName = principalDisplayName;
         }
 
         public void SetAddressPortAndTrID(string address, int port, string trID)
@@ -74,7 +75,6 @@ namespace UWPMessengerClient
                 await Task.Run(() =>
                 {
                     SBSocket.SendCommand($"CAL 2 {principal_email}\r\n");
-                    principalsConnected++;
                 });
             }
             else
@@ -94,7 +94,6 @@ namespace UWPMessengerClient
                     {
                         PrincipalInfo.displayName = principal_display_name;
                     });
-                    principalsConnected++;
                 });
             }
             else
@@ -128,7 +127,6 @@ namespace UWPMessengerClient
                 SBSocket.ConnectSocket();
                 SBSocket.BeginReceiving(outputBuffer, new AsyncCallback(ReceivingCallback), this);
                 SBSocket.SendCommand($"ANS 1 {UserEmail} {TrID} {SessionID}\r\n");
-                connected = true;
             });
         }
 
