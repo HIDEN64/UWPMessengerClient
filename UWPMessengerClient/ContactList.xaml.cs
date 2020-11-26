@@ -64,5 +64,20 @@ namespace UWPMessengerClient
             ChangeUserDisplayNameTextBox.Text = "";
             ChangeFlyout.Hide();
         }
+
+        private void TextBlock_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
+        }
+
+        private async void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
+            {
+                notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
+                await notificationServerConnection.InitiateSB();
+            }
+            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection.SBConnection);
+        }
     }
 }
