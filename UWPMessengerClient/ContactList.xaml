@@ -26,11 +26,24 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="15"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="15"/>
         </Grid.ColumnDefinitions>
         <TextBlock Text="{x:Bind notificationServerConnection.userInfo.displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="36" 
                    FontWeight="Bold" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="1"/>
+        <Button x:Name="ChangeUserDisplayNameButton" Content="Change"
+                Grid.Column="2" Grid.Row="1" Margin="10">
+            <Button.Flyout>
+                <Flyout x:Name="ChangeFlyout">
+                    <StackPanel>
+                        <TextBox x:Name="ChangeUserDisplayNameTextBox" Margin="5" Header="Enter your new display name:" TextWrapping="Wrap"/>
+                        <Button x:Name="ChangeUserDisplayNameConfirmationButton" Content="OK" HorizontalAlignment="Center" Click="ChangeUserDisplayNameConfirmationButton_Click"/>
+                    </StackPanel>
+                </Flyout>
+            </Button.Flyout>
+        </Button>
         <ComboBox x:Name="Presence" FontSize="16" Header="Set your presence status" PlaceholderText="Available" 
                   Grid.Column="1" Grid.Row="3" SelectionChanged="Presence_SelectionChanged">
             <x:String>Available</x:String>
@@ -38,7 +51,7 @@
             <x:String>Away</x:String>
         </ComboBox>
         <ListView x:Name="contactListView" ItemsSource="{x:Bind notificationServerConnection.contacts_in_forward_list, Mode=OneWay}" HorizontalAlignment="Stretch"
-                  Grid.Row="5" Grid.Column="1">
+                  Grid.ColumnSpan="3" Grid.Row="5" Grid.Column="1">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:Contact">
                     <StackPanel Margin="3">

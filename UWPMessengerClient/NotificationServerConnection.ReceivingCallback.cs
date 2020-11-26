@@ -30,9 +30,12 @@ namespace UWPMessengerClient
             {
                 NServerConnection.SetInitialContactPresence();
             }
-            if (NServerConnection.output_string.Contains("PRP MFN"))
+            if (NServerConnection.output_string.Contains("PRP"))
             {
-                NServerConnection.GetUserDisplayName();
+                if (NServerConnection.output_string.Contains("MFN"))
+                {
+                    NServerConnection.GetUserDisplayName();
+                }
             }
             if (NServerConnection.output_string.StartsWith("NLN "))
             {
@@ -179,16 +182,24 @@ namespace UWPMessengerClient
 
         public void GetUserDisplayName()
         {
-            string[] PRPParams = output_string.Split("PRP MFN ", 2);
+            string[] PRPResponse = output_string.Split("PRP ", 2);
             //ensuring the last element of the PRPReponses array is just the PRP response
-            int rnIndex = PRPParams.Last().IndexOf("\r\n");
-            if (rnIndex != PRPParams.Last().Length && rnIndex > 0)
+            int rnIndex = PRPResponse.Last().IndexOf("\r\n");
+            if (rnIndex != PRPResponse.Last().Length && rnIndex > 0)
             {
-                PRPParams[PRPParams.Length - 1] = PRPParams.Last().Remove(rnIndex);
+                PRPResponse[PRPResponse.Length - 1] = PRPResponse.Last().Remove(rnIndex);
             }
+            string[] PRPParams = PRPResponse[1].Split(" ");
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                userInfo.displayName = PRPParams[1];
+                if (int.TryParse(PRPParams[0], out int commandNumber))
+                {
+                    userInfo.displayName = PRPParams[2];
+                }
+                else
+                {
+                    userInfo.displayName = PRPParams[1];
+                }
             });
         }
 

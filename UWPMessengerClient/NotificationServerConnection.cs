@@ -93,6 +93,12 @@ namespace UWPMessengerClient
             await Task.Run(changePresence);
         }
 
+        public async Task ChangeUserDisplayName(string newDisplayName)
+        {
+            string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
+            await Task.Run(() => NSSocket.SendCommand($"PRP 8 MFN {urlEncodedNewDisplayName}\r\n"));
+        }
+
         public async Task InitiateSB()
         {
             await Task.Run(() => NSSocket.SendCommand("XFR 8 SB\r\n"));

@@ -57,5 +57,12 @@ namespace UWPMessengerClient
             }
             this.Frame.Navigate(typeof(ChatPage), notificationServerConnection.SBConnection);
         }
+
+        private async void ChangeUserDisplayNameConfirmationButton_Click(object sender, RoutedEventArgs e)
+        {
+            await notificationServerConnection.ChangeUserDisplayName(ChangeUserDisplayNameTextBox.Text);
+            ChangeUserDisplayNameTextBox.Text = "";
+            ChangeFlyout.Hide();
+        }
     }
 }
