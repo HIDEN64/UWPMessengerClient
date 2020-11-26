@@ -42,6 +42,10 @@ namespace UWPMessengerClient
             {
                 NServerConnection.SetContactPresence();
             }
+            if (NServerConnection.output_string.Contains("UBX"))
+            {
+                NServerConnection.GetContactPersonalMessage();
+            }
             if (NServerConnection.output_string.StartsWith("FLN "))
             {
                 NServerConnection.SetContactOffline();
@@ -54,10 +58,6 @@ namespace UWPMessengerClient
             {
                 NServerConnection.JoinSwitchboard();
             }
-            if (NServerConnection.output_string.StartsWith("UBX"))
-            {
-                NServerConnection.GetContactPersonalMessage();
-            }
             if (bytes_read > 0)
             {
                 NServerConnection.NSSocket.BeginReceiving(NServerConnection.received_bytes, new AsyncCallback(ReceivingCallback), NServerConnection);
@@ -69,7 +69,7 @@ namespace UWPMessengerClient
             string[] LSTResponses = output_string.Split("LST ");
             //ensuring the last element of the LSTResponses array is just the LST response
             int rnIndex = LSTResponses.Last().IndexOf("\r\n");
-            if (rnIndex != LSTResponses.Last().Length && rnIndex > 0)
+            if (rnIndex != LSTResponses.Last().Length && rnIndex >= 0)
             {
                 LSTResponses[LSTResponses.Length - 1] = LSTResponses[LSTResponses.Length - 1].Remove(rnIndex);
             }
@@ -108,7 +108,7 @@ namespace UWPMessengerClient
             string[] ILNResponses = output_string.Split("ILN ");
             //ensuring the last element of the ILNReponses array is just the ILN response
             int rnIndex = ILNResponses.Last().IndexOf("\r\n");
-            if (rnIndex != ILNResponses.Last().Length && rnIndex > 0)
+            if (rnIndex != ILNResponses.Last().Length && rnIndex >= 0)
             {
                 ILNResponses[ILNResponses.Length - 1] = ILNResponses.Last().Remove(rnIndex);
             }
@@ -137,7 +137,7 @@ namespace UWPMessengerClient
             //ensuring the last element of the NLNReponses array is just the NLN response
             int rnIndex = NLNResponses.Last().IndexOf("\r\n");
             rnIndex += 2;//count for the \r and \n characters
-            if (rnIndex != NLNResponses.Last().Length && rnIndex > 0)
+            if (rnIndex != NLNResponses.Last().Length && rnIndex >= 0)
             {
                 NLNResponses[NLNResponses.Length - 1] = NLNResponses.Last().Remove(rnIndex);
             }
@@ -167,7 +167,7 @@ namespace UWPMessengerClient
             string[] FLNResponses = output_string.Split("FLN ", 2);
             //ensuring the last element of the FLNReponses array is just the FLN response
             int rnIndex = FLNResponses.Last().IndexOf("\r\n");
-            if (rnIndex != FLNResponses.Last().Length && rnIndex > 0)
+            if (rnIndex != FLNResponses.Last().Length && rnIndex >= 0)
             {
                 FLNResponses[FLNResponses.Length - 1] = FLNResponses.Last().Remove(rnIndex);
             }
@@ -193,7 +193,7 @@ namespace UWPMessengerClient
             string[] PRPResponse = output_string.Split("PRP ", 2);
             //ensuring the last element of the PRPReponses array is just the PRP response
             int rnIndex = PRPResponse.Last().IndexOf("\r\n");
-            if (rnIndex != PRPResponse.Last().Length && rnIndex > 0)
+            if (rnIndex != PRPResponse.Last().Length && rnIndex >= 0)
             {
                 PRPResponse[PRPResponse.Length - 1] = PRPResponse.Last().Remove(rnIndex);
             }
@@ -224,15 +224,25 @@ namespace UWPMessengerClient
 
         public void GetContactPersonalMessage()
         {
+            string[] UBXResponse = output_string.Split("UBX ", 2);
+            //ensuring the last element of the UBXReponse array is just the UBX response
+            int DataEndIndex = UBXResponse.Last().LastIndexOf(">");
+            int IndexToStartRemoving = DataEndIndex + 1;//remove just after the last xml tag
+            if (IndexToStartRemoving != UBXResponse.Last().Length && IndexToStartRemoving >= 0)
+            {
+                UBXResponse[UBXResponse.Length - 1] = UBXResponse.Last().Remove(IndexToStartRemoving);
+            }
             string personal_message;
-            string[] UBXParams = output_string.Split(" ");
-            string principal_email = UBXParams[1];
-            string length_str = UBXParams[2].Replace("\r\n", "");
+            string[] UBXParams = UBXResponse[1].Split(" ");
+            string principal_email = UBXParams[0];
+            string length_str = UBXParams[1].Replace("\r\n", "");
             length_str = length_str.Remove(length_str.IndexOf("<"));
             int ubx_length;
             int.TryParse(length_str, out ubx_length);
+            int indexData1 = UBXResponse.Last().IndexOf("<Data>");
             byte[] personal_message_xml_buffer = new byte[ubx_length];
-            Buffer.BlockCopy(received_bytes, Encoding.UTF8.GetBytes(output_string).Length - ubx_length, personal_message_xml_buffer, 0, ubx_length);
+            byte[] ubx_response_buffer = Encoding.UTF8.GetBytes(UBXResponse.Last());
+            Buffer.BlockCopy(ubx_response_buffer, indexData1, personal_message_xml_buffer, 0, ubx_length);
             string personal_message_xml = Encoding.UTF8.GetString(personal_message_xml_buffer);
             XElement personalMessageElement;
             try
@@ -261,7 +271,7 @@ namespace UWPMessengerClient
             string[] XFRResponse = output_string.Split("XFR ", 2);
             //ensuring the last element of the XFRReponse array is just the XFR response
             int rnIndex = XFRResponse.Last().IndexOf("\r\n");
-            if (rnIndex != XFRResponse.Last().Length && rnIndex > 0)
+            if (rnIndex != XFRResponse.Last().Length && rnIndex >= 0)
             {
                 XFRResponse[XFRResponse.Length - 1] = XFRResponse.Last().Remove(rnIndex);
             }
@@ -281,7 +291,7 @@ namespace UWPMessengerClient
             string[] RNGResponse = output_string.Split("RNG ", 2);
             //ensuring the last element of the RNGReponse array is just the RNG response
             int rnIndex = RNGResponse.Last().IndexOf("\r\n");
-            if (rnIndex != RNGResponse.Last().Length && rnIndex > 0)
+            if (rnIndex != RNGResponse.Last().Length && rnIndex >= 0)
             {
                 RNGResponse[RNGResponse.Length - 1] = RNGResponse.Last().Remove(rnIndex);
             }
