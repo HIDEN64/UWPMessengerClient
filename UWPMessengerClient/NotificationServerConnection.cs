@@ -105,5 +105,11 @@ namespace UWPMessengerClient
             SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
             SBConnection = switchboardConnection;
         }
+
+        ~NotificationServerConnection()
+        {
+            NSSocket.SendCommand("OUT\r\n");
+            NSSocket.CloseSocket();
+        }
     }
 }

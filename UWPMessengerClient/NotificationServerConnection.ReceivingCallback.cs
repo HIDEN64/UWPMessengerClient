@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Core;
 using System.Collections.ObjectModel;
+using System.Xml.Linq;
 
 namespace UWPMessengerClient
 {
@@ -53,6 +54,10 @@ namespace UWPMessengerClient
             {
                 NServerConnection.JoinSwitchboard();
             }
+            if (NServerConnection.output_string.StartsWith("UBX"))
+            {
+                NServerConnection.GetContactPersonalMessage();
+            }
             if (bytes_read > 0)
             {
                 NServerConnection.NSSocket.BeginReceiving(NServerConnection.received_bytes, new AsyncCallback(ReceivingCallback), NServerConnection);
@@ -79,7 +84,10 @@ namespace UWPMessengerClient
                     displayName = LSTResponses[i].Split("F=")[1];
                     displayName = displayName.Remove(displayName.IndexOf(" "));
                     guid = LSTResponses[i].Split("C=")[1];
-                    guid = guid.Remove(guid.IndexOf(" "));
+                    if (guid.Length > 1)
+                    {
+                        guid = guid.Remove(guid.IndexOf(" "));
+                    }
                     string[] LSTAndParams = LSTResponses[i].Split(" ");
                     if (int.TryParse(LSTAndParams[LSTAndParams.Length - 2], out listbit))
                     {
@@ -212,6 +220,40 @@ namespace UWPMessengerClient
                     contacts_in_forward_list.Add(contact);
                 }
             }
+        }
+
+        public void GetContactPersonalMessage()
+        {
+            string personal_message;
+            string[] UBXParams = output_string.Split(" ");
+            string principal_email = UBXParams[1];
+            string length_str = UBXParams[2].Replace("\r\n", "");
+            length_str = length_str.Remove(length_str.IndexOf("<"));
+            int ubx_length;
+            int.TryParse(length_str, out ubx_length);
+            byte[] personal_message_xml_buffer = new byte[ubx_length];
+            Buffer.BlockCopy(received_bytes, Encoding.UTF8.GetBytes(output_string).Length - ubx_length, personal_message_xml_buffer, 0, ubx_length);
+            string personal_message_xml = Encoding.UTF8.GetString(personal_message_xml_buffer);
+            XElement personalMessageElement;
+            try
+            {
+                personalMessageElement = XElement.Parse(personal_message_xml);
+                personal_message = personalMessageElement.Value;
+            }
+            catch (System.Xml.XmlException)
+            {
+                personal_message = "XML error";
+            }
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                var contactWithPersonalMessage = from contact in contact_list
+                                                 where contact.email == principal_email
+                                                 select contact;
+                foreach (Contact contact in contactWithPersonalMessage)
+                {
+                    contact.personalMessage = personal_message;
+                }
+            });
         }
 
         public async Task ConnectToSwitchboard()

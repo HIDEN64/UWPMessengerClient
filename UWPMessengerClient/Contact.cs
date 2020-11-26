@@ -14,6 +14,7 @@ namespace UWPMessengerClient
         private string _displayName;
         private string _GUID;
         private string _presenceStatus;
+        private string _personalMessage;
         public bool onForward, onAllow, onBlock, onReverse, pending;
         private List<string> _groupIDs;
         public event PropertyChangedEventHandler PropertyChanged;
@@ -73,6 +74,16 @@ namespace UWPMessengerClient
             set
             {
                 _presenceStatus = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string personalMessage
+        {
+            get => _personalMessage;
+            set
+            {
+                _personalMessage = value;
                 NotifyPropertyChanged();
             }
         }

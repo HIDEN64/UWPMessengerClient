@@ -56,7 +56,8 @@
                 <DataTemplate x:DataType="local:Contact">
                     <StackPanel Margin="3">
                         <TextBlock Text="{x:Bind displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="18" FontWeight="Bold"/>
-                        <TextBlock Text="{x:Bind presenceStatus, Converter={StaticResource StatusConverter}, Mode=OneWay}" FontSize="14"/>
+                        <TextBlock Text="{x:Bind personalMessage, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="14"/>
+                        <TextBlock Text="{x:Bind presenceStatus, Converter={StaticResource StatusConverter}, Mode=OneWay}" FontSize="12"/>
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
