@@ -48,5 +48,17 @@ namespace UWPMessengerClient
                 this.Frame.GoBack();
             }
         }
+
+        private async void messageBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                if (switchboardConnection != null && switchboardConnection.connected && messageBox.Text != "")
+                {
+                    await switchboardConnection.SendMessage(messageBox.Text);
+                    messageBox.Text = "";
+                }
+            }
+        }
     }
 }

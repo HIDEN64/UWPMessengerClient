@@ -12,6 +12,7 @@ namespace UWPMessengerClient
     {
         private string _displayName;
         private string _personalMessage;
+        private string _typingUser;
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -35,6 +36,16 @@ namespace UWPMessengerClient
             set
             {
                 _personalMessage = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string typingUser
+        {
+            get => _typingUser;
+            set
+            {
+                _typingUser = value;
                 NotifyPropertyChanged();
             }
         }

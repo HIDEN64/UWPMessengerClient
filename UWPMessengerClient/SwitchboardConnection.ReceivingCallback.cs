@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Microsoft.Toolkit.Uwp.Notifications;
+using System.Web;
 
 namespace UWPMessengerClient
 {
@@ -18,9 +19,16 @@ namespace UWPMessengerClient
             SwitchboardConnection switchboardConnection = (SwitchboardConnection)asyncResult.AsyncState;
             int bytes_received = switchboardConnection.SBSocket.StopReceiving(asyncResult);
             switchboardConnection.outputString = Encoding.UTF8.GetString(switchboardConnection.outputBuffer, 0, bytes_received);
-            if (switchboardConnection.outputString.StartsWith("MSG") && !switchboardConnection.outputString.Contains("TypingUser"))
+            if (switchboardConnection.outputString.StartsWith("MSG"))
             {
-                AddMessageToList();
+                if (switchboardConnection.outputString.Contains("TypingUser"))
+                {
+                    var task = ProduceTypingUser();
+                }
+                else
+                {
+                    AddMessageToList();
+                }
             }
             if (switchboardConnection.outputString.Contains("OK"))
             {
@@ -43,7 +51,7 @@ namespace UWPMessengerClient
             string senderDisplayName = MSGParams[2];
             var content = new ToastContentBuilder()
                 .AddToastActivationInfo("newMessage", ToastActivationType.Foreground)
-                .AddText(senderDisplayName)
+                .AddText(HttpUtility.UrlDecode(senderDisplayName))
                 .AddText(messageText)
                 .GetToastContent();
             try
@@ -54,7 +62,21 @@ namespace UWPMessengerClient
             catch (ArgumentException) { }
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
+                PrincipalInfo.typingUser = null;
                 MessageList.Add(new Message() { message_text = messageText, sender = senderDisplayName });
+            });
+        }
+
+        public async Task ProduceTypingUser()
+        {
+            Windows.Foundation.IAsyncAction set_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PrincipalInfo.typingUser = $"{HttpUtility.UrlDecode(PrincipalInfo.displayName)} is typing...";
+            });
+            await Task.Delay(6000);
+            Windows.Foundation.IAsyncAction null_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PrincipalInfo.typingUser = null;
             });
         }
     }
