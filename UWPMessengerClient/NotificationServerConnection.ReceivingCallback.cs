@@ -110,7 +110,7 @@ namespace UWPMessengerClient
         public void ReceiveNewContact()
         {
             string[] ADCResponses = output_string.Split("ADC ");
-            //ensuring the last element of the LSTResponses array is just the LST response
+            //ensuring the last element of the ADCResponses array is just the ADC response
             int rnIndex = ADCResponses.Last().IndexOf("\r\n");
             if (rnIndex != ADCResponses.Last().Length && rnIndex >= 0)
             {
