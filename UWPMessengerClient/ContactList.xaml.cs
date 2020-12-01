@@ -23,12 +23,26 @@ namespace UWPMessengerClient
         public ContactList()
         {
             this.InitializeComponent();
-            Presence.SelectedIndex = 0;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             notificationServerConnection = (NotificationServerConnection)e.Parameter;
+            string status = notificationServerConnection.CurrentUserPresenceStatus;
+            string fullStatus = null;
+            switch (status)
+            {
+                case "NLN":
+                    fullStatus = "Available";
+                    break;
+                case "BSY":
+                    fullStatus = "Busy";
+                    break;
+                case "AWY":
+                    fullStatus = "Away";
+                    break;
+            }
+            Presence.SelectedItem = fullStatus;
             base.OnNavigatedTo(e);
         }
 
