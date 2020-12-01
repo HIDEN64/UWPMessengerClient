@@ -130,10 +130,15 @@ namespace UWPMessengerClient
             });
         }
 
-        ~SwitchboardConnection()
+        public void Exit()
         {
             SBSocket.SendCommand("OUT\r\n");
             SBSocket.CloseSocket();
+        }
+
+        ~SwitchboardConnection()
+        {
+            Exit();
         }
     }
 }

@@ -23,6 +23,7 @@ namespace UWPMessengerClient
         public ContactList()
         {
             this.InitializeComponent();
+            Presence.SelectedIndex = 0;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -33,18 +34,21 @@ namespace UWPMessengerClient
 
         private async void Presence_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string selectedStatus = e.AddedItems[0].ToString();
-            switch (selectedStatus)
+            if (notificationServerConnection != null)
             {
-                case "Available":
-                    await notificationServerConnection.ChangePresence(PresenceStatuses.Available);
-                    break;
-                case "Busy":
-                    await notificationServerConnection.ChangePresence(PresenceStatuses.Busy);
-                    break;
-                case "Away":
-                    await notificationServerConnection.ChangePresence(PresenceStatuses.Away);
-                    break;
+                string selectedStatus = e.AddedItems[0].ToString();
+                switch (selectedStatus)
+                {
+                    case "Available":
+                        await notificationServerConnection.ChangePresence(PresenceStatuses.Available);
+                        break;
+                    case "Busy":
+                        await notificationServerConnection.ChangePresence(PresenceStatuses.Busy);
+                        break;
+                    case "Away":
+                        await notificationServerConnection.ChangePresence(PresenceStatuses.Away);
+                        break;
+                }
             }
         }
 
@@ -78,6 +82,34 @@ namespace UWPMessengerClient
                 await notificationServerConnection.InitiateSB();
             }
             this.Frame.Navigate(typeof(ChatPage), notificationServerConnection.SBConnection);
+        }
+
+        private async void addContactButton_Click(object sender, RoutedEventArgs e)
+        {
+            await notificationServerConnection.AddContact(contactEmailBox.Text, contactDisplayNameBox.Text);
+            contactDisplayNameBox.Text = "";
+            contactEmailBox.Text = "";
+            addContactAppBarButton.Flyout.Hide();
+        }
+
+        private void exitButton_Click(object sender, RoutedEventArgs e)
+        {
+            notificationServerConnection.Exit();
+            notificationServerConnection = null;
+            this.Frame.Navigate(typeof(LoginPage));
+        }
+
+        private void addContactAppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            addContactAppBarButton.Flyout.ShowAt((FrameworkElement)sender);
+        }
+
+        private async void removeContactAppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (contactListView.SelectedIndex >= 0)
+            {
+                await notificationServerConnection.RemoveContact(notificationServerConnection.contacts_in_forward_list[contactListView.SelectedIndex]);
+            }
         }
     }
 }

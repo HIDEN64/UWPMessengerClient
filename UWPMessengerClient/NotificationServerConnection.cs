@@ -99,6 +99,22 @@ namespace UWPMessengerClient
             await Task.Run(() => NSSocket.SendCommand($"PRP 8 MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
+        public async Task AddContact(string newContactEmail, string newContactDisplayName = "")
+        {
+            if (newContactDisplayName == "")
+            {
+                newContactDisplayName = newContactEmail;
+            }
+            await Task.Run(() => NSSocket.SendCommand($"ADC 9 FL N={newContactEmail} F={newContactDisplayName}\r\n"));
+        }
+
+        public async Task RemoveContact(Contact contactToRemove)
+        {
+            await Task.Run(() => NSSocket.SendCommand($"REM 9 FL {contactToRemove.GUID}\r\n"));
+            contact_list.Remove(contactToRemove);
+            contacts_in_forward_list.Remove(contactToRemove);
+        }
+
         public async Task InitiateSB()
         {
             await Task.Run(() => NSSocket.SendCommand("XFR 8 SB\r\n"));
@@ -106,10 +122,15 @@ namespace UWPMessengerClient
             SBConnection = switchboardConnection;
         }
 
-        ~NotificationServerConnection()
+        public void Exit()
         {
             NSSocket.SendCommand("OUT\r\n");
             NSSocket.CloseSocket();
+        }
+
+        ~NotificationServerConnection()
+        {
+            Exit();
         }
     }
 }

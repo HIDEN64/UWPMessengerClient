@@ -19,9 +19,17 @@ namespace UWPMessengerClient
 {
     public sealed partial class LoginPage : Page
     {
+        NotificationServerConnection notificationServerConnection;
+
         public LoginPage()
         {
             this.InitializeComponent();
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            notificationServerConnection = null;
+            base.OnNavigatedTo(e);
         }
 
         private async void Login_Click(object sender, RoutedEventArgs e)
@@ -29,7 +37,7 @@ namespace UWPMessengerClient
             enable_progress_ring();
             string email = Email_box.Text;
             string password = Password_box.Password;
-            NotificationServerConnection notificationServerConnection = new NotificationServerConnection(email, password);
+            notificationServerConnection = new NotificationServerConnection(email, password);
             try
             {
                 await notificationServerConnection.LoginToMessengerAsync();
@@ -68,6 +76,32 @@ namespace UWPMessengerClient
                 CloseButtonText = "Close"
             };
             ContentDialogResult loginErrorResult = await loginErrorDialog.ShowAsync();
+        }
+
+        private async void Login_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                enable_progress_ring();
+                string email = Email_box.Text;
+                string password = Password_box.Password;
+                notificationServerConnection = new NotificationServerConnection(email, password);
+                try
+                {
+                    await notificationServerConnection.LoginToMessengerAsync();
+                }
+                catch (AggregateException ex)
+                {
+                    for (int i = 0; i < ex.InnerExceptions.Count; i++)
+                    {
+                        await ShowLoginErrorDialog(ex.InnerExceptions[i].Message);
+                    }
+                    disable_progress_ring();
+                    return;
+                }
+                this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
+                disable_progress_ring();
+            }
         }
     }
 }

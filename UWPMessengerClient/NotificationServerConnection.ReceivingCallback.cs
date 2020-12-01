@@ -31,9 +31,9 @@ namespace UWPMessengerClient
             {
                 NServerConnection.SetInitialContactPresence();
             }
-            if (NServerConnection.output_string.Contains("PRP"))
+            if (NServerConnection.output_string.Contains("PRP "))
             {
-                if (NServerConnection.output_string.Contains("MFN"))
+                if (NServerConnection.output_string.Contains("MFN" ))
                 {
                     NServerConnection.GetUserDisplayName();
                 }
@@ -42,7 +42,7 @@ namespace UWPMessengerClient
             {
                 NServerConnection.SetContactPresence();
             }
-            if (NServerConnection.output_string.Contains("UBX"))
+            if (NServerConnection.output_string.Contains("UBX "))
             {
                 NServerConnection.GetContactPersonalMessage();
             }
@@ -57,6 +57,10 @@ namespace UWPMessengerClient
             if (NServerConnection.output_string.StartsWith("RNG "))
             {
                 NServerConnection.JoinSwitchboard();
+            }
+            if (NServerConnection.output_string.StartsWith("ADC "))
+            {
+                NServerConnection.ReceiveNewContact();
             }
             if (bytes_read > 0)
             {
@@ -84,7 +88,7 @@ namespace UWPMessengerClient
                     displayName = LSTResponses[i].Split("F=")[1];
                     displayName = displayName.Remove(displayName.IndexOf(" "));
                     guid = LSTResponses[i].Split("C=")[1];
-                    if (guid.Length > 1)
+                    if (guid.Length > 1 && guid.IndexOf(" ") > 0)
                     {
                         guid = guid.Remove(guid.IndexOf(" "));
                     }
@@ -100,6 +104,35 @@ namespace UWPMessengerClient
                     contact_list.Add(new Contact(listbit) { displayName = displayName, email = email, GUID = guid });
                 }
                 FillForwardListCollection();
+            });
+        }
+
+        public void ReceiveNewContact()
+        {
+            string[] ADCResponses = output_string.Split("ADC ");
+            //ensuring the last element of the LSTResponses array is just the LST response
+            int rnIndex = ADCResponses.Last().IndexOf("\r\n");
+            if (rnIndex != ADCResponses.Last().Length && rnIndex >= 0)
+            {
+                ADCResponses[ADCResponses.Length - 1] = ADCResponses[ADCResponses.Length - 1].Remove(rnIndex);
+            }
+            string email, displayName, guid;
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+            {
+                for (int i = 1; i < ADCResponses.Length; i++)
+                {
+                    email = ADCResponses[i].Split("N=")[1];
+                    email = email.Remove(email.IndexOf(" "));
+                    displayName = ADCResponses[i].Split("F=")[1];
+                    displayName = displayName.Remove(displayName.IndexOf(" "));
+                    guid = ADCResponses[i].Split("C=")[1];
+                    if (guid.Length > 1 && guid.IndexOf(" ") > 0)
+                    {
+                        guid = guid.Remove(guid.IndexOf(" "));
+                    }
+                    contact_list.Add(new Contact(1) { displayName = displayName, email = email, GUID = guid });//1 for forward list
+                    contacts_in_forward_list.Add(contact_list.Last());
+                }
             });
         }
 
