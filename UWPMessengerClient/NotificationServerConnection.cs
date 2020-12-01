@@ -27,6 +27,7 @@ namespace UWPMessengerClient
         private string password;
         private string token;
         public int ContactIndexToChat { get; set; }
+        public string CurrentUserPresenceStatus { get; set; }
 
         public NotificationServerConnection(string escargot_email, string escargot_password)
         {
@@ -54,6 +55,7 @@ namespace UWPMessengerClient
                 NSSocket.SendCommand("CHG 6 NLN 0\r\n");//set presence as available
             });
             await Task.Run(loginAction);
+            CurrentUserPresenceStatus = "NLN";
         }
 
         public async Task<string> GetNexusTokenAsync(HttpClient httpClient)
@@ -90,6 +92,7 @@ namespace UWPMessengerClient
             {
                 NSSocket.SendCommand($"CHG 7 {status} 0\r\n");
             });
+            CurrentUserPresenceStatus = status;
             await Task.Run(changePresence);
         }
 
