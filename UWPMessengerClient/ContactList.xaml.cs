@@ -12,16 +12,18 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using System.Threading.Tasks;
 
 namespace UWPMessengerClient
 {
     public sealed partial class ContactList : Page
     {
-        NotificationServerConnection notificationServerConnection;
+        private NotificationServerConnection notificationServerConnection;
 
         public ContactList()
         {
             this.InitializeComponent();
+            Presence.SelectedIndex = 0;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -32,18 +34,81 @@ namespace UWPMessengerClient
 
         private async void Presence_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string selectedStatus = e.AddedItems[0].ToString();
-            switch (selectedStatus)
+            if (notificationServerConnection != null)
             {
-                case "Available":
-                    await notificationServerConnection.ChangePresence(PresenceStatuses.Available);
-                    break;
-                case "Busy":
-                    await notificationServerConnection.ChangePresence(PresenceStatuses.Busy);
-                    break;
-                case "Away":
-                    await notificationServerConnection.ChangePresence(PresenceStatuses.Away);
-                    break;
+                string selectedStatus = e.AddedItems[0].ToString();
+                switch (selectedStatus)
+                {
+                    case "Available":
+                        await notificationServerConnection.ChangePresence(PresenceStatuses.Available);
+                        break;
+                    case "Busy":
+                        await notificationServerConnection.ChangePresence(PresenceStatuses.Busy);
+                        break;
+                    case "Away":
+                        await notificationServerConnection.ChangePresence(PresenceStatuses.Away);
+                        break;
+                }
+            }
+        }
+
+        private async void start_chat_button_Click(object sender, RoutedEventArgs e)
+        {
+            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
+            {
+                notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
+                await notificationServerConnection.InitiateSB();
+            }
+            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection.SBConnection);
+        }
+
+        private async void ChangeUserDisplayNameConfirmationButton_Click(object sender, RoutedEventArgs e)
+        {
+            await notificationServerConnection.ChangeUserDisplayName(ChangeUserDisplayNameTextBox.Text);
+            ChangeUserDisplayNameTextBox.Text = "";
+            ChangeFlyout.Hide();
+        }
+
+        private void TextBlock_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
+        }
+
+        private async void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
+            {
+                notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
+                await notificationServerConnection.InitiateSB();
+            }
+            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection.SBConnection);
+        }
+
+        private async void addContactButton_Click(object sender, RoutedEventArgs e)
+        {
+            await notificationServerConnection.AddContact(contactEmailBox.Text, contactDisplayNameBox.Text);
+            contactDisplayNameBox.Text = "";
+            contactEmailBox.Text = "";
+            addContactAppBarButton.Flyout.Hide();
+        }
+
+        private void exitButton_Click(object sender, RoutedEventArgs e)
+        {
+            notificationServerConnection.Exit();
+            notificationServerConnection = null;
+            this.Frame.Navigate(typeof(LoginPage));
+        }
+
+        private void addContactAppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            addContactAppBarButton.Flyout.ShowAt((FrameworkElement)sender);
+        }
+
+        private async void removeContactAppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (contactListView.SelectedIndex >= 0)
+            {
+                await notificationServerConnection.RemoveContact(notificationServerConnection.contacts_in_forward_list[contactListView.SelectedIndex]);
             }
         }
     }

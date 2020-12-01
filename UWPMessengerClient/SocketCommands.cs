@@ -12,6 +12,7 @@ namespace UWPMessengerClient
     {
         private Socket socket;
         private string server_address = "";
+        public bool socket_connected { get; set; }
         private static int server_port = 0;
 
         public SocketCommands(string address, int port)
@@ -20,7 +21,7 @@ namespace UWPMessengerClient
             server_port = port;
         }
 
-        public void NSConnectSocket()
+        public void ConnectSocket()
         {
             //creates a tcp socket then connects it to the server
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -29,11 +30,17 @@ namespace UWPMessengerClient
             IPAddress iPAddress = iPHostEntry.AddressList[0];
             IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, server_port);
             socket.Connect(iPEndPoint);
+            socket_connected = true;
         }
 
         public void SendCommand(string msg)
         {
-            byte[] message = Encoding.ASCII.GetBytes(msg);
+            byte[] message = Encoding.UTF8.GetBytes(msg);
+            socket.Send(message);
+        }
+
+        public void SendCommand(byte[] message)
+        {
             socket.Send(message);
         }
 
@@ -44,7 +51,14 @@ namespace UWPMessengerClient
 
         public int StopReceiving(IAsyncResult ar)
         {
-            return socket.EndReceive(ar);
+            if (socket_connected == true)
+            {
+                return socket.EndReceive(ar);
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         public string ReceiveMessage(int message_size = 4096)
@@ -65,7 +79,7 @@ namespace UWPMessengerClient
             }
             if (size != 0)
             {
-                string received_bytes_string = Encoding.ASCII.GetString(received_bytes);
+                string received_bytes_string = Encoding.UTF8.GetString(received_bytes);
                 return received_bytes_string;
             }
             else
@@ -78,6 +92,7 @@ namespace UWPMessengerClient
         {
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
+            socket_connected = false;
         }
 
         ~SocketCommands()

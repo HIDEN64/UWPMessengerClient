@@ -12,7 +12,7 @@ using System.Collections.ObjectModel;
 
 namespace UWPMessengerClient
 {
-    partial class NotificationServerConnection
+    public partial class NotificationServerConnection
     {
         private SocketCommands NSSocket;
         private HttpClient httpClient;
@@ -26,6 +26,7 @@ namespace UWPMessengerClient
         private string email;
         private string password;
         private string token;
+        public int ContactIndexToChat { get; set; }
 
         public NotificationServerConnection(string escargot_email, string escargot_password)
         {
@@ -33,18 +34,18 @@ namespace UWPMessengerClient
             password = escargot_password;
         }
 
-        public async Task login_to_messengerAsync()
+        public async Task LoginToMessengerAsync()
         {
             httpClient = new HttpClient();
             NSSocket = new SocketCommands(NSaddress, port);
             Action loginAction = new Action(() =>
             {
                 //sequence of commands to login to escargot
-                NSSocket.NSConnectSocket();
+                NSSocket.ConnectSocket();
                 //begin receiving from escargot
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");//send msnp version
-                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.3 msmsgs\r\n");//send client information
+                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.4 msmsgs\r\n");//send client information
                 NSSocket.SendCommand($"USR 3 TWN I {email}\r\n");//sends email to get a string for use in authentication
                 Task<string> token_task = GetNexusTokenAsync(httpClient);
                 token = token_task.Result;
@@ -90,6 +91,46 @@ namespace UWPMessengerClient
                 NSSocket.SendCommand($"CHG 7 {status} 0\r\n");
             });
             await Task.Run(changePresence);
+        }
+
+        public async Task ChangeUserDisplayName(string newDisplayName)
+        {
+            string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
+            await Task.Run(() => NSSocket.SendCommand($"PRP 8 MFN {urlEncodedNewDisplayName}\r\n"));
+        }
+
+        public async Task AddContact(string newContactEmail, string newContactDisplayName = "")
+        {
+            if (newContactDisplayName == "")
+            {
+                newContactDisplayName = newContactEmail;
+            }
+            await Task.Run(() => NSSocket.SendCommand($"ADC 9 FL N={newContactEmail} F={newContactDisplayName}\r\n"));
+        }
+
+        public async Task RemoveContact(Contact contactToRemove)
+        {
+            await Task.Run(() => NSSocket.SendCommand($"REM 9 FL {contactToRemove.GUID}\r\n"));
+            contact_list.Remove(contactToRemove);
+            contacts_in_forward_list.Remove(contactToRemove);
+        }
+
+        public async Task InitiateSB()
+        {
+            await Task.Run(() => NSSocket.SendCommand("XFR 8 SB\r\n"));
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
+            SBConnection = switchboardConnection;
+        }
+
+        public void Exit()
+        {
+            NSSocket.SendCommand("OUT\r\n");
+            NSSocket.CloseSocket();
+        }
+
+        ~NotificationServerConnection()
+        {
+            Exit();
         }
     }
 }
