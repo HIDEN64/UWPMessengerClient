@@ -40,7 +40,16 @@ namespace UWPMessengerClient
             notificationServerConnection = new NotificationServerConnection(email, password);
             try
             {
-                await notificationServerConnection.LoginToMessengerAsync();
+                string selected_version = version_box.SelectedItem.ToString();
+                switch (selected_version)
+                {
+                    case "MSNP15":
+                        await notificationServerConnection.StartLoginToMessengerMSNP15Async();
+                        break;
+                    case "MSNP12":
+                        await notificationServerConnection.LoginToMessengerAsync();
+                        break;
+                }
             }
             catch (AggregateException ex)
             {
@@ -88,7 +97,16 @@ namespace UWPMessengerClient
                 notificationServerConnection = new NotificationServerConnection(email, password);
                 try
                 {
-                    await notificationServerConnection.LoginToMessengerAsync();
+                    string selected_version = version_box.SelectedItem.ToString();
+                    switch (selected_version)
+                    {
+                        case "MSNP15":
+                            await notificationServerConnection.StartLoginToMessengerMSNP15Async();
+                            break;
+                        case "MSNP12":
+                            await notificationServerConnection.LoginToMessengerAsync();
+                            break;
+                    }
                 }
                 catch (AggregateException ex)
                 {

@@ -19,9 +19,11 @@ namespace UWPMessengerClient
         //notification server(escargot) address and nexus address
         private readonly string NSaddress = "m1.escargot.log1p.xyz";
         private readonly string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
+        private readonly string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
         //uncomment below and comment above to use localserver
         //private readonly string NSaddress = "127.0.0.1";
         //private readonly string nexus_address = "http://localhost/nexus-mock";
+        //private readonly string RST_address = "http://localhost/RST.srf";
         private readonly int port = 1863;
         private string email;
         private string password;

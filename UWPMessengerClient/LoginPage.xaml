@@ -15,6 +15,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -30,5 +31,9 @@
             <Button Margin="10"  Name="Login" Content="Login" HorizontalAlignment="Center" FontSize="20" Click="Login_Click"/>
         </StackPanel>
         <ProgressRing Grid.Row="4" Grid.Column="1" Name="loginProgress" Width="80" Height="80"></ProgressRing>
+        <ComboBox x:Name="version_box" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="5" SelectedIndex="1">
+            <x:String>MSNP15</x:String>
+            <x:String>MSNP12</x:String>
+        </ComboBox>
     </Grid>
 </Page>

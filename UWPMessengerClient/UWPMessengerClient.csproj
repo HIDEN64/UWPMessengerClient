@@ -144,6 +144,8 @@
     <Compile Include="Message.cs" />
     <Compile Include="MessageSenderConverter.cs" />
     <Compile Include="NotificationServerConnection.cs" />
+    <Compile Include="NotificationServerConnection.MSNP15.cs" />
+    <Compile Include="NotificationServerConnection.MSNP15.ReceivingCallback.cs" />
     <Compile Include="NotificationServerConnection.ReceivingCallback.cs" />
     <Compile Include="PresenceStatuses.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
