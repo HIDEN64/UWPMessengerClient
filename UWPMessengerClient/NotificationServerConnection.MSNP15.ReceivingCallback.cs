@@ -9,6 +9,7 @@ namespace UWPMessengerClient
     public partial class NotificationServerConnection
     {
         private string SOAPResult;
+        private string sso_ticket;
 
         public void MSNP15ReceivingCallback(IAsyncResult asyncResult)
         {
@@ -17,7 +18,7 @@ namespace UWPMessengerClient
             notificationServerConnection.output_string = Encoding.UTF8.GetString(notificationServerConnection.received_bytes, 0, bytes_read);
             if (notificationServerConnection.output_string.Contains("MBI_KEY_OLD"))
             {
-                GetMBIKeyOld();
+                GetMBIKeyOldNonce();
                 ContinueLoginToMessenger();
             }
             if (bytes_read > 0)
@@ -26,25 +27,25 @@ namespace UWPMessengerClient
             }
         }
 
-        public void GetMBIKeyOld()
+        protected void GetMBIKeyOldNonce()
         {
             string[] USRResponse = output_string.Split("USR ", 2);
             //ensuring the last element of the USRReponse array is just the USR response
             int rnIndex = USRResponse.Last().IndexOf("\r\n");
-            rnIndex += 2;//count for the \r and \n characters
             if (rnIndex != USRResponse.Last().Length && rnIndex >= 0)
             {
                 USRResponse[USRResponse.Length - 1] = USRResponse.Last().Remove(rnIndex);
             }
             string[] USRParams = USRResponse[1].Split(" ");
             string mbi_key_old = USRParams[4];
-            MBIKeyOld = mbi_key_old;
+            MBIKeyOld_nonce = mbi_key_old;
         }
 
-        public void ContinueLoginToMessenger()
+        protected void ContinueLoginToMessenger()
         {
             SOAPResult = PerformSoapSSO();
-            GetSSOReturnValue();
+            string response_struct = GetSSOReturnValue();
+            NSSocket.SendCommand($"USR 4 SSO S {sso_ticket} {response_struct}\r\n");
         }
     }
 }

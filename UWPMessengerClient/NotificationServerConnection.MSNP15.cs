@@ -12,22 +12,7 @@ namespace UWPMessengerClient
 {
     public partial class NotificationServerConnection
     {
-        private string MBIKeyOld;
-        private struct MSGUserKey
-        {
-            //header
-            uint uStructHeaderSize;
-            uint uCryptMode;
-            uint uCipherMode;
-            uint uHashType;
-            uint uIVLen;
-            uint uHashLen;
-            uint uCipherLen;
-            //data
-            byte[] aIVBytes;
-            byte[] aHashBytes;
-            byte[] aCipherBytes;
-        }
+        private string MBIKeyOld_nonce;
 
         public async Task StartLoginToMessengerMSNP15Async()
         {
@@ -53,7 +38,7 @@ namespace UWPMessengerClient
             return request;
         }
 
-        public string PerformSoapSSO()
+        protected string PerformSoapSSO()
         {
             HttpWebRequest SOAPRequest = CreateSOAPRequest("http://www.msn.com/webservices/storage/w10/", RST_address);
             XmlDocument SoapXMLBody = new XmlDocument();
@@ -102,7 +87,7 @@ namespace UWPMessengerClient
                                    <wsa:Address>messengerclear.live.com</wsa:Address>
                                </wsa:EndpointReference>
                            </wsp:AppliesTo>
-                           <wsse:PolicyReference URI=""{MBIKeyOld}""></wsse:PolicyReference>
+                           <wsse:PolicyReference URI=""{MBIKeyOld_nonce}""></wsse:PolicyReference>
                        </wst:RequestSecurityToken>
                    </ps:RequestMultipleSecurityTokens>
                </Body>
@@ -122,23 +107,26 @@ namespace UWPMessengerClient
             }
         }
 
-        public byte[] GetResultFromSSOHashs(string key, string ws_secure)
+        public byte[] JoinBytes(byte[] first, byte[] second)
         {
-            HMACSHA1 hMACSHA1 = new HMACSHA1(Encoding.UTF8.GetBytes(key));
-            byte[] ws_secure_bytes = Encoding.UTF8.GetBytes(ws_secure);
+            return first.Concat(second).ToArray();
+        }
+
+        protected byte[] GetResultFromSSOHashs(byte[] key, string ws_secure)
+        {
+            HMACSHA1 hMACSHA1 = new HMACSHA1(key);
+            byte[] ws_secure_bytes = Encoding.ASCII.GetBytes(ws_secure);
             byte[] hash1 = hMACSHA1.ComputeHash(ws_secure_bytes);
-            byte[] hash2 = hMACSHA1.ComputeHash(hash1.Concat(ws_secure_bytes).ToArray());
+            byte[] hash2 = hMACSHA1.ComputeHash(JoinBytes(hash1, ws_secure_bytes));
             byte[] hash3 = hMACSHA1.ComputeHash(hash1);
-            byte[] hash4 = hMACSHA1.ComputeHash(hash3.Concat(ws_secure_bytes).ToArray());
-            byte[] return_key = hash2;
-            for (int i = 0; i < 4; i++)
-            {
-                return_key.Append(hash4[i]);
-            }
+            byte[] hash4 = hMACSHA1.ComputeHash(JoinBytes(hash3, ws_secure_bytes));
+            byte[] hash4_4bytes = new byte[4];
+            Buffer.BlockCopy(hash4, 0, hash4_4bytes, 0, hash4_4bytes.Length);
+            byte[] return_key = JoinBytes(hash2, hash4_4bytes);
             return return_key;
         }
 
-        public string ReturnBinarySecret()
+        protected string ReturnBinarySecret()
         {
             XmlDocument result_xml = new XmlDocument();
             result_xml.LoadXml(SOAPResult);
@@ -154,7 +142,7 @@ namespace UWPMessengerClient
             return BinarySecretNode.InnerText;
         }
 
-        public string ReturnTicket()
+        protected string ReturnTicket()
         {
             XmlDocument result_xml = new XmlDocument();
             result_xml.LoadXml(SOAPResult);
@@ -167,10 +155,54 @@ namespace UWPMessengerClient
             return BinarySecurityToken.InnerText;
         }
 
-        public void GetSSOReturnValue()
+        protected byte[] ReturnByteArrayFromUIntArray(uint[] uint_array)
+        {
+            byte[] byte_array = new byte[sizeof(uint)*uint_array.Length];
+            byte[] number_bytes; 
+            for (int i=0; i < uint_array.Length; i++)
+            {
+                number_bytes = BitConverter.GetBytes(uint_array[i]);
+                Buffer.BlockCopy(number_bytes, 0, byte_array, i * sizeof(uint), sizeof(uint));
+            }
+            return byte_array;
+        }
+
+        protected string GetSSOReturnValue()
         {
             string binary_secret = ReturnBinarySecret();
             string ticket = ReturnTicket();
+            sso_ticket = ticket;
+            byte[] nonce_bytes = Encoding.ASCII.GetBytes(MBIKeyOld_nonce);
+            byte[] key1 = Convert.FromBase64String(binary_secret);
+            byte[] key2 = GetResultFromSSOHashs(key1, "WS-SecureConversationSESSION KEY HASH");
+            byte[] key3 = GetResultFromSSOHashs(key1, "WS-SecureConversationSESSION KEY ENCRYPTION");
+            HMACSHA1 hMACSHA1 = new HMACSHA1(key2);
+            byte[] key2_hash = hMACSHA1.ComputeHash(nonce_bytes);
+            byte[] bytes_8 = { 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08 };
+            byte[] padded_nonce = JoinBytes(nonce_bytes, bytes_8);
+            byte[] random_bytes = new byte[8];
+            RNGCryptoServiceProvider rNGCrypto = new RNGCryptoServiceProvider();
+            rNGCrypto.GetBytes(random_bytes);
+            byte[] encrypted_data = new byte[72];
+            TripleDESCryptoServiceProvider tripleDES = new TripleDESCryptoServiceProvider();
+            tripleDES.Mode = CipherMode.CBC;
+            tripleDES.CreateEncryptor(key3, random_bytes).TransformBlock(padded_nonce, 0, padded_nonce.Length, encrypted_data, 0);
+            uint[] header_values = 
+            {
+                28,//uStructHeaderSize
+                1,//uCryptMode
+                0x6603,//uCipherMode
+                0x8004,//uHashType
+                8,//uIVLen
+                20,//uHashLen
+                72//uCipherLen
+            };
+            byte[] return_struct = ReturnByteArrayFromUIntArray(header_values);
+            return_struct = JoinBytes(return_struct, random_bytes);//aIVBytes
+            return_struct = JoinBytes(return_struct, key2_hash);//aHashBytes
+            return_struct = JoinBytes(return_struct, encrypted_data);//aCipherBytes
+            string return_value = Convert.ToBase64String(return_struct);
+            return return_value;
         }
     }
 }
