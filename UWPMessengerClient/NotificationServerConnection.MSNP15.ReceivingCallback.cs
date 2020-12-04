@@ -9,7 +9,7 @@ namespace UWPMessengerClient
     public partial class NotificationServerConnection
     {
         private string SOAPResult;
-        private string sso_ticket;
+        private string SSO_ticket;
 
         public void MSNP15ReceivingCallback(IAsyncResult asyncResult)
         {
@@ -45,7 +45,7 @@ namespace UWPMessengerClient
         {
             SOAPResult = PerformSoapSSO();
             string response_struct = GetSSOReturnValue();
-            NSSocket.SendCommand($"USR 4 SSO S {sso_ticket} {response_struct}\r\n");
+            NSSocket.SendCommand($"USR 4 SSO S {SSO_ticket} {response_struct}\r\n");
         }
     }
 }
