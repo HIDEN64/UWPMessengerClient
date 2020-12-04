@@ -123,7 +123,7 @@ namespace UWPMessengerClient
             return BinarySecretNode.InnerText;
         }
 
-        protected string ReturnTicket()
+        public string ReturnTicket()
         {
             XmlDocument result_xml = new XmlDocument();
             result_xml.LoadXml(SOAPResult);
@@ -136,7 +136,7 @@ namespace UWPMessengerClient
             return BinarySecurityToken.InnerText;
         }
 
-        protected byte[] ReturnByteArrayFromUIntArray(uint[] uint_array)
+        public byte[] ReturnByteArrayFromUIntArray(uint[] uint_array)
         {
             byte[] byte_array = new byte[sizeof(uint) * uint_array.Length];
             byte[] number_bytes;
@@ -159,6 +159,7 @@ namespace UWPMessengerClient
             string xPathString = "//S:Envelope/S:Body/wst:RequestSecurityTokenResponseCollection/wst:RequestSecurityTokenResponse/wst:RequestedSecurityToken/wsse:BinarySecurityToken[@Id='Compact3']";
             XmlNode BinarySecurityToken = result_xml.SelectSingleNode(xPathString, xmlNamespaceManager);
             TicketToken = BinarySecurityToken.InnerText;
+            TicketToken = TicketToken.Replace("&", "&amp;");
         }
 
         protected string GetSSOReturnValue()

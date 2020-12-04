@@ -19,6 +19,8 @@ namespace UWPMessengerClient
         private List<string> _groupIDs;
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public Contact() { }
+
         public Contact(int listbit)
         {
             SetListsFromListbit(listbit);

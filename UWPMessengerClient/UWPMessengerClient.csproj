@@ -144,6 +144,7 @@
     <Compile Include="Message.cs" />
     <Compile Include="MessageSenderConverter.cs" />
     <Compile Include="NotificationServerConnection.cs" />
+    <Compile Include="NotificationServerConnection.MSNP15.ContactList.cs" />
     <Compile Include="NotificationServerConnection.MSNP15.cs" />
     <Compile Include="NotificationServerConnection.MSNP15.ReceivingCallback.cs" />
     <Compile Include="NotificationServerConnection.MSNP15.SSO.cs" />

@@ -46,6 +46,8 @@ namespace UWPMessengerClient
             SOAPResult = PerformSoapSSO();
             string response_struct = GetSSOReturnValue();
             NSSocket.SendCommand($"USR 4 SSO S {SSO_ticket} {response_struct}\r\n");
+            string members_xml = MakeMembershipListsSOAPRequest();
+            string address_book_xml = MakeAddressBookSOAPRequest();
         }
     }
 }
