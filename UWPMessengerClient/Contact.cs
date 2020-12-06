@@ -35,6 +35,16 @@ namespace UWPMessengerClient
             pending = (listbit & 16) == 16;
         }
 
+        public int GetListbitFromForwardAllowBlock()
+        {
+            int onForwardInt = onForward ? 1 : 0;
+            int onAllowInt = onAllow ? 2 : 0;
+            int onBlockInt = onBlock ? 4 : 0;
+            //respective value of each list if true and 0 if false
+            int listbit = (onForwardInt & 1) + (onAllowInt & 2) + (onBlockInt & 4);
+            return listbit;
+        }
+
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

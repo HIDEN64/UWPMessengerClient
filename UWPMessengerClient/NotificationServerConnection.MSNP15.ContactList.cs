@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Windows.UI.Core;
+using System.Collections.ObjectModel;
 
 namespace UWPMessengerClient
 {
@@ -196,6 +197,53 @@ namespace UWPMessengerClient
                 }
             }
             FillForwardListCollection();
+        }
+
+        public static string ReturnXMLContactPayload(ObservableCollection<Contact> contacts)
+        {
+            string contact_payload = @"<ml l=""1"">";
+            foreach (Contact contact in contacts)
+            {
+                int lisbit = contact.GetListbitFromForwardAllowBlock();
+                if (lisbit > 0)
+                {
+                    string[] email = contact.email.Split("@");
+                    string name = email[0];
+                    string domain = email[1];
+                    contact_payload += $@"<d n=""{domain}""><c n=""{name}"" l=""{lisbit}"" t=""1"" /></d>";
+                }
+            }
+            contact_payload += @"</ml>";
+            return contact_payload;
+        }
+
+        public void SendBLP()
+        {
+            string setting = "";
+            switch (userInfo.BLPValue)
+            {
+                case "1":
+                    setting = "AL";
+                    break;
+                case "2":
+                    setting = "BL";
+                    break;
+                //apparently 0 just means null, 1 means AL and 2 means BL
+            }
+            NSSocket.SendCommand($"BLP 5 {setting}\r\n");
+        }
+
+        public void SendInitialADL()
+        {
+            string contact_payload = ReturnXMLContactPayload(contact_list);
+            int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
+            NSSocket.SendCommand($"ADL 6 {payload_length}\r\n");
+            NSSocket.SendCommand(contact_payload);
+        }
+
+        public void SendUserDisplayName()
+        {
+            NSSocket.SendCommand($"PRP 7 MFN {userInfo.displayName}\r\n");
         }
     }
 }

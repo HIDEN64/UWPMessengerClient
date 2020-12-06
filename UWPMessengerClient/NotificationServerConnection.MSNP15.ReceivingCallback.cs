@@ -50,6 +50,9 @@ namespace UWPMessengerClient
             AddressBook = MakeAddressBookSOAPRequest();
             FillContactList();
             FillContactsInForwardList();
+            SendBLP();
+            SendInitialADL();
+            SendUserDisplayName();
         }
     }
 }
