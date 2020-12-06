@@ -12,7 +12,6 @@ namespace UWPMessengerClient
     {
         private Socket socket;
         private string server_address = "";
-        public bool socket_connected { get; set; }
         private static int server_port = 0;
 
         public SocketCommands(string address, int port)
@@ -30,7 +29,6 @@ namespace UWPMessengerClient
             IPAddress iPAddress = iPHostEntry.AddressList[0];
             IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, server_port);
             socket.Connect(iPEndPoint);
-            socket_connected = true;
         }
 
         public void SendCommand(string msg)
@@ -51,7 +49,7 @@ namespace UWPMessengerClient
 
         public int StopReceiving(IAsyncResult ar)
         {
-            if (socket_connected == true)
+            if (socket.Connected)
             {
                 return socket.EndReceive(ar);
             }
@@ -92,7 +90,6 @@ namespace UWPMessengerClient
         {
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
-            socket_connected = false;
         }
 
         ~SocketCommands()
