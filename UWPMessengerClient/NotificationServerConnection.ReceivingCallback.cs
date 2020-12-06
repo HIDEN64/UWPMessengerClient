@@ -250,7 +250,10 @@ namespace UWPMessengerClient
             {
                 if (contact.onForward == true)
                 {
-                    contacts_in_forward_list.Add(contact);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        contacts_in_forward_list.Add(contact);
+                    });
                 }
             }
         }

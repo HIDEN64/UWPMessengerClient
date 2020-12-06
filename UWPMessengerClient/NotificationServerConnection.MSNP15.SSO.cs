@@ -11,7 +11,7 @@ namespace UWPMessengerClient
 {
     public partial class NotificationServerConnection
     {
-        private string MBIKeyOld_nonce;
+        private string MBIKeyOldNonce;
         private string TicketToken;
 
         public async Task StartLoginToMessengerMSNP15Async()
@@ -75,7 +75,7 @@ namespace UWPMessengerClient
                                     <wsa:Address>messengerclear.live.com</wsa:Address>
                                 </wsa:EndpointReference>
                             </wsp:AppliesTo>
-                            <wsse:PolicyReference URI=""{MBIKeyOld_nonce}""></wsse:PolicyReference>
+                            <wsse:PolicyReference URI=""{MBIKeyOldNonce}""></wsse:PolicyReference>
                         </wst:RequestSecurityToken>
                         <wst:RequestSecurityToken Id=""RST2"">
                             <wst:RequestType>http://schemas.xmlsoap.org/ws/2004/04/security/trust/Issue</wst:RequestType>
@@ -167,8 +167,8 @@ namespace UWPMessengerClient
             string binary_secret = ReturnBinarySecret();
             string ticket = ReturnTicket();
             GetTicketToken();
-            SSO_ticket = ticket;
-            byte[] nonce_bytes = Encoding.ASCII.GetBytes(MBIKeyOld_nonce);
+            SSO_Ticket = ticket;
+            byte[] nonce_bytes = Encoding.ASCII.GetBytes(MBIKeyOldNonce);
             byte[] key1 = Convert.FromBase64String(binary_secret);
             byte[] key2 = GetResultFromSSOHashs(key1, "WS-SecureConversationSESSION KEY HASH");
             byte[] key3 = GetResultFromSSOHashs(key1, "WS-SecureConversationSESSION KEY ENCRYPTION");

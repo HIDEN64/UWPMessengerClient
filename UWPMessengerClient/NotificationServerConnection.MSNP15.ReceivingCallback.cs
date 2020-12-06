@@ -9,7 +9,7 @@ namespace UWPMessengerClient
     public partial class NotificationServerConnection
     {
         private string SOAPResult;
-        private string SSO_ticket;
+        private string SSO_Ticket;
 
         public void MSNP15ReceivingCallback(IAsyncResult asyncResult)
         {
@@ -38,16 +38,18 @@ namespace UWPMessengerClient
             }
             string[] USRParams = USRResponse[1].Split(" ");
             string mbi_key_old = USRParams[4];
-            MBIKeyOld_nonce = mbi_key_old;
+            MBIKeyOldNonce = mbi_key_old;
         }
 
         protected void ContinueLoginToMessenger()
         {
             SOAPResult = PerformSoapSSO();
             string response_struct = GetSSOReturnValue();
-            NSSocket.SendCommand($"USR 4 SSO S {SSO_ticket} {response_struct}\r\n");
-            string members_xml = MakeMembershipListsSOAPRequest();
-            string address_book_xml = MakeAddressBookSOAPRequest();
+            NSSocket.SendCommand($"USR 4 SSO S {SSO_Ticket} {response_struct}\r\n");
+            MembershipLists = MakeMembershipListsSOAPRequest();
+            AddressBook = MakeAddressBookSOAPRequest();
+            FillContactList();
+            FillContactsInForwardList();
         }
     }
 }

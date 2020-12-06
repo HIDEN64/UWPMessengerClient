@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using Windows.UI.Core;
 
 namespace UWPMessengerClient
 {
     public partial class NotificationServerConnection
     {
+        private string MembershipLists;
+        private string AddressBook;
+
         public string MakeMembershipListsSOAPRequest()
         {
             string membership_lists_xml = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
@@ -66,6 +71,131 @@ namespace UWPMessengerClient
 	            </soap:Body>
             </soap:Envelope>";
             return MakeSOAPRequest(address_book_xml, "https://m1.escargot.log1p.xyz/abservice/abservice.asmx", "http://www.msn.com/webservices/AddressBook/ABFindAll");
+        }
+
+        public void FillContactList()
+        {
+            XmlDocument member_list = new XmlDocument();
+            member_list.LoadXml(MembershipLists);
+            XmlNamespaceManager NSmanager = new XmlNamespaceManager(member_list.NameTable);
+            NSmanager.AddNamespace("soap", "http://schemas.xmlsoap.org/soap/envelope/");
+            NSmanager.AddNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
+            NSmanager.AddNamespace("xsd", "http://www.w3.org/2001/XMLSchema");
+            NSmanager.AddNamespace("ab", "http://www.msn.com/webservices/AddressBook");
+            string xPathString = "//soap:Envelope/soap:Body/ab:FindMembershipResponse/ab:FindMembershipResult/ab:Services/" +
+                "ab:Service/ab:Memberships/ab:Membership";
+            XmlNodeList memberships = member_list.SelectNodes(xPathString, NSmanager);
+            foreach (XmlNode membership in memberships)
+            {
+                xPathString = "./ab:MemberRole";
+                XmlNode member_role = membership.SelectSingleNode(xPathString, NSmanager);
+                xPathString = "./ab:Members/ab:Member";
+                XmlNodeList members = membership.SelectNodes(xPathString, NSmanager);
+                foreach (XmlNode member in members)
+                {
+                    xPathString = "./ab:PassportName";
+                    XmlNode passport_name = member.SelectSingleNode(xPathString, NSmanager);
+                    var contactInList = from contact_in_list in contact_list
+                                        where contact_in_list.email == passport_name.InnerText
+                                        select contact_in_list;
+                    if (!contactInList.Any())
+                    {
+                        Contact contact = new Contact();
+                        contact.email = passport_name.InnerText;
+                        switch (member_role.InnerText)
+                        {
+                            case "Allow":
+                                contact.onAllow = true;
+                                break;
+                            case "Block":
+                                contact.onBlock = true;
+                                break;
+                            case "Reverse":
+                                contact.onReverse = true;
+                                break;
+                            case "Pending":
+                                contact.pending = true;
+                                break;
+                        }
+                        contact_list.Add(contact);
+                    }
+                    else
+                    {
+                        foreach (Contact list_contact in contactInList)
+                        {
+                            switch (member_role.InnerText)
+                            {
+                                case "Allow":
+                                    list_contact.onAllow = true;
+                                    break;
+                                case "Block":
+                                    list_contact.onBlock = true;
+                                    break;
+                                case "Reverse":
+                                    list_contact.onReverse = true;
+                                    break;
+                                case "Pending":
+                                    list_contact.pending = true;
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void FillContactsInForwardList()
+        {
+            XmlDocument address_book_xml = new XmlDocument();
+            address_book_xml.LoadXml(AddressBook);
+            XmlNamespaceManager NSmanager = new XmlNamespaceManager(address_book_xml.NameTable);
+            NSmanager.AddNamespace("soap", "http://schemas.xmlsoap.org/soap/envelope/");
+            NSmanager.AddNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
+            NSmanager.AddNamespace("xsd", "http://www.w3.org/2001/XMLSchema");
+            NSmanager.AddNamespace("ab", "http://www.msn.com/webservices/AddressBook");
+            string xPath = "//soap:Envelope/soap:Body/ab:ABFindAllResponse/ab:ABFindAllResult/ab:contacts/ab:Contact";
+            XmlNodeList contacts = address_book_xml.SelectNodes(xPath, NSmanager);
+            foreach (XmlNode contact in contacts)
+            {
+                xPath = "./ab:contactInfo/ab:contactType";
+                XmlNode contactType = contact.SelectSingleNode(xPath, NSmanager);
+                switch (contactType.InnerText)
+                {
+                    case "Me":
+                        xPath = "./ab:contactInfo/ab:displayName";
+                        XmlNode userDisplayName = contact.SelectSingleNode(xPath, NSmanager);
+                        Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            userInfo.displayName = userDisplayName.InnerText;
+                        });
+                        xPath = "./ab:contactInfo/ab:annotations/ab:Annotation[ab:Name='MSN.IM.BLP']/ab:Value";
+                        XmlNode BLP_value = contact.SelectSingleNode(xPath, NSmanager);
+                        userInfo.BLPValue = BLP_value.InnerText;
+                        break;
+                    case "Regular":
+                        xPath = "./ab:contactInfo/ab:passportName";
+                        XmlNode passportName = contact.SelectSingleNode(xPath, NSmanager);
+                        xPath = "./ab:contactInfo/ab:displayName";
+                        XmlNode displayName = contact.SelectSingleNode(xPath, NSmanager);
+                        var contactInList = from contact_in_list in contact_list
+                                            where contact_in_list.email == passportName.InnerText
+                                            select contact_in_list;
+                        if (!contactInList.Any())
+                        {
+                            contact_list.Add(new Contact() { displayName = displayName.InnerText, email = passportName.InnerText, onForward = true });
+                        }
+                        else
+                        {
+                            foreach (Contact contact_in_list in contactInList)
+                            {
+                                contact_in_list.displayName = displayName.InnerText;
+                                contact_in_list.onForward = true;
+                            }
+                        }
+                        break;
+                }
+            }
+            FillForwardListCollection();
         }
     }
 }
