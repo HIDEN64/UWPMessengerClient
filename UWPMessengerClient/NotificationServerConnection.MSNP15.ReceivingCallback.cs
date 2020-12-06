@@ -41,11 +41,11 @@ namespace UWPMessengerClient
             MBIKeyOldNonce = mbi_key_old;
         }
 
-        protected void ContinueLoginToMessenger()
+        public void ContinueLoginToMessenger()
         {
             SOAPResult = PerformSoapSSO();
             string response_struct = GetSSOReturnValue();
-            NSSocket.SendCommand($"USR 4 SSO S {SSO_Ticket} {response_struct}\r\n");
+            NSSocket.SendCommand($"USR 4 SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
             MembershipLists = MakeMembershipListsSOAPRequest();
             AddressBook = MakeAddressBookSOAPRequest();
             FillContactList();
@@ -53,6 +53,7 @@ namespace UWPMessengerClient
             SendBLP();
             SendInitialADL();
             SendUserDisplayName();
+            NSSocket.SendCommand("CHG 8 NLN 0\r\n");//setting presence as available
         }
     }
 }
