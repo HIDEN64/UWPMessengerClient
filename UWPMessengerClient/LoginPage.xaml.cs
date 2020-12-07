@@ -19,7 +19,8 @@ namespace UWPMessengerClient
 {
     public sealed partial class LoginPage : Page
     {
-        NotificationServerConnection notificationServerConnection;
+        MSNP12.NotificationServerConnection MSNP12notificationServerConnection;
+        MSNP15.NotificationServerConnection MSNP15notificationServerConnection;
 
         public LoginPage()
         {
@@ -28,7 +29,8 @@ namespace UWPMessengerClient
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            notificationServerConnection = null;
+            MSNP12notificationServerConnection = null;
+            MSNP15notificationServerConnection = null;
             base.OnNavigatedTo(e);
         }
 
@@ -38,21 +40,45 @@ namespace UWPMessengerClient
             string email = Email_box.Text;
             string password = Password_box.Password;
             string selected_version = version_box.SelectedItem.ToString();
-            notificationServerConnection = new NotificationServerConnection(selected_version, email, password);
-            try
+            switch (selected_version)
             {
-                await notificationServerConnection.StartLoginToMessengerAsync();
+                case "MSNP12":
+                    MSNP12notificationServerConnection = new MSNP12.NotificationServerConnection(email, password);
+                    try
+                    {
+                        await MSNP12notificationServerConnection.StartLoginToMessengerAsync();
+                    }
+                    catch (AggregateException ex)
+                    {
+                        for (int i = 0; i < ex.InnerExceptions.Count; i++)
+                        {
+                            await ShowLoginErrorDialog(ex.InnerExceptions[i].Message);
+                        }
+                        disable_progress_ring();
+                        return;
+                    }
+                    this.Frame.Navigate(typeof(MSNP12.ContactList), MSNP12notificationServerConnection);
+                    break;
+                case "MSNP15":
+                    MSNP15notificationServerConnection = new MSNP15.NotificationServerConnection(email, password);
+                    try
+                    {
+                        await MSNP15notificationServerConnection.StartLoginToMessengerAsync();
+                    }
+                    catch (AggregateException ex)
+                    {
+                        for (int i = 0; i < ex.InnerExceptions.Count; i++)
+                        {
+                            await ShowLoginErrorDialog(ex.InnerExceptions[i].Message);
+                        }
+                        disable_progress_ring();
+                        return;
+                    }
+                    this.Frame.Navigate(typeof(MSNP15.ContactList), MSNP15notificationServerConnection);
+                    break;
+                default:
+                    throw new Exceptions.VersionNotSelectedException();
             }
-            catch (AggregateException ex)
-            {
-                for (int i = 0; i < ex.InnerExceptions.Count; i++)
-                {
-                    await ShowLoginErrorDialog(ex.InnerExceptions[i].Message);
-                }
-                disable_progress_ring();
-                return;
-            }
-            this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
             disable_progress_ring();
         }
 

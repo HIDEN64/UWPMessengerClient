@@ -245,5 +245,15 @@ namespace UWPMessengerClient.MSNP15
         {
             NSSocket.SendCommand($"PRP 7 MFN {userInfo.displayName}\r\n");
         }
+
+        public async Task AddContact(string newContactEmail, string newContactDisplayName = "")
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task RemoveContact(Contact contactToRemove)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

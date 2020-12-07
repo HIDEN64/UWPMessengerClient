@@ -14,7 +14,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP15
 {
     public sealed partial class ContactList : Page
     {
@@ -68,7 +68,7 @@ namespace UWPMessengerClient
 
         private async Task StartChat()
         {
-            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.switchboardConnection == null)
+            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
             {
                 notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
                 await notificationServerConnection.InitiateSB();

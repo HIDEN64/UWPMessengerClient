@@ -14,6 +14,7 @@ namespace UWPMessengerClient.MSNP15
     public partial class NotificationServerConnection
     {
         private SocketCommands NSSocket;
+        public SwitchboardConnection SBConnection { get; set; }
         private readonly string NSaddress = "m1.escargot.log1p.xyz";
         private readonly string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
         //private readonly string RST_address = "http://localhost/RST.srf";
@@ -75,6 +76,32 @@ namespace UWPMessengerClient.MSNP15
                     });
                 }
             }
+        }
+
+        public async Task ChangePresence(string status)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task ChangeUserDisplayName(string newDisplayName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task InitiateSB()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Exit()
+        {
+            NSSocket.SendCommand("OUT\r\n");
+            NSSocket.CloseSocket();
+        }
+
+        ~NotificationServerConnection()
+        {
+            Exit();
         }
     }
 }

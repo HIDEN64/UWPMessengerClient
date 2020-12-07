@@ -12,10 +12,9 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP12
 {
     public sealed partial class ChatPage : Page
     {
@@ -30,27 +29,17 @@ namespace UWPMessengerClient
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             notificationServerConnection = (NotificationServerConnection)e.Parameter;
-            switchboardConnection = notificationServerConnection.switchboardConnection;
+            switchboardConnection = notificationServerConnection.SBConnection;
             BackButton.IsEnabled = this.Frame.CanGoBack;
             base.OnNavigatedTo(e);
         }
 
         private async Task SendMessage()
         {
-            switch (notificationServerConnection.MSNPVersionSelected)
+            if (switchboardConnection != null && switchboardConnection.connected && messageBox.Text != "")
             {
-                case "MSNP12":
-                    if (notificationServerConnection.switchboardConnection != null && notificationServerConnection.switchboardConnection.connected && messageBox.Text != "")
-                    {
-                        await notificationServerConnection.switchboardConnection.SendMessage(messageBox.Text);
-                        messageBox.Text = "";
-                    }
-                    break;
-                case "MSNP15":
-                    throw new NotImplementedException();
-                    break;
-                default:
-                    throw new Exceptions.VersionNotSelectedException();
+                await switchboardConnection.SendMessage(messageBox.Text);
+                messageBox.Text = "";
             }
         }
 
