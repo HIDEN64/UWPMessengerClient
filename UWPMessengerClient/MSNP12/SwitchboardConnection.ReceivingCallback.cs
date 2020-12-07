@@ -9,7 +9,7 @@ using Windows.UI.Notifications;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System.Web;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP12
 {
     public partial class SwitchboardConnection
     {

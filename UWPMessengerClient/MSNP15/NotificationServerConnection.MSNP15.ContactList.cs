@@ -7,7 +7,7 @@ using System.Xml;
 using Windows.UI.Core;
 using System.Collections.ObjectModel;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP15
 {
     public partial class NotificationServerConnection
     {

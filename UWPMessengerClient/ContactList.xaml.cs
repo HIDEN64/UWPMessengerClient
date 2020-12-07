@@ -66,14 +66,19 @@ namespace UWPMessengerClient
             }
         }
 
-        private async void start_chat_button_Click(object sender, RoutedEventArgs e)
+        private async Task StartChat()
         {
-            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
+            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.switchboardConnection == null)
             {
                 notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
                 await notificationServerConnection.InitiateSB();
             }
-            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection.SBConnection);
+            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection);
+        }
+
+        private async void start_chat_button_Click(object sender, RoutedEventArgs e)
+        {
+            await StartChat();
         }
 
         private async void ChangeUserDisplayNameConfirmationButton_Click(object sender, RoutedEventArgs e)
@@ -90,12 +95,7 @@ namespace UWPMessengerClient
 
         private async void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
-            {
-                notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
-                await notificationServerConnection.InitiateSB();
-            }
-            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection.SBConnection);
+            await StartChat();
         }
 
         private async void addContactButton_Click(object sender, RoutedEventArgs e)

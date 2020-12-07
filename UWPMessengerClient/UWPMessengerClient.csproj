@@ -135,6 +135,7 @@
     <Compile Include="ContactList.xaml.cs">
       <DependentUpon>ContactList.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Exceptions\VersionNotSelectedException.cs" />
     <Compile Include="LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
     </Compile>
@@ -143,18 +144,21 @@
     </Compile>
     <Compile Include="Message.cs" />
     <Compile Include="MessageSenderConverter.cs" />
-    <Compile Include="NotificationServerConnection.cs" />
-    <Compile Include="NotificationServerConnection.MSNP15.ContactList.cs" />
-    <Compile Include="NotificationServerConnection.MSNP15.cs" />
-    <Compile Include="NotificationServerConnection.MSNP15.ReceivingCallback.cs" />
-    <Compile Include="NotificationServerConnection.MSNP15.SSO.cs" />
-    <Compile Include="NotificationServerConnection.ReceivingCallback.cs" />
+    <Compile Include="MSNP12\NotificationServerConnection.cs" />
+    <Compile Include="MSNP15\NotificationServerConnection.MSNP15.ContactList.cs" />
+    <Compile Include="MSNP15\NotificationServerConnection.MSNP15.cs" />
+    <Compile Include="MSNP15\NotificationServerConnection.MSNP15.ReceivingCallback.cs" />
+    <Compile Include="MSNP15\NotificationServerConnection.MSNP15.SSO.cs" />
+    <Compile Include="MSNP12\NotificationServerConnection.ReceivingCallback.cs" />
+    <Compile Include="MSNP15\SwitchboardConnection.MSNP15.cs" />
+    <Compile Include="MSNP15\SwitchboardConnection.MSNP15.ReceivingCallback.cs" />
     <Compile Include="PresenceStatuses.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SocketCommands.cs" />
     <Compile Include="StatusConverter.cs" />
-    <Compile Include="SwitchboardConnection.cs" />
-    <Compile Include="SwitchboardConnection.ReceivingCallback.cs" />
+    <Compile Include="MSNP12\SwitchboardConnection.cs" />
+    <Compile Include="MSNP12\SwitchboardConnection.ReceivingCallback.cs" />
+    <Compile Include="SwitchboardConnection.Selector.cs" />
     <Compile Include="UrlDecodingConverter.cs" />
     <Compile Include="UserInfo.cs" />
   </ItemGroup>
@@ -202,6 +206,9 @@
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications">
       <Version>6.1.1</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="NotificationServerConnection.Selector.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

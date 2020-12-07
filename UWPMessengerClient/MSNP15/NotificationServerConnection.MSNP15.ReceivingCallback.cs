@@ -3,13 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP15
 {
     public partial class NotificationServerConnection
     {
         private string SOAPResult;
         private string SSO_Ticket;
+        private byte[] received_bytes = new byte[4096];
+        private string output_string;
+        public ObservableCollection<Contact> contact_list { get; set; } = new ObservableCollection<Contact>();
+        public ObservableCollection<Contact> contacts_in_forward_list { get; set; } = new ObservableCollection<Contact>();
+        public UserInfo userInfo { get; set; } = new UserInfo();
 
         public void MSNP15ReceivingCallback(IAsyncResult asyncResult)
         {
@@ -54,6 +60,7 @@ namespace UWPMessengerClient
             SendInitialADL();
             SendUserDisplayName();
             NSSocket.SendCommand("CHG 8 NLN 0\r\n");//setting presence as available
+            CurrentUserPresenceStatus = "NLN";
         }
     }
 }

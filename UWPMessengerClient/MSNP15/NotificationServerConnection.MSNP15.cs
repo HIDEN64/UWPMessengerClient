@@ -7,12 +7,29 @@ using System.Net;
 using System.Xml;
 using System.IO;
 using System.Security.Cryptography;
+using Windows.UI.Core;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP15
 {
     public partial class NotificationServerConnection
     {
-        public HttpWebRequest CreateSOAPRequest(string soap_action, string address)
+        private SocketCommands NSSocket;
+        private readonly string NSaddress = "m1.escargot.log1p.xyz";
+        private readonly string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
+        //private readonly string RST_address = "http://localhost/RST.srf";
+        private readonly int port = 1863;
+        private string email;
+        private string password;
+        public int ContactIndexToChat { get; set; }
+        public string CurrentUserPresenceStatus { get; set; }
+
+        public NotificationServerConnection(string escargot_email, string escargot_password)
+        {
+            email = escargot_email;
+            password = escargot_password;
+        }
+
+        public static HttpWebRequest CreateSOAPRequest(string soap_action, string address)
         {
             HttpWebRequest request = WebRequest.CreateHttp(address);
             request.Headers.Add($@"SOAPAction:{soap_action}");
@@ -41,9 +58,23 @@ namespace UWPMessengerClient
             }
         }
 
-        public byte[] JoinBytes(byte[] first, byte[] second)
+        public static byte[] JoinBytes(byte[] first, byte[] second)
         {
             return first.Concat(second).ToArray();
+        }
+
+        public void FillForwardListCollection()
+        {
+            foreach (Contact contact in contact_list)
+            {
+                if (contact.onForward == true)
+                {
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        contacts_in_forward_list.Add(contact);
+                    });
+                }
+            }
         }
     }
 }

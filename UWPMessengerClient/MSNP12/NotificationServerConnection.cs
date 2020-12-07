@@ -10,7 +10,7 @@ using System.Web;
 using Windows.UI.Core;
 using System.Collections.ObjectModel;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP12
 {
     public partial class NotificationServerConnection
     {
@@ -19,11 +19,9 @@ namespace UWPMessengerClient
         //notification server(escargot) address and nexus address
         private readonly string NSaddress = "m1.escargot.log1p.xyz";
         private readonly string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
-        private readonly string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
         //uncomment below and comment above to use localserver
         //private readonly string NSaddress = "127.0.0.1";
         //private readonly string nexus_address = "http://localhost/nexus-mock";
-        //private readonly string RST_address = "http://localhost/RST.srf";
         private readonly int port = 1863;
         private string email;
         private string password;
@@ -37,7 +35,7 @@ namespace UWPMessengerClient
             password = escargot_password;
         }
 
-        public async Task LoginToMessengerAsync()
+        public async Task StartLoginToMessengerAsync()
         {
             httpClient = new HttpClient();
             NSSocket = new SocketCommands(NSaddress, port);

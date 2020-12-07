@@ -7,14 +7,14 @@ using System.Net;
 using System.Xml;
 using System.Security.Cryptography;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP15
 {
     public partial class NotificationServerConnection
     {
         private string MBIKeyOldNonce;
         private string TicketToken;
 
-        public async Task StartLoginToMessengerMSNP15Async()
+        public async Task StartLoginToMessengerAsync()
         {
             NSSocket = new SocketCommands(NSaddress, port);
             Action loginAction = new Action(() =>

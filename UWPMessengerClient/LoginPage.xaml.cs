@@ -32,24 +32,16 @@ namespace UWPMessengerClient
             base.OnNavigatedTo(e);
         }
 
-        private async void Login_Click(object sender, RoutedEventArgs e)
+        private async Task StartLogin()
         {
             enable_progress_ring();
             string email = Email_box.Text;
             string password = Password_box.Password;
-            notificationServerConnection = new NotificationServerConnection(email, password);
+            string selected_version = version_box.SelectedItem.ToString();
+            notificationServerConnection = new NotificationServerConnection(selected_version, email, password);
             try
             {
-                string selected_version = version_box.SelectedItem.ToString();
-                switch (selected_version)
-                {
-                    case "MSNP15":
-                        await notificationServerConnection.StartLoginToMessengerMSNP15Async();
-                        break;
-                    case "MSNP12":
-                        await notificationServerConnection.LoginToMessengerAsync();
-                        break;
-                }
+                await notificationServerConnection.StartLoginToMessengerAsync();
             }
             catch (AggregateException ex)
             {
@@ -62,6 +54,11 @@ namespace UWPMessengerClient
             }
             this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
             disable_progress_ring();
+        }
+
+        private async void Login_Click(object sender, RoutedEventArgs e)
+        {
+            await StartLogin();
         }
 
         private void enable_progress_ring()
@@ -91,34 +88,7 @@ namespace UWPMessengerClient
         {
             if (e.Key == Windows.System.VirtualKey.Enter)
             {
-                enable_progress_ring();
-                string email = Email_box.Text;
-                string password = Password_box.Password;
-                notificationServerConnection = new NotificationServerConnection(email, password);
-                try
-                {
-                    string selected_version = version_box.SelectedItem.ToString();
-                    switch (selected_version)
-                    {
-                        case "MSNP15":
-                            await notificationServerConnection.StartLoginToMessengerMSNP15Async();
-                            break;
-                        case "MSNP12":
-                            await notificationServerConnection.LoginToMessengerAsync();
-                            break;
-                    }
-                }
-                catch (AggregateException ex)
-                {
-                    for (int i = 0; i < ex.InnerExceptions.Count; i++)
-                    {
-                        await ShowLoginErrorDialog(ex.InnerExceptions[i].Message);
-                    }
-                    disable_progress_ring();
-                    return;
-                }
-                this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
-                disable_progress_ring();
+                await StartLogin();
             }
         }
     }
