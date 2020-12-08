@@ -80,17 +80,25 @@ namespace UWPMessengerClient.MSNP15
 
         public async Task ChangePresence(string status)
         {
-            throw new NotImplementedException();
+            Action changePresence = new Action(() =>
+            {
+                NSSocket.SendCommand($"CHG 9 {status} 0\r\n");
+            });
+            CurrentUserPresenceStatus = status;
+            await Task.Run(changePresence);
         }
 
         public async Task ChangeUserDisplayName(string newDisplayName)
         {
-            throw new NotImplementedException();
+            string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
+            await Task.Run(() => NSSocket.SendCommand($"PRP 9 MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
         public async Task InitiateSB()
         {
-            throw new NotImplementedException();
+            await Task.Run(() => NSSocket.SendCommand("XFR 9 SB\r\n"));
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
+            SBConnection = switchboardConnection;
         }
 
         public void Exit()

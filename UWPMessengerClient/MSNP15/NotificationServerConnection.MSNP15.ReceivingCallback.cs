@@ -29,6 +29,13 @@ namespace UWPMessengerClient.MSNP15
                 GetMBIKeyOldNonce();
                 ContinueLoginToMessenger();
             }
+            if (notificationServerConnection.output_string.Contains("PRP "))
+            {
+                if (notificationServerConnection.output_string.Contains("MFN"))
+                {
+                    notificationServerConnection.GetUserDisplayName();
+                }
+            }
             if (notificationServerConnection.output_string.Contains("ILN "))
             {
                 notificationServerConnection.SetInitialContactPresence();
@@ -44,6 +51,14 @@ namespace UWPMessengerClient.MSNP15
             if (notificationServerConnection.output_string.StartsWith("FLN "))
             {
                 notificationServerConnection.SetContactOffline();
+            }
+            if (notificationServerConnection.output_string.StartsWith("XFR "))
+            {
+                var task = notificationServerConnection.ConnectToSwitchboard();
+            }
+            if (notificationServerConnection.output_string.StartsWith("RNG "))
+            {
+                notificationServerConnection.JoinSwitchboard();
             }
             if (bytes_read > 0)
             {
@@ -79,6 +94,29 @@ namespace UWPMessengerClient.MSNP15
             SendUserDisplayName();
             NSSocket.SendCommand("CHG 8 NLN 0\r\n");//setting presence as available
             CurrentUserPresenceStatus = "NLN";
+        }
+
+        public void GetUserDisplayName()
+        {
+            string[] PRPResponse = output_string.Split("PRP ", 2);
+            //ensuring the last element of the PRPReponses array is just the PRP response
+            int rnIndex = PRPResponse.Last().IndexOf("\r\n");
+            if (rnIndex != PRPResponse.Last().Length && rnIndex >= 0)
+            {
+                PRPResponse[PRPResponse.Length - 1] = PRPResponse.Last().Remove(rnIndex);
+            }
+            string[] PRPParams = PRPResponse[1].Split(" ");
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                if (int.TryParse(PRPParams[0], out int commandNumber))
+                {
+                    userInfo.displayName = PRPParams[2];
+                }
+                else
+                {
+                    userInfo.displayName = PRPParams[1];
+                }
+            });
         }
 
         public void SetInitialContactPresence()
@@ -213,6 +251,48 @@ namespace UWPMessengerClient.MSNP15
                     }
                 });
             }
+        }
+
+        public async Task ConnectToSwitchboard()
+        {
+            string[] XFRResponse = output_string.Split("XFR ", 2);
+            //ensuring the last element of the XFRReponse array is just the XFR response
+            int rnIndex = XFRResponse.Last().IndexOf("\r\n");
+            if (rnIndex != XFRResponse.Last().Length && rnIndex >= 0)
+            {
+                XFRResponse[XFRResponse.Length - 1] = XFRResponse.Last().Remove(rnIndex);
+            }
+            string[] XFRParams = XFRResponse[1].Split(" ");
+            string[] address_and_port = XFRParams[2].Split(":");
+            string sb_address = address_and_port[0];
+            int sb_port;
+            int.TryParse(address_and_port[1], out sb_port);
+            string trID = XFRParams[4];
+            SBConnection.SetAddressPortAndTrID(sb_address, sb_port, trID);
+            await SBConnection.LoginToNewSwitchboardAsync();
+            await SBConnection.InvitePrincipal(contacts_in_forward_list[ContactIndexToChat].email, contacts_in_forward_list[ContactIndexToChat].displayName);
+        }
+
+        public void JoinSwitchboard()
+        {
+            string[] RNGResponse = output_string.Split("RNG ", 2);
+            //ensuring the last element of the RNGReponse array is just the RNG response
+            int rnIndex = RNGResponse.Last().IndexOf("\r\n");
+            if (rnIndex != RNGResponse.Last().Length && rnIndex >= 0)
+            {
+                RNGResponse[RNGResponse.Length - 1] = RNGResponse.Last().Remove(rnIndex);
+            }
+            string[] RNGParams = RNGResponse[1].Split(" ");
+            string sessionID = RNGParams[0];
+            string[] address_and_port = RNGParams[1].Split(":");
+            int sb_port;
+            string sb_address = address_and_port[0];
+            int.TryParse(address_and_port[1], out sb_port);
+            string trID = RNGParams[3];
+            string principalName = RNGParams[5];
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, trID, userInfo.displayName, principalName, sessionID);
+            SBConnection = switchboardConnection;
+            _ = SBConnection.AnswerRNG();
         }
     }
 }
