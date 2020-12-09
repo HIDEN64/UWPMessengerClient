@@ -87,10 +87,17 @@ namespace UWPMessengerClient.MSNP12
                     email = email.Remove(email.IndexOf(" "));
                     displayName = LSTResponses[i].Split("F=")[1];
                     displayName = displayName.Remove(displayName.IndexOf(" "));
-                    guid = LSTResponses[i].Split("C=")[1];
-                    if (guid.Length > 1 && guid.IndexOf(" ") > 0)
+                    try
                     {
-                        guid = guid.Remove(guid.IndexOf(" "));
+                        guid = LSTResponses[i].Split("C=")[1];
+                        if (guid.Length > 1 && guid.IndexOf(" ") > 0)
+                        {
+                            guid = guid.Remove(guid.IndexOf(" "));
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        guid = "";
                     }
                     string[] LSTAndParams = LSTResponses[i].Split(" ");
                     if (int.TryParse(LSTAndParams[LSTAndParams.Length - 2], out listbit))

@@ -13,6 +13,11 @@ namespace UWPMessengerClient.MSNP15
     {
         private string MembershipLists;
         private string AddressBook;
+        private readonly string SharingService_url = "https://m1.escargot.log1p.xyz/abservice/SharingService.asmx";
+        private readonly string abservice_url = "https://m1.escargot.log1p.xyz/abservice/abservice.asmx";
+        //uncomment below and comment above to use localserver
+        //private readonly string SharingService_url = "http://localhost/abservice/SharingService.asmx";
+        //private readonly string abservice_url = "http://localhost/abservice/abservice.asmx";
 
         public string MakeMembershipListsSOAPRequest()
         {
@@ -41,7 +46,7 @@ namespace UWPMessengerClient.MSNP15
                    </FindMembership>
                </soap:Body>
             </soap:Envelope>";
-            return MakeSOAPRequest(membership_lists_xml, "https://m1.escargot.log1p.xyz/abservice/SharingService.asmx", "http://www.msn.com/webservices/AddressBook/FindMembership");
+            return MakeSOAPRequest(membership_lists_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/FindMembership");
         }
 
         public string MakeAddressBookSOAPRequest()
@@ -71,7 +76,81 @@ namespace UWPMessengerClient.MSNP15
 		            </ABFindAll>
 	            </soap:Body>
             </soap:Envelope>";
-            return MakeSOAPRequest(address_book_xml, "https://m1.escargot.log1p.xyz/abservice/abservice.asmx", "http://www.msn.com/webservices/AddressBook/ABFindAll");
+            return MakeSOAPRequest(address_book_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABFindAll");
+        }
+
+        public string MakeAddContactSOAPRequest(string newContactEmail, string newContactDisplayName = "")
+        {
+            string add_contact_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/""
+                           xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
+                           xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
+                           xmlns:soapenc=""http://schemas.xmlsoap.org/soap/encoding/"">
+                <soap:Header>
+                    <ABApplicationHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
+                        <ApplicationId>996CDE1B-AA53-4477-B943-2BB802EA6166</ApplicationId>
+                        <IsMigration>false</IsMigration>
+                        <PartnerScenario>ContactSave</PartnerScenario>
+                    </ABApplicationHeader>
+                    <ABAuthHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
+                        <ManagedGroupRequest>false</ManagedGroupRequest>
+                        <TicketToken>{TicketToken}</TicketToken>
+                    </ABAuthHeader>
+                </soap:Header>
+                <soap:Body>
+                    <ABContactAdd xmlns=""http://www.msn.com/webservices/AddressBook"">
+                        <abId>00000000-0000-0000-0000-000000000000</abId>
+                        <contacts>
+                            <Contact xmlns=""http://www.msn.com/webservices/AddressBook"">
+                                <contactInfo>
+                                    <contactType>LivePending</contactType>
+                                    <passportName>{newContactEmail}</passportName>
+                                    <isMessengerUser>true</isMessengerUser>
+                                    <MessengerMemberInfo>
+                                        <DisplayName>{newContactDisplayName}</DisplayName>
+                                    </MessengerMemberInfo>
+                                </contactInfo>
+                            </Contact>
+                        </contacts>
+                        <options>
+                            <EnableAllowListManagement>true</EnableAllowListManagement>
+                        </options>
+                    </ABContactAdd>
+                </soap:Body>
+            </soap:Envelope>";
+            return MakeSOAPRequest(add_contact_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactAdd");
+        }
+
+        public string MakeRemoveContactSOAPRequest(Contact contact)
+        {
+            string remove_contact_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/""
+                           xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
+                           xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
+                           xmlns:soapenc=""http://schemas.xmlsoap.org/soap/encoding/"">
+                <soap:Header>
+                    <ABApplicationHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
+                        <ApplicationId>996CDE1B-AA53-4477-B943-2BB802EA6166</ApplicationId>
+                        <IsMigration>false</IsMigration>
+                        <PartnerScenario>Timer</PartnerScenario>
+                    </ABApplicationHeader>
+                    <ABAuthHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
+                        <ManagedGroupRequest>false</ManagedGroupRequest>
+                        <TicketToken>{TicketToken}</TicketToken>
+                    </ABAuthHeader>
+                </soap:Header>
+                <soap:Body>
+                    <ABContactDelete xmlns=""http://www.msn.com/webservices/AddressBook"">
+                        <abId>00000000-0000-0000-0000-000000000000</abId>
+                        <contacts>
+                            <Contact>
+                                <contactId>{contact.contactID}</contactId>
+                            </Contact>
+                        </contacts>
+                    </ABContactDelete>
+                </soap:Body>
+            </soap:Envelope>";
+            return MakeSOAPRequest(remove_contact_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactDelete");
         }
 
         public void FillContactList()
@@ -158,6 +237,8 @@ namespace UWPMessengerClient.MSNP15
             XmlNodeList contacts = address_book_xml.SelectNodes(xPath, NSmanager);
             foreach (XmlNode contact in contacts)
             {
+                xPath = "./ab:contactId";
+                XmlNode contactID = contact.SelectSingleNode(xPath, NSmanager);
                 xPath = "./ab:contactInfo/ab:contactType";
                 XmlNode contactType = contact.SelectSingleNode(xPath, NSmanager);
                 switch (contactType.InnerText)
@@ -183,13 +264,14 @@ namespace UWPMessengerClient.MSNP15
                                             select contact_in_list;
                         if (!contactInList.Any())
                         {
-                            contact_list.Add(new Contact() { displayName = displayName.InnerText, email = passportName.InnerText, onForward = true });
+                            contact_list.Add(new Contact() { displayName = displayName.InnerText, email = passportName.InnerText, contactID = contactID.InnerText, onForward = true });
                         }
                         else
                         {
                             foreach (Contact contact_in_list in contactInList)
                             {
                                 contact_in_list.displayName = displayName.InnerText;
+                                contact_in_list.contactID = contactID.InnerText;
                                 contact_in_list.onForward = true;
                             }
                         }
@@ -213,6 +295,32 @@ namespace UWPMessengerClient.MSNP15
                     contact_payload += $@"<d n=""{domain}""><c n=""{name}"" l=""{lisbit}"" t=""1"" /></d>";
                 }
             }
+            contact_payload += @"</ml>";
+            return contact_payload;
+        }
+
+        public static string ReturnXMLContactPayload(Contact contact)
+        {
+            string contact_payload = @"<ml l=""1"">";
+            int lisbit = contact.GetListbitFromForwardAllowBlock();
+            if (lisbit > 0)
+            {
+                string[] email = contact.email.Split("@");
+                string name = email[0];
+                string domain = email[1];
+                contact_payload += $@"<d n=""{domain}""><c n=""{name}"" l=""{lisbit}"" t=""1"" /></d>";
+            }
+            contact_payload += @"</ml>";
+            return contact_payload;
+        }
+
+        public static string ReturnXMLNewContactPayload(string newContactEmail)
+        {
+            string contact_payload = @"<ml l=""1"">";
+            string[] email = newContactEmail.Split("@");
+            string name = email[0];
+            string domain = email[1];
+            contact_payload += $@"<d n=""{domain}""><c n=""{name}"" l=""1"" t=""1"" /></d>";
             contact_payload += @"</ml>";
             return contact_payload;
         }
@@ -248,12 +356,36 @@ namespace UWPMessengerClient.MSNP15
 
         public async Task AddContact(string newContactEmail, string newContactDisplayName = "")
         {
-            throw new NotImplementedException();
+            if (newContactDisplayName == "") { newContactDisplayName = newContactEmail; }
+            MakeAddContactSOAPRequest(newContactEmail, newContactDisplayName);
+            await Task.Run(() =>
+            {
+                string contact_payload = ReturnXMLNewContactPayload(newContactEmail);
+                int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
+                NSSocket.SendCommand($"ADL 10 {payload_length}\r\n");
+                NSSocket.SendCommand(contact_payload);
+                Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    contact_list.Add(new Contact() { displayName = newContactDisplayName, email = newContactEmail, onForward = true });
+                    contacts_in_forward_list.Add(new Contact() { displayName = newContactDisplayName, email = newContactEmail, onForward = true });
+                });
+            });
         }
 
         public async Task RemoveContact(Contact contactToRemove)
         {
-            throw new NotImplementedException();
+            MakeRemoveContactSOAPRequest(contactToRemove);
+            await Task.Run(() =>
+            {
+                string contact_payload = ReturnXMLContactPayload(contactToRemove);
+                int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
+                NSSocket.SendCommand($"RML 10 {payload_length}\r\n");
+                NSSocket.SendCommand(contact_payload);
+                Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    contacts_in_forward_list.Remove(contactToRemove);
+                });
+            });
         }
     }
 }

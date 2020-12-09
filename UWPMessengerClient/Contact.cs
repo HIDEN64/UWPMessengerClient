@@ -13,6 +13,7 @@ namespace UWPMessengerClient
         private string _email;
         private string _displayName;
         private string _GUID;
+        private string _contactID;
         private string _presenceStatus;
         private string _personalMessage;
         public bool onForward, onAllow, onBlock, onReverse, pending;
@@ -76,6 +77,16 @@ namespace UWPMessengerClient
             set
             {
                 _GUID = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string contactID
+        {
+            get => _contactID;
+            set
+            {
+                _contactID = value;
                 NotifyPropertyChanged();
             }
         }

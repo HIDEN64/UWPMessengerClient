@@ -120,9 +120,9 @@ namespace UWPMessengerClient.MSNP12
 
         public async Task InitiateSB()
         {
-            await Task.Run(() => NSSocket.SendCommand("XFR 8 SB\r\n"));
             SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
             SBConnection = switchboardConnection;
+            await Task.Run(() => NSSocket.SendCommand("XFR 8 SB\r\n"));
         }
 
         public void Exit()
