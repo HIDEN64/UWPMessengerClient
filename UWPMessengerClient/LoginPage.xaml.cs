@@ -46,7 +46,7 @@ namespace UWPMessengerClient
                     MSNP12notificationServerConnection = new MSNP12.NotificationServerConnection(email, password);
                     try
                     {
-                        await MSNP12notificationServerConnection.StartLoginToMessengerAsync();
+                        await MSNP12notificationServerConnection.LoginToMessengerAsync();
                     }
                     catch (AggregateException ex)
                     {
@@ -63,7 +63,7 @@ namespace UWPMessengerClient
                     MSNP15notificationServerConnection = new MSNP15.NotificationServerConnection(email, password);
                     try
                     {
-                        await MSNP15notificationServerConnection.StartLoginToMessengerAsync();
+                        await MSNP15notificationServerConnection.LoginToMessengerAsync();
                     }
                     catch (AggregateException ex)
                     {

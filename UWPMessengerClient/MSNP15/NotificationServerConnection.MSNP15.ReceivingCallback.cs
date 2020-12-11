@@ -24,11 +24,6 @@ namespace UWPMessengerClient.MSNP15
             NotificationServerConnection notificationServerConnection = (NotificationServerConnection)asyncResult.AsyncState;
             int bytes_read = notificationServerConnection.NSSocket.StopReceiving(asyncResult);
             notificationServerConnection.output_string = Encoding.UTF8.GetString(notificationServerConnection.received_bytes, 0, bytes_read);
-            if (notificationServerConnection.output_string.Contains("MBI_KEY_OLD"))
-            {
-                GetMBIKeyOldNonce();
-                ContinueLoginToMessenger();
-            }
             if (notificationServerConnection.output_string.Contains("PRP "))
             {
                 if (notificationServerConnection.output_string.Contains("MFN"))
@@ -78,22 +73,6 @@ namespace UWPMessengerClient.MSNP15
             string[] USRParams = USRResponse[1].Split(" ");
             string mbi_key_old = USRParams[4];
             MBIKeyOldNonce = mbi_key_old;
-        }
-
-        public void ContinueLoginToMessenger()
-        {
-            SOAPResult = PerformSoapSSO();
-            string response_struct = GetSSOReturnValue();
-            NSSocket.SendCommand($"USR 4 SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
-            MembershipLists = MakeMembershipListsSOAPRequest();
-            AddressBook = MakeAddressBookSOAPRequest();
-            FillContactList();
-            FillContactsInForwardList();
-            SendBLP();
-            SendInitialADL();
-            SendUserDisplayName();
-            NSSocket.SendCommand("CHG 8 NLN 0\r\n");//setting presence as available
-            CurrentUserPresenceStatus = "NLN";
         }
 
         public void GetUserDisplayName()

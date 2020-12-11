@@ -14,21 +14,39 @@ namespace UWPMessengerClient.MSNP15
         private string MBIKeyOldNonce;
         private string TicketToken;
 
-        public async Task StartLoginToMessengerAsync()
+        public async Task LoginToMessengerAsync()
         {
             NSSocket = new SocketCommands(NSaddress, port);
             Action loginAction = new Action(() =>
             {
                 NSSocket.ConnectSocket();
-                NSSocket.BeginReceiving(received_bytes, new AsyncCallback(MSNP15ReceivingCallback), this);
+                NSSocket.SetReceiveTimeout(15000);
                 NSSocket.SendCommand("VER 1 MSNP15 CVR0\r\n");
+                output_string = NSSocket.ReceiveMessage(received_bytes);//receive VER response
                 NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.4 msmsgs\r\n");
+                output_string = NSSocket.ReceiveMessage(received_bytes);//receive CVR response
                 NSSocket.SendCommand($"USR 3 SSO I {email}\r\n");
+                output_string = NSSocket.ReceiveMessage(received_bytes);//receive GCF
+                output_string = NSSocket.ReceiveMessage(received_bytes);//receive USR response with nonce
+                GetMBIKeyOldNonce();
+                SOAPResult = Perform_SSO_SOAP_Request();
+                string response_struct = GetSSOReturnValue();
+                NSSocket.SendCommand($"USR 4 SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
+                MembershipLists = MakeMembershipListsSOAPRequest();
+                AddressBook = MakeAddressBookSOAPRequest();
+                FillContactList();
+                FillContactsInForwardList();
+                SendBLP();
+                SendInitialADL();
+                SendUserDisplayName();
+                NSSocket.SendCommand("CHG 8 NLN 0\r\n");//setting presence as available
+                CurrentUserPresenceStatus = "NLN";
+                NSSocket.BeginReceiving(received_bytes, new AsyncCallback(MSNP15ReceivingCallback), this);
             });
             await Task.Run(loginAction);
         }
 
-        protected string PerformSoapSSO()
+        protected string Perform_SSO_SOAP_Request()
         {
             string SSO_XML = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
             <Envelope xmlns=""http://schemas.xmlsoap.org/soap/envelope/""

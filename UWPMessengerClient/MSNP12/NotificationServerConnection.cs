@@ -35,7 +35,7 @@ namespace UWPMessengerClient.MSNP12
             password = escargot_password;
         }
 
-        public async Task StartLoginToMessengerAsync()
+        public async Task LoginToMessengerAsync()
         {
             httpClient = new HttpClient();
             NSSocket = new SocketCommands(NSaddress, port);
