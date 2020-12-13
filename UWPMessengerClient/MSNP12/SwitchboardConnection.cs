@@ -21,6 +21,7 @@ namespace UWPMessengerClient.MSNP12
         public int principalsConnected { get; set; }
         public string outputString { get; set; }
         public byte[] outputBuffer { get; set; } = new byte[4096];
+        private bool waitingTyping = false;
 
         public SwitchboardConnection(string email, string userDisplayName)
         {
@@ -70,7 +71,7 @@ namespace UWPMessengerClient.MSNP12
 
         public async Task InvitePrincipal(string principal_email)
         {
-            if (connected == true)
+            if (connected)
             {
                 await Task.Run(() =>
                 {
@@ -85,7 +86,7 @@ namespace UWPMessengerClient.MSNP12
 
         public async Task InvitePrincipal(string principal_email, string principal_display_name)
         {
-            if (connected == true)
+            if (connected)
             {
                 await Task.Run(() =>
                 {
@@ -104,7 +105,7 @@ namespace UWPMessengerClient.MSNP12
 
         public async Task SendMessage(string message_text)
         {
-            if (connected == true && principalsConnected > 0)
+            if (connected && principalsConnected > 0)
             {
                 await Task.Run(() => 
                 {
@@ -116,6 +117,22 @@ namespace UWPMessengerClient.MSNP12
                         MessageList.Add(new Message() { message_text = message_text, sender = userInfo.displayName });
                     });
                 });
+            }
+        }
+
+        public async Task SendTypingUser()
+        {
+            if (connected && principalsConnected > 0 && !waitingTyping)
+            {
+                await Task.Run(() =>
+                {
+                    string message = $"MIME-Version: 1.0\r\nContent-Type: text/x-msmsgscontrol\r\nTypingUser: {UserEmail}\r\n\r\n\r\n";
+                    byte[] byte_message = Encoding.UTF8.GetBytes(message);
+                    SBSocket.SendCommand($"MSG 3 U {byte_message.Length}\r\n{message}");
+                });
+                waitingTyping = true;
+                await Task.Delay(5000);
+                waitingTyping = false;
             }
         }
 

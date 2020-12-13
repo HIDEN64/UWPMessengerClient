@@ -63,5 +63,13 @@ namespace UWPMessengerClient.MSNP12
                 await SendMessage();
             }
         }
+
+        private async void messageBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (messageBox.Text != "")
+            {
+                await switchboardConnection.SendTypingUser();
+            }
+        }
     }
 }
