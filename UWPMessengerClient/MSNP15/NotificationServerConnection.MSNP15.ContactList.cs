@@ -13,11 +13,10 @@ namespace UWPMessengerClient.MSNP15
     {
         private string MembershipLists;
         private string AddressBook;
-        private readonly string SharingService_url = "https://m1.escargot.log1p.xyz/abservice/SharingService.asmx";
-        private readonly string abservice_url = "https://m1.escargot.log1p.xyz/abservice/abservice.asmx";
-        //uncomment below and comment above to use localserver
-        //private readonly string SharingService_url = "http://localhost/abservice/SharingService.asmx";
-        //private readonly string abservice_url = "http://localhost/abservice/abservice.asmx";
+        private string SharingService_url = "https://m1.escargot.log1p.xyz/abservice/SharingService.asmx";
+        private string abservice_url = "https://m1.escargot.log1p.xyz/abservice/abservice.asmx";
+        //local adresses are http://localhost/abservice/SharingService.asmx for SharingService_url and
+        //http://localhost/abservice/abservice.asmx for abservice_url
 
         public string MakeMembershipListsSOAPRequest()
         {

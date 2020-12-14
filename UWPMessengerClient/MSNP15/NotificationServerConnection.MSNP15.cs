@@ -14,21 +14,31 @@ namespace UWPMessengerClient.MSNP15
     {
         private SocketCommands NSSocket;
         public SwitchboardConnection SBConnection { get; set; }
-        private readonly string NSaddress = "m1.escargot.log1p.xyz";
-        private readonly string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
-        //uncomment below and comment above to use localserver
-        //private readonly string NSaddress = "127.0.0.1";
-        //private readonly string RST_address = "http://localhost/RST.srf";
+        //notification server(escargot) address and address for SSO auth
+        private string NSaddress = "m1.escargot.log1p.xyz";
+        private string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
+        //local addresses are 127.0.0.1 for NSaddress and http://localhost/RST.srf for RST_address
         private readonly int port = 1863;
         private string email;
         private string password;
+        private bool _UsingLocalhost = false;
         public int ContactIndexToChat { get; set; }
         public string CurrentUserPresenceStatus { get; set; }
+        public bool UsingLocalhost { get => _UsingLocalhost; }
 
-        public NotificationServerConnection(string escargot_email, string escargot_password)
+        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost)
         {
-            email = escargot_email;
-            password = escargot_password;
+            email = messenger_email;
+            password = messenger_password;
+            _UsingLocalhost = use_localhost;
+            if (_UsingLocalhost)
+            {
+                NSaddress = "127.0.0.1";
+                RST_address = "http://localhost/RST.srf";
+                SharingService_url = "http://localhost/abservice/SharingService.asmx";
+                abservice_url = "http://localhost/abservice/abservice.asmx";
+                //setting local addresses
+            }
         }
 
         public static HttpWebRequest CreateSOAPRequest(string soap_action, string address)

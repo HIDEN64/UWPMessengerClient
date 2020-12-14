@@ -31,6 +31,7 @@ namespace UWPMessengerClient.MSNP15
                 GetMBIKeyOldNonce();
                 SOAPResult = Perform_SSO_SOAP_Request();
                 string response_struct = GetSSOReturnValue();
+                NSSocket.BeginReceiving(received_bytes, new AsyncCallback(MSNP15ReceivingCallback), this);
                 NSSocket.SendCommand($"USR 4 SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
                 MembershipLists = MakeMembershipListsSOAPRequest();
                 AddressBook = MakeAddressBookSOAPRequest();
@@ -41,7 +42,6 @@ namespace UWPMessengerClient.MSNP15
                 SendUserDisplayName();
                 NSSocket.SendCommand("CHG 8 NLN 0\r\n");//setting presence as available
                 CurrentUserPresenceStatus = "NLN";
-                NSSocket.BeginReceiving(received_bytes, new AsyncCallback(MSNP15ReceivingCallback), this);
             });
             await Task.Run(loginAction);
         }

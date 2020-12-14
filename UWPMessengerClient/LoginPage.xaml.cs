@@ -13,7 +13,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
-using System.Net.Http;
+using System.Net.Sockets;
 
 namespace UWPMessengerClient
 {
@@ -39,38 +39,62 @@ namespace UWPMessengerClient
             enable_progress_ring();
             string email = Email_box.Text;
             string password = Password_box.Password;
+            if (email == "" || password == "")
+            {
+                await ShowLoginErrorDialog("Please type login and password");
+                disable_progress_ring();
+                return;
+            }
             string selected_version = version_box.SelectedItem.ToString();
             switch (selected_version)
             {
                 case "MSNP12":
-                    MSNP12notificationServerConnection = new MSNP12.NotificationServerConnection(email, password);
+                    MSNP12notificationServerConnection = new MSNP12.NotificationServerConnection(email, password, localhost_toggle.IsOn);
                     try
                     {
                         await MSNP12notificationServerConnection.LoginToMessengerAsync();
                     }
-                    catch (AggregateException ex)
+                    catch (AggregateException ae)
                     {
-                        for (int i = 0; i < ex.InnerExceptions.Count; i++)
+                        for (int i = 0; i < ae.InnerExceptions.Count; i++)
                         {
-                            await ShowLoginErrorDialog(ex.InnerExceptions[i].Message);
+                            await ShowLoginErrorDialog(ae.InnerExceptions[i].Message);
                         }
+                        disable_progress_ring();
+                        return;
+                    }
+                    catch (SocketException se)
+                    {
+                        await ShowLoginErrorDialog("Server connection error, code: " + se.NativeErrorCode);
                         disable_progress_ring();
                         return;
                     }
                     this.Frame.Navigate(typeof(MSNP12.ContactList), MSNP12notificationServerConnection);
                     break;
                 case "MSNP15":
-                    MSNP15notificationServerConnection = new MSNP15.NotificationServerConnection(email, password);
+                    MSNP15notificationServerConnection = new MSNP15.NotificationServerConnection(email, password, localhost_toggle.IsOn);
                     try
                     {
                         await MSNP15notificationServerConnection.LoginToMessengerAsync();
                     }
-                    catch (AggregateException ex)
+                    catch (AggregateException ae)
                     {
-                        for (int i = 0; i < ex.InnerExceptions.Count; i++)
+                        for (int i = 0; i < ae.InnerExceptions.Count; i++)
                         {
-                            await ShowLoginErrorDialog(ex.InnerExceptions[i].Message);
+                            await ShowLoginErrorDialog(ae.InnerExceptions[i].Message);
                         }
+                        disable_progress_ring();
+                        return;
+                    }
+                    catch (NullReferenceException)
+                    {
+                        await ShowLoginErrorDialog("Incorrect email or password");
+                        disable_progress_ring();
+                        return;
+                    }
+                    catch (SocketException se)
+                    {
+                        await ShowLoginErrorDialog("Server connection error, code: " + se.NativeErrorCode);
                         disable_progress_ring();
                         return;
                     }
