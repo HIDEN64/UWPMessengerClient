@@ -84,6 +84,7 @@
                     </Flyout>
                 </AppBarButton.Flyout>
             </AppBarButton>
+            <AppBarButton Icon="Setting" Label="Settings" x:Name="settings_button" Click="settings_button_Click"/>
         </CommandBar>
     </Grid>
 </Page>

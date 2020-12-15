@@ -125,5 +125,10 @@ namespace UWPMessengerClient.MSNP12
                 await notificationServerConnection.RemoveContact(notificationServerConnection.contacts_in_forward_list[contactListView.SelectedIndex]);
             }
         }
+
+        private void settings_button_Click(object sender, RoutedEventArgs e)
+        {
+            this.Frame.Navigate(typeof(SettingsPage));
+        }
     }
 }

@@ -14,8 +14,9 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="10"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
@@ -23,20 +24,27 @@
             <ColumnDefinition Width="15"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="15"/>
         </Grid.ColumnDefinitions>
-        <TextBlock Name="Title" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="UWP Messenger Client" FontSize="40" 
-                   TextWrapping="Wrap" FontFamily="Segoe UI" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-        <StackPanel Padding="6" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Grid.RowSpan="2" HorizontalAlignment="Center">
-            <TextBox x:Name="Email_box" Margin="5" Header="Enter your email:" FontSize="20" FontWeight="Normal" AutomationProperties.IsRequiredForForm="True" KeyDown="Login_KeyDown"/>
-            <PasswordBox x:Name="Password_box" Margin="5" Header="Enter your password:" InputScope="EmailSmtpAddress" FontSize="20" AutomationProperties.IsRequiredForForm="True" KeyDown="Login_KeyDown"/>
-            <Button Margin="10"  Name="Login" Content="Login" HorizontalAlignment="Center" FontSize="20" Click="Login_Click"/>
-        </StackPanel>
-        <ProgressRing Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Name="loginProgress" Width="80" Height="80"></ProgressRing>
-        <ToggleSwitch x:Name="localhost_toggle" Header="Use localhost" Grid.Row="5" Grid.Column="2" HorizontalAlignment="Left"/>
-        <ComboBox x:Name="version_box" HorizontalAlignment="Left" Grid.Column="2" Grid.Row="6" SelectedIndex="0">
-            <x:String>MSNP15</x:String>
-            <x:String>MSNP12</x:String>
-        </ComboBox>
+        <TextBlock Name="Title" Grid.Row="1" Grid.Column="2" Text="UWP Messenger Client" 
+                   Style="{ThemeResource HeaderTextBlockStyle}" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        <TextBox x:Name="Email_box" Margin="5" Header="Enter your email:" FontSize="20" FontWeight="Normal" 
+                 AutomationProperties.IsRequiredForForm="True" KeyDown="Login_KeyDown" Grid.Column="2"
+                 Grid.Row="2"/>
+        <PasswordBox x:Name="Password_box" Margin="5" Header="Enter your password:" InputScope="EmailSmtpAddress" FontSize="20" 
+                     AutomationProperties.IsRequiredForForm="True" KeyDown="Login_KeyDown" Grid.Column="2"
+                     Grid.Row="3"/>
+        <Button Margin="10"  Name="Login" Content="Login" HorizontalAlignment="Center" FontSize="20" 
+                Click="Login_Click" Grid.Row="5" Grid.Column="2"/>
+        <ProgressRing Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" Name="loginProgress" Width="80" Height="80"/>
+        <Button x:Name="SettingsButton" Style="{ThemeResource PaneToggleButtonStyle}" Grid.Column="1" Grid.Row="7"
+                Click="SettingsButton_Click" Grid.ColumnSpan="3">
+            <Button.Flyout>
+                <MenuFlyout Placement="TopEdgeAlignedLeft">
+                    <MenuFlyoutItem x:Name="settingsItem" Text="Settings" Click="settingsItem_Click"/>
+                </MenuFlyout>
+            </Button.Flyout>
+        </Button>
     </Grid>
 </Page>
