@@ -35,10 +35,11 @@
         <TextBlock Text="{x:Bind notificationServerConnection.userInfo.displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="36" 
                    PointerPressed="TextBlock_PointerPressed" FontWeight="Bold" Grid.Column="1" Grid.Row="1">
             <FlyoutBase.AttachedFlyout>
-                <Flyout x:Name="ChangeFlyout">
+                <Flyout x:Name="ChangeFlyout" Closed="ChangeFlyout_Closed">
                     <StackPanel>
                         <TextBox x:Name="ChangeUserDisplayNameTextBox" Margin="5" Header="Enter your new display name:" TextWrapping="Wrap"/>
                         <Button x:Name="ChangeUserDisplayNameConfirmationButton" Content="OK" HorizontalAlignment="Center" Click="ChangeUserDisplayNameConfirmationButton_Click"/>
+                        <TextBlock x:Name="DisplayNameErrors" Margin="5" TextWrapping="Wrap" Text=""/>
                     </StackPanel>
                 </Flyout>
             </FlyoutBase.AttachedFlyout>
@@ -75,11 +76,12 @@
             <AppBarButton x:Name="removeContactAppBarButton" Icon="Remove" Label="Remove Contact" Click="removeContactAppBarButton_Click"/>
             <AppBarButton x:Name="addContactAppBarButton" Icon="AddFriend" Label="Add Contact" Click="addContactAppBarButton_Click" AllowFocusOnInteraction="True">
                 <AppBarButton.Flyout>
-                    <Flyout x:Name="addContactFlyout">
+                    <Flyout x:Name="addContactFlyout" Closed="addContactFlyout_Closed">
                         <StackPanel>
                             <TextBox x:Name="contactEmailBox" Header="Contact Email" TextWrapping="Wrap" Margin="5"/>
                             <TextBox x:Name="contactDisplayNameBox" Header="Contact Display Name" TextWrapping="Wrap" Margin="5"/>
                             <Button x:Name="addcontactButton" Content="Add" Click="addContactButton_Click"/>
+                            <TextBlock x:Name="AddContactErrors" Margin="5" TextWrapping="Wrap" Text=""/>
                         </StackPanel>
                     </Flyout>
                 </AppBarButton.Flyout>

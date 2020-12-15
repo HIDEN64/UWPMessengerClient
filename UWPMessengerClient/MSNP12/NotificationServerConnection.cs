@@ -97,6 +97,7 @@ namespace UWPMessengerClient.MSNP12
 
         public async Task ChangePresence(string status)
         {
+            if (status == "") { throw new ArgumentNullException("Status is empty"); }
             Action changePresence = new Action(() =>
             {
                 NSSocket.SendCommand($"CHG 7 {status} 0\r\n");
@@ -107,12 +108,14 @@ namespace UWPMessengerClient.MSNP12
 
         public async Task ChangeUserDisplayName(string newDisplayName)
         {
+            if (newDisplayName == "") { throw new ArgumentNullException("Display name is empty"); }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
             await Task.Run(() => NSSocket.SendCommand($"PRP 8 MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
         public async Task AddContact(string newContactEmail, string newContactDisplayName = "")
         {
+            if (newContactEmail == "") { throw new ArgumentNullException("Contact email is empty"); }
             if (newContactDisplayName == "")
             {
                 newContactDisplayName = newContactEmail;

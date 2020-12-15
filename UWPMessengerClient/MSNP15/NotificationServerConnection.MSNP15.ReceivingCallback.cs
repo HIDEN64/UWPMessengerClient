@@ -131,7 +131,6 @@ namespace UWPMessengerClient.MSNP15
             string[] NLNResponses = output_string.Split("NLN ", 2);
             //ensuring the last element of the NLNReponses array is just the NLN response
             int rnIndex = NLNResponses.Last().IndexOf("\r\n");
-            rnIndex += 2;//count for the \r and \n characters
             if (rnIndex != NLNResponses.Last().Length && rnIndex >= 0)
             {
                 NLNResponses[NLNResponses.Length - 1] = NLNResponses.Last().Remove(rnIndex);

@@ -83,9 +83,17 @@ namespace UWPMessengerClient.MSNP12
 
         private async void ChangeUserDisplayNameConfirmationButton_Click(object sender, RoutedEventArgs e)
         {
-            await notificationServerConnection.ChangeUserDisplayName(ChangeUserDisplayNameTextBox.Text);
-            ChangeUserDisplayNameTextBox.Text = "";
-            ChangeFlyout.Hide();
+            try
+            {
+                await notificationServerConnection.ChangeUserDisplayName(ChangeUserDisplayNameTextBox.Text);
+                ChangeUserDisplayNameTextBox.Text = "";
+                DisplayNameErrors.Text = "";
+                ChangeFlyout.Hide();
+            }
+            catch (ArgumentNullException ane)
+            {
+                DisplayNameErrors.Text = ane.Message;
+            }
         }
 
         private void TextBlock_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -100,10 +108,18 @@ namespace UWPMessengerClient.MSNP12
 
         private async void addContactButton_Click(object sender, RoutedEventArgs e)
         {
-            await notificationServerConnection.AddContact(contactEmailBox.Text, contactDisplayNameBox.Text);
-            contactDisplayNameBox.Text = "";
-            contactEmailBox.Text = "";
-            addContactAppBarButton.Flyout.Hide();
+            try
+            {
+                await notificationServerConnection.AddContact(contactEmailBox.Text, contactDisplayNameBox.Text);
+                contactDisplayNameBox.Text = "";
+                contactEmailBox.Text = "";
+                AddContactErrors.Text = "";
+                addContactAppBarButton.Flyout.Hide();
+            }
+            catch (ArgumentNullException ane)
+            {
+                AddContactErrors.Text = ane.Message;
+            }
         }
 
         private void exitButton_Click(object sender, RoutedEventArgs e)
@@ -129,6 +145,16 @@ namespace UWPMessengerClient.MSNP12
         private void settings_button_Click(object sender, RoutedEventArgs e)
         {
             this.Frame.Navigate(typeof(SettingsPage));
+        }
+
+        private void addContactFlyout_Closed(object sender, object e)
+        {
+            AddContactErrors.Text = "";
+        }
+
+        private void ChangeFlyout_Closed(object sender, object e)
+        {
+            DisplayNameErrors.Text = "";
         }
     }
 }

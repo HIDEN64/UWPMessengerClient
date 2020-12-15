@@ -91,6 +91,7 @@ namespace UWPMessengerClient.MSNP15
 
         public async Task ChangePresence(string status)
         {
+            if (status == "") { throw new ArgumentNullException("Status is empty"); }
             Action changePresence = new Action(() =>
             {
                 NSSocket.SendCommand($"CHG 9 {status} 0\r\n");
@@ -101,6 +102,7 @@ namespace UWPMessengerClient.MSNP15
 
         public async Task ChangeUserDisplayName(string newDisplayName)
         {
+            if (newDisplayName == "") { throw new ArgumentNullException("Display name is empty"); }
             string ab_display_name_change_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" 
                            xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""

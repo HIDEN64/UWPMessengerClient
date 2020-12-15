@@ -315,6 +315,7 @@ namespace UWPMessengerClient.MSNP15
 
         public static string ReturnXMLNewContactPayload(string newContactEmail)
         {
+            if (newContactEmail == "") { throw new ArgumentNullException("Contact email is empty"); }
             string contact_payload = @"<ml l=""1"">";
             string[] email = newContactEmail.Split("@");
             string name = email[0];
@@ -355,6 +356,7 @@ namespace UWPMessengerClient.MSNP15
 
         public async Task AddContact(string newContactEmail, string newContactDisplayName = "")
         {
+            if (newContactEmail == "") { throw new ArgumentNullException("Contact email is empty"); }
             if (newContactDisplayName == "") { newContactDisplayName = newContactEmail; }
             MakeAddContactSOAPRequest(newContactEmail, newContactDisplayName);
             await Task.Run(() =>
