@@ -33,6 +33,7 @@ namespace UWPMessengerClient
         {
             MSNP12notificationServerConnection = null;
             MSNP15notificationServerConnection = null;
+            DisableProgressRingAndShowLogin();
             base.OnNavigatedTo(e);
         }
 
@@ -107,7 +108,6 @@ namespace UWPMessengerClient
                 default:
                     throw new Exceptions.VersionNotSelectedException();
             }
-            DisableProgressRingAndShowLogin();
         }
 
         private void SetConfigDefaultValuesIfNull()
