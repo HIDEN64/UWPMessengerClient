@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Core;
 using System.Collections.ObjectModel;
-using System.Xml.Linq;
+using System.Xml;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP12
 {
     public partial class NotificationServerConnection
     {
@@ -87,10 +87,17 @@ namespace UWPMessengerClient
                     email = email.Remove(email.IndexOf(" "));
                     displayName = LSTResponses[i].Split("F=")[1];
                     displayName = displayName.Remove(displayName.IndexOf(" "));
-                    guid = LSTResponses[i].Split("C=")[1];
-                    if (guid.Length > 1 && guid.IndexOf(" ") > 0)
+                    try
                     {
-                        guid = guid.Remove(guid.IndexOf(" "));
+                        guid = LSTResponses[i].Split("C=")[1];
+                        if (guid.Length > 1 && guid.IndexOf(" ") > 0)
+                        {
+                            guid = guid.Remove(guid.IndexOf(" "));
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        guid = "";
                     }
                     string[] LSTAndParams = LSTResponses[i].Split(" ");
                     if (int.TryParse(LSTAndParams[LSTAndParams.Length - 2], out listbit))
@@ -169,7 +176,6 @@ namespace UWPMessengerClient
             string[] NLNResponses = output_string.Split("NLN ", 2);
             //ensuring the last element of the NLNReponses array is just the NLN response
             int rnIndex = NLNResponses.Last().IndexOf("\r\n");
-            rnIndex += 2;//count for the \r and \n characters
             if (rnIndex != NLNResponses.Last().Length && rnIndex >= 0)
             {
                 NLNResponses[NLNResponses.Length - 1] = NLNResponses.Last().Remove(rnIndex);
@@ -250,53 +256,61 @@ namespace UWPMessengerClient
             {
                 if (contact.onForward == true)
                 {
-                    contacts_in_forward_list.Add(contact);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        contacts_in_forward_list.Add(contact);
+                    });
                 }
             }
         }
 
         public void GetContactPersonalMessage()
         {
-            string[] UBXResponse = output_string.Split("UBX ", 2);
-            //ensuring the last element of the UBXReponse array is just the UBX response
-            int DataEndIndex = UBXResponse.Last().LastIndexOf(">");
-            int IndexToStartRemoving = DataEndIndex + 1;//remove just after the last xml tag
-            if (IndexToStartRemoving != UBXResponse.Last().Length && IndexToStartRemoving >= 0)
+            string[] UBXResponses = output_string.Split("UBX ");
+            //ensuring the last element of the UBXReponses array is just the UBX responses
+            for (var i = 1; i < UBXResponses.Length; i++)
             {
-                UBXResponse[UBXResponse.Length - 1] = UBXResponse.Last().Remove(IndexToStartRemoving);
-            }
-            string personal_message;
-            string[] UBXParams = UBXResponse[1].Split(" ");
-            string principal_email = UBXParams[0];
-            string length_str = UBXParams[1].Replace("\r\n", "");
-            length_str = length_str.Remove(length_str.IndexOf("<"));
-            int ubx_length;
-            int.TryParse(length_str, out ubx_length);
-            int indexData1 = UBXResponse.Last().IndexOf("<Data>");
-            byte[] personal_message_xml_buffer = new byte[ubx_length];
-            byte[] ubx_response_buffer = Encoding.UTF8.GetBytes(UBXResponse.Last());
-            Buffer.BlockCopy(ubx_response_buffer, indexData1, personal_message_xml_buffer, 0, ubx_length);
-            string personal_message_xml = Encoding.UTF8.GetString(personal_message_xml_buffer);
-            XElement personalMessageElement;
-            try
-            {
-                personalMessageElement = XElement.Parse(personal_message_xml);
-                personal_message = personalMessageElement.Value;
-            }
-            catch (System.Xml.XmlException)
-            {
-                personal_message = "XML error";
-            }
-            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                var contactWithPersonalMessage = from contact in contact_list
-                                                 where contact.email == principal_email
-                                                 select contact;
-                foreach (Contact contact in contactWithPersonalMessage)
+                int DataEndIndex = UBXResponses[i].LastIndexOf(">");
+                int IndexToStartRemoving = DataEndIndex + 1;//remove just after the last xml tag
+                if (IndexToStartRemoving != UBXResponses[i].Length && IndexToStartRemoving >= 0)
                 {
-                    contact.personalMessage = personal_message;
+                    UBXResponses[i] = UBXResponses[i].Remove(IndexToStartRemoving);
                 }
-            });
+                string personal_message;
+                string[] UBXParams = UBXResponses[i].Split(" ");
+                string principal_email = UBXParams[0];
+                string length_str = UBXParams[1].Replace("\r\n", "");
+                length_str = length_str.Remove(length_str.IndexOf("<"));
+                int ubx_length;
+                int.TryParse(length_str, out ubx_length);
+                int indexData1 = UBXResponses[i].IndexOf("<Data>");
+                byte[] personal_message_xml_buffer = new byte[ubx_length];
+                byte[] ubx_response_buffer = Encoding.UTF8.GetBytes(UBXResponses[i]);
+                Buffer.BlockCopy(ubx_response_buffer, indexData1, personal_message_xml_buffer, 0, ubx_length);
+                string personal_message_xml = Encoding.UTF8.GetString(personal_message_xml_buffer);
+                XmlDocument personalMessagePayload = new XmlDocument();
+                try
+                {
+                    personalMessagePayload.LoadXml(personal_message_xml);
+                    string xPath = "//Data/PSM";
+                    XmlNode PSM = personalMessagePayload.SelectSingleNode(xPath);
+                    personal_message = PSM.InnerText;
+                }
+                catch (XmlException)
+                {
+                    personal_message = "XML error";
+                }
+                Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    var contactWithPersonalMessage = from contact in contact_list
+                                                     where contact.email == principal_email
+                                                     select contact;
+                    foreach (Contact contact in contactWithPersonalMessage)
+                    {
+                        contact.personalMessage = personal_message;
+                    }
+                });
+            }
         }
 
         public async Task ConnectToSwitchboard()

@@ -10,29 +10,36 @@ using System.Web;
 using Windows.UI.Core;
 using System.Collections.ObjectModel;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP12
 {
     public partial class NotificationServerConnection
     {
         private SocketCommands NSSocket;
         private HttpClient httpClient;
         //notification server(escargot) address and nexus address
-        private readonly string NSaddress = "m1.escargot.log1p.xyz";
-        private readonly string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
-        //uncomment below and comment above to use localserver
-        //private readonly string NSaddress = "127.0.0.1";
-        //private readonly string nexus_address = "http://localhost/nexus-mock";
+        private string NSaddress = "m1.escargot.log1p.xyz";
+        private string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
+        //local addresses are 127.0.0.1 for NSaddress and http://localhost/nexus-mock for nexus_address
         private readonly int port = 1863;
         private string email;
         private string password;
         private string token;
+        private bool _UsingLocalhost = false;
         public int ContactIndexToChat { get; set; }
         public string CurrentUserPresenceStatus { get; set; }
+        public bool UsingLocalhost { get => _UsingLocalhost; }
 
-        public NotificationServerConnection(string escargot_email, string escargot_password)
+        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost)
         {
-            email = escargot_email;
-            password = escargot_password;
+            email = messenger_email;
+            password = messenger_password;
+            _UsingLocalhost = use_localhost;
+            if (_UsingLocalhost)
+            {
+                NSaddress = "127.0.0.1";
+                nexus_address = "http://localhost/nexus-mock";
+                //setting local addresses
+            }
         }
 
         public async Task LoginToMessengerAsync()
@@ -69,8 +76,10 @@ namespace UWPMessengerClient
             string[] SplitHeadersString = headersString.Split("DALogin=");
             string DALogin = SplitHeadersString[1];
             DALogin = DALogin.Remove(DALogin.IndexOf("\r"));
-            //to use local nexus server uncomment
-            //DALogin = "http://localhost/login";
+            if (_UsingLocalhost)
+            {
+                DALogin = "http://localhost/login";
+            }
             string email_encoded = HttpUtility.UrlEncode(email);
             string password_encoded = HttpUtility.UrlEncode(password);
             //makes a request to the login address and gets the from-PP header
@@ -88,6 +97,7 @@ namespace UWPMessengerClient
 
         public async Task ChangePresence(string status)
         {
+            if (status == "") { throw new ArgumentNullException("Status is empty"); }
             Action changePresence = new Action(() =>
             {
                 NSSocket.SendCommand($"CHG 7 {status} 0\r\n");
@@ -98,12 +108,14 @@ namespace UWPMessengerClient
 
         public async Task ChangeUserDisplayName(string newDisplayName)
         {
+            if (newDisplayName == "") { throw new ArgumentNullException("Display name is empty"); }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
             await Task.Run(() => NSSocket.SendCommand($"PRP 8 MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
         public async Task AddContact(string newContactEmail, string newContactDisplayName = "")
         {
+            if (newContactEmail == "") { throw new ArgumentNullException("Contact email is empty"); }
             if (newContactDisplayName == "")
             {
                 newContactDisplayName = newContactEmail;
@@ -120,9 +132,9 @@ namespace UWPMessengerClient
 
         public async Task InitiateSB()
         {
-            await Task.Run(() => NSSocket.SendCommand("XFR 8 SB\r\n"));
             SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
             SBConnection = switchboardConnection;
+            await Task.Run(() => NSSocket.SendCommand("XFR 8 SB\r\n"));
         }
 
         public void Exit()

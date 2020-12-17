@@ -13,11 +13,14 @@ namespace UWPMessengerClient
         private string _email;
         private string _displayName;
         private string _GUID;
+        private string _contactID;
         private string _presenceStatus;
         private string _personalMessage;
         public bool onForward, onAllow, onBlock, onReverse, pending;
         private List<string> _groupIDs;
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public Contact() { }
 
         public Contact(int listbit)
         {
@@ -31,6 +34,16 @@ namespace UWPMessengerClient
             onBlock = (listbit & 4) == 4;
             onReverse = (listbit & 8) == 8;
             pending = (listbit & 16) == 16;
+        }
+
+        public int GetListbitFromForwardAllowBlock()
+        {
+            int onForwardInt = onForward ? 1 : 0;
+            int onAllowInt = onAllow ? 2 : 0;
+            int onBlockInt = onBlock ? 4 : 0;
+            //respective value of each list if true and 0 if false
+            int listbit = (onForwardInt & 1) + (onAllowInt & 2) + (onBlockInt & 4);
+            return listbit;
         }
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -64,6 +77,16 @@ namespace UWPMessengerClient
             set
             {
                 _GUID = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string contactID
+        {
+            get => _contactID;
+            set
+            {
+                _contactID = value;
                 NotifyPropertyChanged();
             }
         }

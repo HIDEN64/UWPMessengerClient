@@ -12,12 +12,13 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP12
 {
     public sealed partial class ChatPage : Page
     {
+        private NotificationServerConnection notificationServerConnection;
         private SwitchboardConnection switchboardConnection;
 
         public ChatPage()
@@ -27,18 +28,24 @@ namespace UWPMessengerClient
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            switchboardConnection = (SwitchboardConnection)e.Parameter;
+            notificationServerConnection = (NotificationServerConnection)e.Parameter;
+            switchboardConnection = notificationServerConnection.SBConnection;
             BackButton.IsEnabled = this.Frame.CanGoBack;
             base.OnNavigatedTo(e);
         }
 
-        private async void sendButton_Click(object sender, RoutedEventArgs e)
+        private async Task SendMessage()
         {
             if (switchboardConnection != null && switchboardConnection.connected && messageBox.Text != "")
             {
                 await switchboardConnection.SendMessage(messageBox.Text);
                 messageBox.Text = "";
             }
+        }
+
+        private async void sendButton_Click(object sender, RoutedEventArgs e)
+        {
+            await SendMessage();
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -53,11 +60,15 @@ namespace UWPMessengerClient
         {
             if (e.Key == Windows.System.VirtualKey.Enter)
             {
-                if (switchboardConnection != null && switchboardConnection.connected && messageBox.Text != "")
-                {
-                    await switchboardConnection.SendMessage(messageBox.Text);
-                    messageBox.Text = "";
-                }
+                await SendMessage();
+            }
+        }
+
+        private async void messageBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (messageBox.Text != "")
+            {
+                await switchboardConnection.SendTypingUser();
             }
         }
     }
