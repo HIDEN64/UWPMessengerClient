@@ -13,6 +13,7 @@ namespace UWPMessengerClient
         private string _displayName;
         private string _personalMessage;
         private string _typingUser;
+        public string BLPValue { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")

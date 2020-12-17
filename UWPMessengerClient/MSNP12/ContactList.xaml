@@ -1,15 +1,16 @@
 ﻿<Page
-    x:Class="UWPMessengerClient.ContactList"
+    x:Class="UWPMessengerClient.MSNP12.ContactList"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:UWPMessengerClient"
+    xmlns:local="using:UWPMessengerClient.MSNP12"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:main_local="using:UWPMessengerClient"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <UserControl.Resources>
-        <local:StatusConverter x:Key="StatusConverter"/>
-        <local:UrlDecodingConverter x:Key="UrlDecodingConverter"/>
+        <main_local:StatusConverter x:Key="StatusConverter"/>
+        <main_local:UrlDecodingConverter x:Key="UrlDecodingConverter"/>
     </UserControl.Resources>
 
     <Grid>
@@ -34,10 +35,11 @@
         <TextBlock Text="{x:Bind notificationServerConnection.userInfo.displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="36" 
                    PointerPressed="TextBlock_PointerPressed" FontWeight="Bold" Grid.Column="1" Grid.Row="1">
             <FlyoutBase.AttachedFlyout>
-                <Flyout x:Name="ChangeFlyout">
+                <Flyout x:Name="ChangeFlyout" Closed="ChangeFlyout_Closed">
                     <StackPanel>
                         <TextBox x:Name="ChangeUserDisplayNameTextBox" Margin="5" Header="Enter your new display name:" TextWrapping="Wrap"/>
                         <Button x:Name="ChangeUserDisplayNameConfirmationButton" Content="OK" HorizontalAlignment="Center" Click="ChangeUserDisplayNameConfirmationButton_Click"/>
+                        <TextBlock x:Name="DisplayNameErrors" Margin="5" TextWrapping="Wrap" Text=""/>
                     </StackPanel>
                 </Flyout>
             </FlyoutBase.AttachedFlyout>
@@ -51,7 +53,7 @@
         <ListView x:Name="contactListView" ItemsSource="{x:Bind notificationServerConnection.contacts_in_forward_list, Mode=OneWay}" HorizontalAlignment="Stretch"
                   Grid.ColumnSpan="3" Grid.Row="5" Grid.Column="1">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:Contact">
+                <DataTemplate x:DataType="main_local:Contact">
                     <StackPanel DoubleTapped="StackPanel_DoubleTapped" Margin="3">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{x:Bind displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="18" FontWeight="Bold"/>
@@ -74,15 +76,17 @@
             <AppBarButton x:Name="removeContactAppBarButton" Icon="Remove" Label="Remove Contact" Click="removeContactAppBarButton_Click"/>
             <AppBarButton x:Name="addContactAppBarButton" Icon="AddFriend" Label="Add Contact" Click="addContactAppBarButton_Click" AllowFocusOnInteraction="True">
                 <AppBarButton.Flyout>
-                    <Flyout x:Name="addContactFlyout">
+                    <Flyout x:Name="addContactFlyout" Closed="addContactFlyout_Closed">
                         <StackPanel>
                             <TextBox x:Name="contactEmailBox" Header="Contact Email" TextWrapping="Wrap" Margin="5"/>
                             <TextBox x:Name="contactDisplayNameBox" Header="Contact Display Name" TextWrapping="Wrap" Margin="5"/>
                             <Button x:Name="addcontactButton" Content="Add" Click="addContactButton_Click"/>
+                            <TextBlock x:Name="AddContactErrors" Margin="5" TextWrapping="Wrap" Text=""/>
                         </StackPanel>
                     </Flyout>
                 </AppBarButton.Flyout>
             </AppBarButton>
+            <AppBarButton Icon="Setting" Label="Settings" x:Name="settings_button" Click="settings_button_Click"/>
         </CommandBar>
     </Grid>
 </Page>

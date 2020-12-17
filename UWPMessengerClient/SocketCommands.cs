@@ -12,7 +12,7 @@ namespace UWPMessengerClient
     {
         private Socket socket;
         private string server_address = "";
-        private static int server_port = 0;
+        private int server_port = 0;
 
         public SocketCommands(string address, int port)
         {
@@ -20,11 +20,15 @@ namespace UWPMessengerClient
             server_port = port;
         }
 
+        public void SetReceiveTimeout(int timeout)
+        {
+            socket.ReceiveTimeout = timeout;//in ms
+        }
+
         public void ConnectSocket()
         {
             //creates a tcp socket then connects it to the server
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            socket.ReceiveTimeout = 10000;
             IPHostEntry iPHostEntry = Dns.GetHostEntry(server_address);
             IPAddress iPAddress = iPHostEntry.AddressList[0];
             IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, server_port);
@@ -59,31 +63,11 @@ namespace UWPMessengerClient
             }
         }
 
-        public string ReceiveMessage(int message_size = 4096)
+        public string ReceiveMessage(byte[] buffer)
         {
-            int size = 0;
-            byte[] received_bytes = new byte[message_size];
-            try
-            {
-                do
-                {
-                    size = socket.Receive(received_bytes);
-                }
-                while (socket.Available != 0);
-            }
-            catch (SocketException e)
-            {
-                return "Socket exception: " + e.Message + "\n";
-            }
-            if (size != 0)
-            {
-                string received_bytes_string = Encoding.UTF8.GetString(received_bytes);
-                return received_bytes_string;
-            }
-            else
-            {
-                return "";
-            }
+            int bytes_read = socket.Receive(buffer);
+            string received_bytes_string = Encoding.UTF8.GetString(buffer, 0, bytes_read);
+            return received_bytes_string;
         }
 
         public void CloseSocket()

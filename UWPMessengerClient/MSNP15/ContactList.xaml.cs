@@ -14,7 +14,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP15
 {
     public sealed partial class ContactList : Page
     {
@@ -66,21 +66,34 @@ namespace UWPMessengerClient
             }
         }
 
-        private async void start_chat_button_Click(object sender, RoutedEventArgs e)
+        private async Task StartChat()
         {
             if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
             {
                 notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
                 await notificationServerConnection.InitiateSB();
             }
-            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection.SBConnection);
+            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection);
+        }
+
+        private async void start_chat_button_Click(object sender, RoutedEventArgs e)
+        {
+            await StartChat();
         }
 
         private async void ChangeUserDisplayNameConfirmationButton_Click(object sender, RoutedEventArgs e)
         {
-            await notificationServerConnection.ChangeUserDisplayName(ChangeUserDisplayNameTextBox.Text);
-            ChangeUserDisplayNameTextBox.Text = "";
-            ChangeFlyout.Hide();
+            try
+            {
+                await notificationServerConnection.ChangeUserDisplayName(ChangeUserDisplayNameTextBox.Text);
+                ChangeUserDisplayNameTextBox.Text = "";
+                DisplayNameErrors.Text = "";
+                ChangeFlyout.Hide();
+            }
+            catch (ArgumentNullException ane)
+            {
+                DisplayNameErrors.Text = ane.Message;
+            }
         }
 
         private void TextBlock_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -90,20 +103,23 @@ namespace UWPMessengerClient
 
         private async void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
-            {
-                notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
-                await notificationServerConnection.InitiateSB();
-            }
-            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection.SBConnection);
+            await StartChat();
         }
 
         private async void addContactButton_Click(object sender, RoutedEventArgs e)
         {
-            await notificationServerConnection.AddContact(contactEmailBox.Text, contactDisplayNameBox.Text);
-            contactDisplayNameBox.Text = "";
-            contactEmailBox.Text = "";
-            addContactAppBarButton.Flyout.Hide();
+            try
+            {
+                await notificationServerConnection.AddContact(contactEmailBox.Text, contactDisplayNameBox.Text);
+                contactDisplayNameBox.Text = "";
+                contactEmailBox.Text = "";
+                AddContactErrors.Text = "";
+                addContactAppBarButton.Flyout.Hide();
+            }
+            catch (ArgumentNullException ane)
+            {
+                AddContactErrors.Text = ane.Message;
+            }
         }
 
         private void exitButton_Click(object sender, RoutedEventArgs e)
@@ -124,6 +140,21 @@ namespace UWPMessengerClient
             {
                 await notificationServerConnection.RemoveContact(notificationServerConnection.contacts_in_forward_list[contactListView.SelectedIndex]);
             }
+        }
+
+        private void settings_button_Click(object sender, RoutedEventArgs e)
+        {
+            this.Frame.Navigate(typeof(SettingsPage));
+        }
+
+        private void addContactFlyout_Closed(object sender, object e)
+        {
+            AddContactErrors.Text = "";
+        }
+
+        private void ChangeFlyout_Closed(object sender, object e)
+        {
+            DisplayNameErrors.Text = "";
         }
     }
 }
