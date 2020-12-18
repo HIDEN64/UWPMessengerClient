@@ -17,6 +17,8 @@ namespace UWPMessengerClient.MSNP15
         private string abservice_url = "https://m1.escargot.log1p.xyz/abservice/abservice.asmx";
         //local adresses are http://localhost/abservice/SharingService.asmx for SharingService_url and
         //http://localhost/abservice/abservice.asmx for abservice_url
+        public ObservableCollection<Contact> contact_list { get; set; } = new ObservableCollection<Contact>();
+        public ObservableCollection<Contact> contacts_in_forward_list { get; set; } = new ObservableCollection<Contact>();
 
         public string MakeMembershipListsSOAPRequest()
         {

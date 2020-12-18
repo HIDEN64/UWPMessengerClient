@@ -25,6 +25,7 @@ namespace UWPMessengerClient.MSNP15
         public int ContactIndexToChat { get; set; }
         public string CurrentUserPresenceStatus { get; set; }
         public bool UsingLocalhost { get => _UsingLocalhost; }
+        public UserInfo userInfo { get; set; } = new UserInfo();
 
         public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost)
         {
@@ -94,7 +95,7 @@ namespace UWPMessengerClient.MSNP15
             if (status == "") { throw new ArgumentNullException("Status is empty"); }
             Action changePresence = new Action(() =>
             {
-                NSSocket.SendCommand($"CHG 9 {status} 0\r\n");
+                NSSocket.SendCommand($"CHG 10 {status} 0\r\n");
             });
             CurrentUserPresenceStatus = status;
             await Task.Run(changePresence);
@@ -136,14 +137,30 @@ namespace UWPMessengerClient.MSNP15
             </soap:Envelope>";
             MakeSOAPRequest(ab_display_name_change_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
-            await Task.Run(() => NSSocket.SendCommand($"PRP 9 MFN {urlEncodedNewDisplayName}\r\n"));
+            await Task.Run(() => NSSocket.SendCommand($"PRP 10 MFN {urlEncodedNewDisplayName}\r\n"));
+        }
+
+        public async Task SendUserPersonalMessage(string newPersonalMessage)
+        {
+            Action psm_action = new Action(() =>
+            {
+                string encodedPersonalMessage = newPersonalMessage.Replace("&", "&amp;");
+                string psm_payload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
+                int payload_length = Encoding.UTF8.GetBytes(psm_payload).Length;
+                NSSocket.SendCommand($"UUX 12 {payload_length}\r\n" + psm_payload);
+                Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    userInfo.personalMessage = newPersonalMessage;
+                });
+            });
+            await Task.Run(psm_action);
         }
 
         public async Task InitiateSB()
         {
             SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
             SBConnection = switchboardConnection;
-            await Task.Run(() => NSSocket.SendCommand("XFR 9 SB\r\n"));
+            await Task.Run(() => NSSocket.SendCommand("XFR 10 SB\r\n"));
         }
 
         public void Exit()

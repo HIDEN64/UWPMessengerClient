@@ -15,7 +15,6 @@ namespace UWPMessengerClient.MSNP12
         private string output_string;
         public ObservableCollection<Contact> contact_list { get; set; } = new ObservableCollection<Contact>();
         public ObservableCollection<Contact> contacts_in_forward_list { get; set; } = new ObservableCollection<Contact>();
-        public UserInfo userInfo { get; set; } = new UserInfo();
         public SwitchboardConnection SBConnection { get; set; }
 
         public static void ReceivingCallback(IAsyncResult asyncResult)

@@ -17,6 +17,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="15"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="10"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="10"/>
@@ -44,14 +45,26 @@
                 </Flyout>
             </FlyoutBase.AttachedFlyout>
         </TextBlock>
+        <TextBlock x:Name="UserPersonalMessage" Text="{x:Bind notificationServerConnection.userInfo.personalMessage, Mode=OneWay}" 
+                   Grid.Column="1" Grid.Row="2" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap" PointerPressed="UserPersonalMessage_PointerPressed">
+            <FlyoutBase.AttachedFlyout>
+                <Flyout x:Name="personalMessageFlyout" Closed="personalMessageFlyout_Closed">
+                    <StackPanel>
+                        <TextBox x:Name="ChangeUserPersonalMessageTextBox" Margin="5" Header="Enter your new personal message:" TextWrapping="Wrap"/>
+                        <Button x:Name="ChangeUserPersonalConfirmationButton" Content="OK" HorizontalAlignment="Center" Click="ChangeUserPersonalConfirmationButton_Click"/>
+                        <TextBlock x:Name="PersonalMessageErrors" Margin="5" TextWrapping="Wrap" Text=""/>
+                    </StackPanel>
+                </Flyout>
+            </FlyoutBase.AttachedFlyout>
+        </TextBlock>
         <ComboBox x:Name="Presence" FontSize="16" Header="Set your presence status" PlaceholderText="Status" 
-                  Grid.Column="1" Grid.Row="3" SelectionChanged="Presence_SelectionChanged">
+                  Grid.Column="1" Grid.Row="4" SelectionChanged="Presence_SelectionChanged">
             <x:String>Available</x:String>
             <x:String>Busy</x:String>
             <x:String>Away</x:String>
         </ComboBox>
         <ListView x:Name="contactListView" ItemsSource="{x:Bind notificationServerConnection.contacts_in_forward_list, Mode=OneWay}" HorizontalAlignment="Stretch"
-                  Grid.ColumnSpan="3" Grid.Row="5" Grid.Column="1">
+                  Grid.ColumnSpan="3" Grid.Row="6" Grid.Column="1">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="main_local:Contact">
                     <StackPanel DoubleTapped="StackPanel_DoubleTapped" Margin="3">
@@ -70,7 +83,7 @@
                 </ItemsPanelTemplate>
             </ListView.ItemsPanel>
         </ListView>
-        <CommandBar Grid.Column="1" Grid.Row="7" HorizontalAlignment="Center" Grid.ColumnSpan="3">
+        <CommandBar Grid.Column="1" Grid.Row="8" HorizontalAlignment="Center" Grid.ColumnSpan="3">
             <AppBarButton x:Name="exitButton" Icon="Back" Label="Back to login(exit)" Click="exitButton_Click"/>
             <AppBarButton x:Name="chatButton" Icon="Message" Label="Chat with contact" Click="start_chat_button_Click"/>
             <AppBarButton x:Name="removeContactAppBarButton" Icon="Remove" Label="Remove Contact" Click="removeContactAppBarButton_Click"/>

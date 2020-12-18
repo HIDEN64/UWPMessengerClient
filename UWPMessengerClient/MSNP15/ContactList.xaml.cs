@@ -13,12 +13,14 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
+using Windows.Storage;
 
 namespace UWPMessengerClient.MSNP15
 {
     public sealed partial class ContactList : Page
     {
         private NotificationServerConnection notificationServerConnection;
+        ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
 
         public ContactList()
         {
@@ -43,6 +45,10 @@ namespace UWPMessengerClient.MSNP15
                     break;
             }
             Presence.SelectedItem = fullStatus;
+            if (roamingSettings.Values["MSN_PersonalMessage"] != null)
+            {
+                _ = notificationServerConnection.SendUserPersonalMessage((string)roamingSettings.Values["MSN_PersonalMessage"]);
+            }
             base.OnNavigatedTo(e);
         }
 
@@ -68,10 +74,14 @@ namespace UWPMessengerClient.MSNP15
 
         private async Task StartChat()
         {
-            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
+            if ((notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null) && contactListView.SelectedIndex >= 0)
             {
                 notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
                 await notificationServerConnection.InitiateSB();
+            }
+            else
+            {
+                return;
             }
             this.Frame.Navigate(typeof(ChatPage), notificationServerConnection);
         }
@@ -155,6 +165,32 @@ namespace UWPMessengerClient.MSNP15
         private void ChangeFlyout_Closed(object sender, object e)
         {
             DisplayNameErrors.Text = "";
+        }
+
+        private void personalMessageFlyout_Closed(object sender, object e)
+        {
+            PersonalMessageErrors.Text = "";
+        }
+
+        private async void ChangeUserPersonalConfirmationButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await notificationServerConnection.SendUserPersonalMessage(ChangeUserPersonalMessageTextBox.Text);
+                ChangeUserDisplayNameTextBox.Text = "";
+                PersonalMessageErrors.Text = "";
+                personalMessageFlyout.Hide();
+                roamingSettings.Values["MSN_PersonalMessage"] = ChangeUserPersonalMessageTextBox.Text;
+            }
+            catch (ArgumentNullException ane)
+            {
+                PersonalMessageErrors.Text = ane.Message;
+            }
+        }
+
+        private void UserPersonalMessage_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
         }
     }
 }
