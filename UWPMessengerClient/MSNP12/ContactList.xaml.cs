@@ -45,9 +45,9 @@ namespace UWPMessengerClient.MSNP12
                     break;
             }
             Presence.SelectedItem = fullStatus;
-            if (roamingSettings.Values["MSN_PersonalMessage"] != null)
+            if (roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"] != null)
             {
-                _ = notificationServerConnection.SendUserPersonalMessage((string)roamingSettings.Values["MSN_PersonalMessage"]);
+                _ = notificationServerConnection.SendUserPersonalMessage((string)roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"]);
             }
             base.OnNavigatedTo(e);
         }
@@ -180,7 +180,7 @@ namespace UWPMessengerClient.MSNP12
                 ChangeUserDisplayNameTextBox.Text = "";
                 PersonalMessageErrors.Text = "";
                 personalMessageFlyout.Hide();
-                roamingSettings.Values["MSN_PersonalMessage"] = ChangeUserPersonalMessageTextBox.Text;
+                roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"] = ChangeUserPersonalMessageTextBox.Text;
             }
             catch (ArgumentNullException ane)
             {

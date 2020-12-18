@@ -56,6 +56,7 @@ namespace UWPMessengerClient.MSNP12
                 NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");//send msnp version
                 NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");//send client information
                 NSSocket.SendCommand($"USR 3 TWN I {email}\r\n");//sends email to get a string for use in authentication
+                userInfo.Email = email;
                 Task<string> token_task = GetNexusTokenAsync(httpClient);
                 token = token_task.Result;
                 NSSocket.SendCommand($"USR 4 TWN S t={token}\r\n");//sending authentication token

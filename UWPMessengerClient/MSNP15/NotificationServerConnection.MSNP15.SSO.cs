@@ -28,6 +28,7 @@ namespace UWPMessengerClient.MSNP15
                 NSSocket.SendCommand($"USR 3 SSO I {email}\r\n");
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive GCF
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive USR response with nonce
+                userInfo.Email = email;
                 GetMBIKeyOldNonce();
                 SOAPResult = Perform_SSO_SOAP_Request();
                 string response_struct = GetSSOReturnValue();
