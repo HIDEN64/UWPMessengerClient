@@ -23,11 +23,12 @@ namespace UWPMessengerClient.MSNP15
                 NSSocket.SetReceiveTimeout(15000);
                 NSSocket.SendCommand("VER 1 MSNP15 CVR0\r\n");
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive VER response
-                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.4 msmsgs\r\n");
+                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive CVR response
                 NSSocket.SendCommand($"USR 3 SSO I {email}\r\n");
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive GCF
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive USR response with nonce
+                userInfo.Email = email;
                 GetMBIKeyOldNonce();
                 SOAPResult = Perform_SSO_SOAP_Request();
                 string response_struct = GetSSOReturnValue();

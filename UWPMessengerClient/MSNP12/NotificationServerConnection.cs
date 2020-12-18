@@ -28,6 +28,7 @@ namespace UWPMessengerClient.MSNP12
         public int ContactIndexToChat { get; set; }
         public string CurrentUserPresenceStatus { get; set; }
         public bool UsingLocalhost { get => _UsingLocalhost; }
+        public UserInfo userInfo { get; set; } = new UserInfo();
 
         public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost)
         {
@@ -53,8 +54,9 @@ namespace UWPMessengerClient.MSNP12
                 //begin receiving from escargot
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");//send msnp version
-                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.4 msmsgs\r\n");//send client information
+                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");//send client information
                 NSSocket.SendCommand($"USR 3 TWN I {email}\r\n");//sends email to get a string for use in authentication
+                userInfo.Email = email;
                 Task<string> token_task = GetNexusTokenAsync(httpClient);
                 token = token_task.Result;
                 NSSocket.SendCommand($"USR 4 TWN S t={token}\r\n");//sending authentication token
@@ -113,6 +115,22 @@ namespace UWPMessengerClient.MSNP12
             await Task.Run(() => NSSocket.SendCommand($"PRP 8 MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
+        public async Task SendUserPersonalMessage(string newPersonalMessage)
+        {
+            Action psm_action = new Action(() =>
+            {
+                string encodedPersonalMessage = newPersonalMessage.Replace("&", "&amp;");
+                string psm_payload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
+                int payload_length = Encoding.UTF8.GetBytes(psm_payload).Length;
+                NSSocket.SendCommand($"UUX 12 {payload_length}\r\n" + psm_payload);
+                Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    userInfo.personalMessage = newPersonalMessage;
+                });
+            });
+            await Task.Run(psm_action);
+        }
+
         public async Task AddContact(string newContactEmail, string newContactDisplayName = "")
         {
             if (newContactEmail == "") { throw new ArgumentNullException("Contact email is empty"); }
@@ -120,12 +138,12 @@ namespace UWPMessengerClient.MSNP12
             {
                 newContactDisplayName = newContactEmail;
             }
-            await Task.Run(() => NSSocket.SendCommand($"ADC 9 FL N={newContactEmail} F={newContactDisplayName}\r\n"));
+            await Task.Run(() => NSSocket.SendCommand($"ADC 11 FL N={newContactEmail} F={newContactDisplayName}\r\n"));
         }
 
         public async Task RemoveContact(Contact contactToRemove)
         {
-            await Task.Run(() => NSSocket.SendCommand($"REM 9 FL {contactToRemove.GUID}\r\n"));
+            await Task.Run(() => NSSocket.SendCommand($"REM 11 FL {contactToRemove.GUID}\r\n"));
             contact_list.Remove(contactToRemove);
             contacts_in_forward_list.Remove(contactToRemove);
         }
@@ -134,7 +152,7 @@ namespace UWPMessengerClient.MSNP12
         {
             SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
             SBConnection = switchboardConnection;
-            await Task.Run(() => NSSocket.SendCommand("XFR 8 SB\r\n"));
+            await Task.Run(() => NSSocket.SendCommand("XFR 10 SB\r\n"));
         }
 
         public void Exit()

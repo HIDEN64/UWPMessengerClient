@@ -15,9 +15,6 @@ namespace UWPMessengerClient.MSNP15
         private string SSO_Ticket;
         private byte[] received_bytes = new byte[4096];
         private string output_string;
-        public ObservableCollection<Contact> contact_list { get; set; } = new ObservableCollection<Contact>();
-        public ObservableCollection<Contact> contacts_in_forward_list { get; set; } = new ObservableCollection<Contact>();
-        public UserInfo userInfo { get; set; } = new UserInfo();
 
         public void MSNP15ReceivingCallback(IAsyncResult asyncResult)
         {

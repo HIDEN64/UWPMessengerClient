@@ -13,12 +13,14 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
+using Windows.Storage;
 
 namespace UWPMessengerClient.MSNP15
 {
     public sealed partial class ContactList : Page
     {
         private NotificationServerConnection notificationServerConnection;
+        ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
 
         public ContactList()
         {
@@ -43,6 +45,10 @@ namespace UWPMessengerClient.MSNP15
                     break;
             }
             Presence.SelectedItem = fullStatus;
+            if (roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"] != null)
+            {
+                _ = notificationServerConnection.SendUserPersonalMessage((string)roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"]);
+            }
             base.OnNavigatedTo(e);
         }
 
@@ -68,12 +74,19 @@ namespace UWPMessengerClient.MSNP15
 
         private async Task StartChat()
         {
-            if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
+            if (contactListView.SelectedIndex >= 0)
             {
-                notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
-                await notificationServerConnection.InitiateSB();
+                if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
+                {
+                    notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
+                    await notificationServerConnection.InitiateSB();
+                }
+                this.Frame.Navigate(typeof(ChatPage), notificationServerConnection);
             }
-            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection);
+            else
+            {
+                return;
+            }
         }
 
         private async void start_chat_button_Click(object sender, RoutedEventArgs e)
@@ -155,6 +168,32 @@ namespace UWPMessengerClient.MSNP15
         private void ChangeFlyout_Closed(object sender, object e)
         {
             DisplayNameErrors.Text = "";
+        }
+
+        private void personalMessageFlyout_Closed(object sender, object e)
+        {
+            PersonalMessageErrors.Text = "";
+        }
+
+        private async void ChangeUserPersonalConfirmationButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await notificationServerConnection.SendUserPersonalMessage(ChangeUserPersonalMessageTextBox.Text);
+                ChangeUserDisplayNameTextBox.Text = "";
+                PersonalMessageErrors.Text = "";
+                personalMessageFlyout.Hide();
+                roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"] = ChangeUserPersonalMessageTextBox.Text;
+            }
+            catch (ArgumentNullException ane)
+            {
+                PersonalMessageErrors.Text = ane.Message;
+            }
+        }
+
+        private void UserPersonalMessage_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
         }
     }
 }
