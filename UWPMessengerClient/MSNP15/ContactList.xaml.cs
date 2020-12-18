@@ -74,16 +74,19 @@ namespace UWPMessengerClient.MSNP15
 
         private async Task StartChat()
         {
-            if ((notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null) && contactListView.SelectedIndex >= 0)
+            if (contactListView.SelectedIndex >= 0)
             {
-                notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
-                await notificationServerConnection.InitiateSB();
+                if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
+                {
+                    notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
+                    await notificationServerConnection.InitiateSB();
+                }
+                this.Frame.Navigate(typeof(ChatPage), notificationServerConnection);
             }
             else
             {
                 return;
             }
-            this.Frame.Navigate(typeof(ChatPage), notificationServerConnection);
         }
 
         private async void start_chat_button_Click(object sender, RoutedEventArgs e)
