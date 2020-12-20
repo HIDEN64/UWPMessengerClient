@@ -158,6 +158,7 @@
     <Compile Include="MSNP12\NotificationServerConnection.ReceivingCallback.cs" />
     <Compile Include="MSNP15\SwitchboardConnection.MSNP15.cs" />
     <Compile Include="MSNP15\SwitchboardConnection.MSNP15.ReceivingCallback.cs" />
+    <Compile Include="PersonalMessageConverter.cs" />
     <Compile Include="PresenceStatuses.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SettingsPage.xaml.cs">

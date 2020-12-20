@@ -11,6 +11,7 @@
     <UserControl.Resources>
         <main_local:StatusConverter x:Key="StatusConverter"/>
         <main_local:UrlDecodingConverter x:Key="UrlDecodingConverter"/>
+        <main_local:PersonalMessageConverter x:Key="PersonalMessageConverter"/>
     </UserControl.Resources>
 
     <Grid>
@@ -45,7 +46,7 @@
                 </Flyout>
             </FlyoutBase.AttachedFlyout>
         </TextBlock>
-        <TextBlock x:Name="UserPersonalMessage" Text="{x:Bind notificationServerConnection.userInfo.personalMessage, Mode=OneWay}" 
+        <TextBlock x:Name="UserPersonalMessage" Text="{x:Bind notificationServerConnection.userInfo.personalMessage, Converter={StaticResource PersonalMessageConverter}, Mode=OneWay}" 
                    Grid.Column="1" Grid.Row="2" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap" PointerPressed="UserPersonalMessage_PointerPressed">
             <FlyoutBase.AttachedFlyout>
                 <Flyout x:Name="personalMessageFlyout" Closed="personalMessageFlyout_Closed">
@@ -69,9 +70,9 @@
                 <DataTemplate x:DataType="main_local:Contact">
                     <StackPanel DoubleTapped="StackPanel_DoubleTapped" Margin="3">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{x:Bind displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="18" FontWeight="Bold"/>
+                            <TextBlock Text="{x:Bind displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="18" FontWeight="Bold" TextWrapping="Wrap"/>
                             <TextBlock Text="- " FontSize="18"/>
-                            <TextBlock Text="{x:Bind personalMessage, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="16"/>
+                            <TextBlock Text="{x:Bind personalMessage, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="16" TextWrapping="Wrap"/>
                         </StackPanel>
                         <TextBlock Text="{x:Bind presenceStatus, Converter={StaticResource StatusConverter}, Mode=OneWay}" FontSize="14"/>
                     </StackPanel>
