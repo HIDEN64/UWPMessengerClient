@@ -51,13 +51,16 @@ namespace UWPMessengerClient.MSNP
             string[] MSGParams = outputString.Split(" ");
             string senderDisplayName = MSGParams[2];
             var content = new ToastContentBuilder()
-                .AddToastActivationInfo("newMessage", ToastActivationType.Foreground)
+                .AddToastActivationInfo("newMessages", ToastActivationType.Foreground)
                 .AddText(HttpUtility.UrlDecode(senderDisplayName))
                 .AddText(messageText)
                 .GetToastContent();
             try
             {
-                var notif = new ToastNotification(content.GetXml());
+                var notif = new ToastNotification(content.GetXml())
+                {
+                    Group = "messages"
+                };
                 ToastNotificationManager.CreateToastNotifier().Show(notif);
             }
             catch (ArgumentException) { }

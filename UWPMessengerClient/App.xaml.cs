@@ -14,6 +14,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Windows.UI.Notifications;
 
 namespace UWPMessengerClient
 {
@@ -71,6 +72,21 @@ namespace UWPMessengerClient
                 // Verifique se a janela atual está ativa
                 Window.Current.Activate();
             }
+        }
+
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            ToastNotificationHistory notificationHistory = ToastNotificationManager.History;
+            if (args is ToastNotificationActivatedEventArgs eventArgs)
+            {
+                switch (eventArgs.Argument)
+                {
+                    case "newMessages":
+                        notificationHistory.RemoveGroup("messages");
+                        break;
+                }
+            }
+            base.OnActivated(args);
         }
 
         /// <summary>
