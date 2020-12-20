@@ -8,7 +8,7 @@ using System.Net.Sockets;
 
 namespace UWPMessengerClient
 {
-    class SocketCommands
+    public class SocketCommands
     {
         private Socket socket;
         private string server_address = "";

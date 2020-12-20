@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Core;
 
-namespace UWPMessengerClient.MSNP15
+namespace UWPMessengerClient.MSNP
 {
     public partial class SwitchboardConnection
     {

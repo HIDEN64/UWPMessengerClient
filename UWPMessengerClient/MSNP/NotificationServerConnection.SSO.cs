@@ -7,14 +7,14 @@ using System.Net;
 using System.Xml;
 using System.Security.Cryptography;
 
-namespace UWPMessengerClient.MSNP15
+namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection
     {
         private string MBIKeyOldNonce;
         private string TicketToken;
 
-        public async Task LoginToMessengerAsync()
+        protected async Task MSNP15LoginToMessengerAsync()
         {
             NSSocket = new SocketCommands(NSaddress, port);
             Action loginAction = new Action(() =>
@@ -32,12 +32,12 @@ namespace UWPMessengerClient.MSNP15
                 GetMBIKeyOldNonce();
                 SOAPResult = Perform_SSO_SOAP_Request();
                 string response_struct = GetSSOReturnValue();
-                NSSocket.BeginReceiving(received_bytes, new AsyncCallback(MSNP15ReceivingCallback), this);
+                NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 NSSocket.SendCommand($"USR 4 SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
                 MembershipLists = MakeMembershipListsSOAPRequest();
                 AddressBook = MakeAddressBookSOAPRequest();
-                FillContactList();
-                FillContactsInForwardList();
+                FillContactListFromSOAP();
+                FillContactsInForwardListFromSOAP();
                 SendBLP();
                 SendInitialADL();
                 SendUserDisplayName();
@@ -110,6 +110,11 @@ namespace UWPMessengerClient.MSNP15
                 </Body>
             </Envelope>";
             return MakeSOAPRequest(SSO_XML, RST_address, "http://www.msn.com/webservices/storage/w10/");
+        }
+
+        public static byte[] JoinBytes(byte[] first, byte[] second)
+        {
+            return first.Concat(second).ToArray();
         }
 
         protected byte[] GetResultFromSSOHashs(byte[] key, string ws_secure)

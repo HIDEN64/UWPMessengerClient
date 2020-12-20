@@ -4,16 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
-using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System.Web;
+using Windows.UI.Core;
 
-namespace UWPMessengerClient.MSNP12
+namespace UWPMessengerClient.MSNP
 {
     public partial class SwitchboardConnection
     {
         public ObservableCollection<Message> MessageList { get; set; } = new ObservableCollection<Message>();
+
         public void ReceivingCallback(IAsyncResult asyncResult)
         {
             SwitchboardConnection switchboardConnection = (SwitchboardConnection)asyncResult.AsyncState;
@@ -34,7 +35,7 @@ namespace UWPMessengerClient.MSNP12
             {
                 connected = true;
             }
-            if (switchboardConnection.outputString.StartsWith("JOI") || switchboardConnection.outputString.StartsWith("IRO"))
+            if (switchboardConnection.outputString.Contains("JOI") || switchboardConnection.outputString.Contains("IRO"))
             {
                 principalsConnected++;
             }

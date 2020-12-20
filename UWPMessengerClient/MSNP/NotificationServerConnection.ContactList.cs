@@ -7,7 +7,7 @@ using System.Xml;
 using Windows.UI.Core;
 using System.Collections.ObjectModel;
 
-namespace UWPMessengerClient.MSNP15
+namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection
     {
@@ -154,7 +154,7 @@ namespace UWPMessengerClient.MSNP15
             return MakeSOAPRequest(remove_contact_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactDelete");
         }
 
-        public void FillContactList()
+        protected void FillContactListFromSOAP()
         {
             XmlDocument member_list = new XmlDocument();
             member_list.LoadXml(MembershipLists);
@@ -225,7 +225,7 @@ namespace UWPMessengerClient.MSNP15
             }
         }
 
-        public void FillContactsInForwardList()
+        protected void FillContactsInForwardListFromSOAP()
         {
             XmlDocument address_book_xml = new XmlDocument();
             address_book_xml.LoadXml(AddressBook);
@@ -327,7 +327,7 @@ namespace UWPMessengerClient.MSNP15
             return contact_payload;
         }
 
-        public void SendBLP()
+        protected void SendBLP()
         {
             string setting = "";
             switch (userInfo.BLPValue)
@@ -343,7 +343,7 @@ namespace UWPMessengerClient.MSNP15
             NSSocket.SendCommand($"BLP 5 {setting}\r\n");
         }
 
-        public void SendInitialADL()
+        protected void SendInitialADL()
         {
             string contact_payload = ReturnXMLContactPayload(contact_list);
             int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
@@ -351,7 +351,7 @@ namespace UWPMessengerClient.MSNP15
             NSSocket.SendCommand(contact_payload);
         }
 
-        public void SendUserDisplayName()
+        protected void SendUserDisplayName()
         {
             NSSocket.SendCommand($"PRP 7 MFN {userInfo.displayName}\r\n");
         }
@@ -360,13 +360,21 @@ namespace UWPMessengerClient.MSNP15
         {
             if (newContactEmail == "") { throw new ArgumentNullException("Contact email is empty"); }
             if (newContactDisplayName == "") { newContactDisplayName = newContactEmail; }
-            MakeAddContactSOAPRequest(newContactEmail, newContactDisplayName);
             await Task.Run(() =>
             {
-                string contact_payload = ReturnXMLNewContactPayload(newContactEmail);
-                int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                NSSocket.SendCommand($"ADL 10 {payload_length}\r\n");
-                NSSocket.SendCommand(contact_payload);
+                switch (MSNPVersion)
+                {
+                    case "MSNP12":
+                        NSSocket.SendCommand($"ADC 11 FL N={newContactEmail} F={newContactDisplayName}\r\n");
+                        break;
+                    case "MSNP15":
+                        MakeAddContactSOAPRequest(newContactEmail, newContactDisplayName);
+                        string contact_payload = ReturnXMLNewContactPayload(newContactEmail);
+                        int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
+                        NSSocket.SendCommand($"ADL 10 {payload_length}\r\n");
+                        NSSocket.SendCommand(contact_payload);
+                        break;
+                }
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     contact_list.Add(new Contact() { displayName = newContactDisplayName, email = newContactEmail, onForward = true });
@@ -377,13 +385,22 @@ namespace UWPMessengerClient.MSNP15
 
         public async Task RemoveContact(Contact contactToRemove)
         {
-            MakeRemoveContactSOAPRequest(contactToRemove);
+            
             await Task.Run(() =>
             {
-                string contact_payload = ReturnXMLContactPayload(contactToRemove);
-                int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                NSSocket.SendCommand($"RML 10 {payload_length}\r\n");
-                NSSocket.SendCommand(contact_payload);
+                switch (MSNPVersion)
+                {
+                    case "MSNP12":
+                        NSSocket.SendCommand($"REM 11 FL {contactToRemove.GUID}\r\n");
+                        break;
+                    case "MSNP15":
+                        MakeRemoveContactSOAPRequest(contactToRemove);
+                        string contact_payload = ReturnXMLContactPayload(contactToRemove);
+                        int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
+                        NSSocket.SendCommand($"RML 10 {payload_length}\r\n");
+                        NSSocket.SendCommand(contact_payload);
+                        break;
+                }
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     contacts_in_forward_list.Remove(contactToRemove);

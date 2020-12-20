@@ -17,6 +17,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="10"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
@@ -42,5 +43,6 @@
         </ComboBox>
         <TextBlock Text="If you're already logged in log off and back in to apply these changes" Style="{ThemeResource BodyTextBlockStyle}"
                    Margin="5" TextWrapping="Wrap" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3"/>
+        <ListView x:Name="errorList" Grid.Row="8" ItemsSource="{x:Bind errors}" Grid.Column="1" Grid.ColumnSpan="3"/>
     </Grid>
 </Page>

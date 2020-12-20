@@ -13,12 +13,14 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Windows.Storage;
+using System.Collections.ObjectModel;
 
 namespace UWPMessengerClient
 {
     public sealed partial class SettingsPage : Page
     {
         ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+        private ObservableCollection<string> errors;
 
         public SettingsPage()
         {
@@ -30,6 +32,7 @@ namespace UWPMessengerClient
         {
             BackButton.IsEnabled = this.Frame.CanGoBack;
             SetSavedSettings();
+            errors = (ObservableCollection<string>)e.Parameter;
             base.OnNavigatedTo(e);
         }
 

@@ -3,68 +3,144 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.UI.Core;
 using System.Collections.ObjectModel;
 using System.Xml;
+using Windows.UI.Core;
 
-namespace UWPMessengerClient.MSNP12
+namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection
     {
+        private string SOAPResult;
+        private string SSO_Ticket;
         private byte[] received_bytes = new byte[4096];
         private string output_string;
-        public ObservableCollection<Contact> contact_list { get; set; } = new ObservableCollection<Contact>();
-        public ObservableCollection<Contact> contacts_in_forward_list { get; set; } = new ObservableCollection<Contact>();
-        public SwitchboardConnection SBConnection { get; set; }
 
-        public static void ReceivingCallback(IAsyncResult asyncResult)
+        public void ReceivingCallback(IAsyncResult asyncResult)
         {
-            NotificationServerConnection NServerConnection = (NotificationServerConnection)asyncResult.AsyncState;
-            int bytes_read = NServerConnection.NSSocket.StopReceiving(asyncResult);
-            NServerConnection.output_string = Encoding.UTF8.GetString(NServerConnection.received_bytes, 0, bytes_read);
-            if (NServerConnection.output_string.Contains("LST "))
+            NotificationServerConnection notificationServerConnection = (NotificationServerConnection)asyncResult.AsyncState;
+            int bytes_read = notificationServerConnection.NSSocket.StopReceiving(asyncResult);
+            notificationServerConnection.output_string = Encoding.UTF8.GetString(notificationServerConnection.received_bytes, 0, bytes_read);
+            if (notificationServerConnection.output_string.Contains("LST "))
             {
-                NServerConnection.CreateContactList();
-            }
-            if (NServerConnection.output_string.Contains("ILN "))
-            {
-                NServerConnection.SetInitialContactPresence();
-            }
-            if (NServerConnection.output_string.Contains("PRP "))
-            {
-                if (NServerConnection.output_string.Contains("MFN" ))
+                try
                 {
-                    NServerConnection.GetUserDisplayName();
+                    notificationServerConnection.CreateContactList();
+                }
+                catch (Exception e)
+                {
+                    errorLog.Add("LST processing error: " + e.Message);
                 }
             }
-            if (NServerConnection.output_string.StartsWith("NLN "))
+            if (notificationServerConnection.output_string.StartsWith("ADC "))
             {
-                NServerConnection.SetContactPresence();
+                try
+                {
+                    notificationServerConnection.ReceiveNewContactFromADC();
+                }
+                catch (Exception e)
+                {
+                    errorLog.Add("Receiving ADC processing error: " + e.Message);
+                }
             }
-            if (NServerConnection.output_string.Contains("UBX "))
+            if (notificationServerConnection.output_string.Contains("PRP "))
             {
-                NServerConnection.GetContactPersonalMessage();
+                if (notificationServerConnection.output_string.Contains("MFN"))
+                {
+                    try
+                    {
+                        notificationServerConnection.GetUserDisplayName();
+                    }
+                    catch(Exception e)
+                    {
+                        errorLog.Add("PRP MFN processing error: " + e.Message);
+                    }
+                }
             }
-            if (NServerConnection.output_string.StartsWith("FLN "))
+            if (notificationServerConnection.output_string.Contains("ILN "))
             {
-                NServerConnection.SetContactOffline();
+                try
+                {
+                    notificationServerConnection.SetInitialContactPresence();
+                }
+                catch (Exception e)
+                {
+                    errorLog.Add("ILN processing error: " + e.Message);
+                }
             }
-            if (NServerConnection.output_string.StartsWith("XFR "))
+            if (notificationServerConnection.output_string.StartsWith("NLN "))
             {
-                var task = NServerConnection.ConnectToSwitchboard();
+                try
+                {
+                    notificationServerConnection.SetContactPresence();
+                }
+                catch (Exception e)
+                {
+                    errorLog.Add("NLN processing error: " + e.Message);
+                }
             }
-            if (NServerConnection.output_string.StartsWith("RNG "))
+            if (notificationServerConnection.output_string.Contains("UBX "))
             {
-                NServerConnection.JoinSwitchboard();
+                try
+                {
+                    notificationServerConnection.GetContactsPersonalMessages();
+                }
+                catch (Exception e)
+                {
+                    errorLog.Add("UBX processing error: " + e.Message);
+                }
             }
-            if (NServerConnection.output_string.StartsWith("ADC "))
+            if (notificationServerConnection.output_string.StartsWith("FLN "))
             {
-                NServerConnection.ReceiveNewContact();
+                try
+                {
+                    notificationServerConnection.SetContactOffline();
+                }
+                catch (Exception e)
+                {
+                    errorLog.Add("FLN processing error: " + e.Message);
+                }
+            }
+            if (notificationServerConnection.output_string.StartsWith("XFR "))
+            {
+                try
+                {
+                    var task = notificationServerConnection.ConnectToSwitchboard();
+                }
+                catch (Exception e)
+                {
+                    errorLog.Add("XFR processing error: " + e.Message);
+                }
+            }
+            if (notificationServerConnection.output_string.StartsWith("RNG "))
+            {
+                try
+                {
+                    notificationServerConnection.JoinSwitchboard();
+                }
+                catch (Exception e)
+                {
+                    errorLog.Add("RNG processing error: " + e.Message);
+                }
             }
             if (bytes_read > 0)
             {
-                NServerConnection.NSSocket.BeginReceiving(NServerConnection.received_bytes, new AsyncCallback(ReceivingCallback), NServerConnection);
+                notificationServerConnection.NSSocket.BeginReceiving(notificationServerConnection.received_bytes, new AsyncCallback(ReceivingCallback), notificationServerConnection);
             }
+        }
+
+        protected void GetMBIKeyOldNonce()
+        {
+            string[] USRResponse = output_string.Split("USR ", 2);
+            //ensuring the last element of the USRReponse array is just the USR response
+            int rnIndex = USRResponse.Last().IndexOf("\r\n");
+            if (rnIndex != USRResponse.Last().Length && rnIndex >= 0)
+            {
+                USRResponse[USRResponse.Length - 1] = USRResponse.Last().Remove(rnIndex);
+            }
+            string[] USRParams = USRResponse[1].Split(" ");
+            string mbi_key_old = USRParams[4];
+            MBIKeyOldNonce = mbi_key_old;
         }
 
         public void CreateContactList()
@@ -113,7 +189,7 @@ namespace UWPMessengerClient.MSNP12
             });
         }
 
-        public void ReceiveNewContact()
+        public void ReceiveNewContactFromADC()
         {
             string[] ADCResponses = output_string.Split("ADC ");
             //ensuring the last element of the ADCResponses array is just the ADC response
@@ -142,90 +218,6 @@ namespace UWPMessengerClient.MSNP12
             });
         }
 
-        public void SetInitialContactPresence()
-        {
-            string[] ILNResponses = output_string.Split("ILN ");
-            //ensuring the last element of the ILNReponses array is just the ILN response
-            int rnIndex = ILNResponses.Last().IndexOf("\r\n");
-            if (rnIndex != ILNResponses.Last().Length && rnIndex >= 0)
-            {
-                ILNResponses[ILNResponses.Length - 1] = ILNResponses.Last().Remove(rnIndex);
-            }
-            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                for (int i = 1; i < ILNResponses.Length; i++)
-                {
-                    //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
-                    string[] ILNParams = ILNResponses[i].Split(" ");
-                    string status = ILNParams[1];
-                    string email = ILNParams[2];
-                    var contactWithPresence = from contact in contact_list
-                                              where contact.email == email
-                                              select contact;
-                    foreach (Contact contact in contactWithPresence)
-                    {
-                        contact.presenceStatus = status;
-                    }
-                }
-            });
-        }
-
-        public void SetContactPresence()
-        {
-            string[] NLNResponses = output_string.Split("NLN ", 2);
-            //ensuring the last element of the NLNReponses array is just the NLN response
-            int rnIndex = NLNResponses.Last().IndexOf("\r\n");
-            if (rnIndex != NLNResponses.Last().Length && rnIndex >= 0)
-            {
-                NLNResponses[NLNResponses.Length - 1] = NLNResponses.Last().Remove(rnIndex);
-            }
-            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                for (int i = 1; i < NLNResponses.Length; i++)
-                {
-                    //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
-                    string[] NLNParams = NLNResponses[i].Split(" ");
-                    string status = NLNParams[0];
-                    string email = NLNParams[1];
-                    string displayName = NLNParams[2];
-                    var contactWithPresence = from contact in contact_list
-                                              where contact.email == email
-                                              select contact;
-                    foreach (Contact contact in contactWithPresence)
-                    {
-                        contact.presenceStatus = status;
-                        contact.displayName = displayName;
-                    }
-                }
-            });
-        }
-
-        public void SetContactOffline()
-        {
-            string[] FLNResponses = output_string.Split("FLN ", 2);
-            //ensuring the last element of the FLNReponses array is just the FLN response
-            int rnIndex = FLNResponses.Last().IndexOf("\r\n");
-            if (rnIndex != FLNResponses.Last().Length && rnIndex >= 0)
-            {
-                FLNResponses[FLNResponses.Length - 1] = FLNResponses.Last().Remove(rnIndex);
-            }
-            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                for (int i = 1; i < FLNResponses.Length; i++)
-                {
-                    //for each FLN response gets the email, does a LINQ query in the contact list and sets the contact's status to offline
-                    string email = FLNResponses[i];
-                    var contactWithPresence = from contact in contact_list
-                                              where contact.email == email
-                                              select contact;
-                    foreach (Contact contact in contactWithPresence)
-                    {
-                        contact.presenceStatus = null;
-                    }
-                }
-            });
-        }
-
         public void GetUserDisplayName()
         {
             string[] PRPResponse = output_string.Split("PRP ", 2);
@@ -249,21 +241,116 @@ namespace UWPMessengerClient.MSNP12
             });
         }
 
-        public void FillForwardListCollection()
+        public void SetInitialContactPresence()
         {
-            foreach (Contact contact in contact_list)
+            string[] ILNResponses = output_string.Split("ILN ");
+            //ensuring the last element of the ILNReponses array is just the ILN response
+            int rnIndex = ILNResponses.Last().IndexOf("\r\n");
+            if (rnIndex != ILNResponses.Last().Length && rnIndex >= 0)
             {
-                if (contact.onForward == true)
+                ILNResponses[ILNResponses.Length - 1] = ILNResponses.Last().Remove(rnIndex);
+            }
+            for (int i = 1; i < ILNResponses.Length; i++)
+            {
+                //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
+                string[] ILNParams = ILNResponses[i].Split(" ");
+                string status = ILNParams[1];
+                string email = ILNParams[2];
+                string displayName = "";
+                switch (MSNPVersion)
+                {
+                    case "MSNP12":
+                        displayName = ILNParams[3];
+                        break;
+                    case "MSNP15":
+                        displayName = ILNParams[4];
+                        break;
+                    default:
+                        throw new Exceptions.VersionNotSelectedException();
+                }
+                var contactWithPresence = from contact in contact_list
+                                            where contact.email == email
+                                            select contact;
+                foreach (Contact contact in contactWithPresence)
                 {
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        contacts_in_forward_list.Add(contact);
+                        contact.presenceStatus = status;
+                        contact.displayName = displayName;
                     });
                 }
             }
         }
 
-        public void GetContactPersonalMessage()
+        public void SetContactPresence()
+        {
+            string[] NLNResponses = output_string.Split("NLN ", 2);
+            //ensuring the last element of the NLNReponses array is just the NLN response
+            int rnIndex = NLNResponses.Last().IndexOf("\r\n");
+            if (rnIndex != NLNResponses.Last().Length && rnIndex >= 0)
+            {
+                NLNResponses[NLNResponses.Length - 1] = NLNResponses.Last().Remove(rnIndex);
+            }
+            for (int i = 1; i < NLNResponses.Length; i++)
+            {
+                //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
+                string[] NLNParams = NLNResponses[i].Split(" ");
+                string status = NLNParams[0];
+                string email = NLNParams[1];
+                string displayName = "";
+                switch (MSNPVersion)
+                {
+                    case "MSNP12":
+                        displayName = NLNParams[2];
+                        break;
+                    case "MSNP15":
+                        displayName = NLNParams[3];
+                        break;
+                    default:
+                        throw new Exceptions.VersionNotSelectedException();
+                }
+                
+                var contactWithPresence = from contact in contact_list
+                                            where contact.email == email
+                                            select contact;
+                foreach (Contact contact in contactWithPresence)
+                {
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        contact.presenceStatus = status;
+                        contact.displayName = displayName;
+                    });
+                }
+            }
+        }
+
+        public void SetContactOffline()
+        {
+            string[] FLNResponses = output_string.Split("FLN ", 2);
+            //ensuring the last element of the FLNReponses array is just the FLN response
+            int rnIndex = FLNResponses.Last().IndexOf("\r\n");
+            if (rnIndex != FLNResponses.Last().Length && rnIndex >= 0)
+            {
+                FLNResponses[FLNResponses.Length - 1] = FLNResponses.Last().Remove(rnIndex);
+            }
+            for (int i = 1; i < FLNResponses.Length; i++)
+            {
+                //for each FLN response gets the email, does a LINQ query in the contact list and sets the contact's status to offline
+                string email = FLNResponses[i].Split(" ")[0];
+                var contactWithPresence = from contact in contact_list
+                                            where contact.email == email
+                                            select contact;
+                foreach (Contact contact in contactWithPresence)
+                {
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        contact.presenceStatus = null;
+                    });
+                }
+            }
+        }
+
+        public void GetContactsPersonalMessages()
         {
             string[] UBXResponses = output_string.Split("UBX ");
             //ensuring the last element of the UBXReponses array is just the UBX responses
@@ -278,7 +365,18 @@ namespace UWPMessengerClient.MSNP12
                 string personal_message;
                 string[] UBXParams = UBXResponses[i].Split(" ");
                 string principal_email = UBXParams[0];
-                string length_str = UBXParams[1].Replace("\r\n", "");
+                string length_str = "";
+                switch (MSNPVersion)
+                {
+                    case "MSNP12":
+                        length_str = UBXParams[1].Replace("\r\n", "");
+                        break;
+                    case "MSNP15":
+                        length_str = UBXParams[2].Replace("\r\n", "");
+                        break;
+                    default:
+                        throw new Exceptions.VersionNotSelectedException();
+                }
                 length_str = length_str.Remove(length_str.IndexOf("<"));
                 int ubx_length;
                 int.TryParse(length_str, out ubx_length);
@@ -299,16 +397,16 @@ namespace UWPMessengerClient.MSNP12
                 {
                     personal_message = "XML error";
                 }
-                Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                var contactWithPersonalMessage = from contact in contact_list
+                                                    where contact.email == principal_email
+                                                    select contact;
+                foreach (Contact contact in contactWithPersonalMessage)
                 {
-                    var contactWithPersonalMessage = from contact in contact_list
-                                                     where contact.email == principal_email
-                                                     select contact;
-                    foreach (Contact contact in contactWithPersonalMessage)
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         contact.personalMessage = personal_message;
-                    }
-                });
+                    });
+                }
             }
         }
 
@@ -326,7 +424,18 @@ namespace UWPMessengerClient.MSNP12
             string sb_address = address_and_port[0];
             int sb_port;
             int.TryParse(address_and_port[1], out sb_port);
-            string trID = XFRParams.Last();
+            string trID = "";
+            switch (MSNPVersion)
+            {
+                case "MSNP12":
+                    trID = XFRParams.Last();
+                    break;
+                case "MSNP15":
+                    trID = XFRParams[4];
+                    break;
+                default:
+                    throw new Exceptions.VersionNotSelectedException();
+            }
             SBConnection.SetAddressPortAndTrID(sb_address, sb_port, trID);
             await SBConnection.LoginToNewSwitchboardAsync();
             await SBConnection.InvitePrincipal(contacts_in_forward_list[ContactIndexToChat].email, contacts_in_forward_list[ContactIndexToChat].displayName);

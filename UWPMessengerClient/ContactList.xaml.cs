@@ -15,11 +15,11 @@ using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 using Windows.Storage;
 
-namespace UWPMessengerClient.MSNP15
+namespace UWPMessengerClient
 {
     public sealed partial class ContactList : Page
     {
-        private NotificationServerConnection notificationServerConnection;
+        private MSNP.NotificationServerConnection notificationServerConnection;
         ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
 
         public ContactList()
@@ -29,7 +29,7 @@ namespace UWPMessengerClient.MSNP15
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            notificationServerConnection = (NotificationServerConnection)e.Parameter;
+            notificationServerConnection = (MSNP.NotificationServerConnection)e.Parameter;
             string status = notificationServerConnection.CurrentUserPresenceStatus;
             string fullStatus = null;
             switch (status)
@@ -157,7 +157,7 @@ namespace UWPMessengerClient.MSNP15
 
         private void settings_button_Click(object sender, RoutedEventArgs e)
         {
-            this.Frame.Navigate(typeof(SettingsPage));
+            this.Frame.Navigate(typeof(SettingsPage), notificationServerConnection.errorLog);
         }
 
         private void addContactFlyout_Closed(object sender, object e)

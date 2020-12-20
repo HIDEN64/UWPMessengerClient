@@ -7,38 +7,59 @@ using System.Net;
 using System.Xml;
 using System.IO;
 using Windows.UI.Core;
+using System.Collections.ObjectModel;
 
-namespace UWPMessengerClient.MSNP15
+namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection
     {
-        private SocketCommands NSSocket;
+        protected SocketCommands NSSocket;
         public SwitchboardConnection SBConnection { get; set; }
         //notification server(escargot) address and address for SSO auth
-        private string NSaddress = "m1.escargot.log1p.xyz";
-        private string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
-        //local addresses are 127.0.0.1 for NSaddress and http://localhost/RST.srf for RST_address
-        private readonly int port = 1863;
+        protected string NSaddress = "m1.escargot.log1p.xyz";
+        protected string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
+        protected string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
+        //local addresses are 127.0.0.1 for NSaddress, http://localhost/RST.srf for RST_address
+        //and http://localhost/nexus-mock for nexus_address
+        protected readonly int port = 1863;
         private string email;
         private string password;
-        private bool _UsingLocalhost = false;
+        protected bool _UsingLocalhost = false;
+        protected string _MSNPVersion;
         public int ContactIndexToChat { get; set; }
         public string CurrentUserPresenceStatus { get; set; }
         public bool UsingLocalhost { get => _UsingLocalhost; }
+        public string MSNPVersion { get => _MSNPVersion; }
         public UserInfo userInfo { get; set; } = new UserInfo();
+        public ObservableCollection<string> errorLog { get; set; } = new ObservableCollection<string>();
 
-        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost)
+        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version)
         {
             email = messenger_email;
             password = messenger_password;
             _UsingLocalhost = use_localhost;
+            _MSNPVersion = msnp_version;
             if (_UsingLocalhost)
             {
                 NSaddress = "127.0.0.1";
                 RST_address = "http://localhost/RST.srf";
+                nexus_address = "http://localhost/nexus-mock";
                 SharingService_url = "http://localhost/abservice/SharingService.asmx";
                 abservice_url = "http://localhost/abservice/abservice.asmx";
                 //setting local addresses
+            }
+        }
+
+        public async Task LoginToMessengerAsync()
+        {
+            switch (MSNPVersion)
+            {
+                case "MSNP12":
+                    await MSNP12LoginToMessengerAsync();
+                    break;
+                case "MSNP15":
+                    await MSNP15LoginToMessengerAsync();
+                    break;
             }
         }
 
@@ -69,11 +90,6 @@ namespace UWPMessengerClient.MSNP15
                     return result;
                 }
             }
-        }
-
-        public static byte[] JoinBytes(byte[] first, byte[] second)
-        {
-            return first.Concat(second).ToArray();
         }
 
         public void FillForwardListCollection()
@@ -135,7 +151,10 @@ namespace UWPMessengerClient.MSNP15
                     </ABContactUpdate>
                 </soap:Body>
             </soap:Envelope>";
-            MakeSOAPRequest(ab_display_name_change_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
+            if (MSNPVersion == "MSNP15")
+            {
+                MakeSOAPRequest(ab_display_name_change_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
+            }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
             await Task.Run(() => NSSocket.SendCommand($"PRP 10 MFN {urlEncodedNewDisplayName}\r\n"));
         }

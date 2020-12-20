@@ -20,8 +20,7 @@ namespace UWPMessengerClient
 {
     public sealed partial class LoginPage : Page
     {
-        MSNP12.NotificationServerConnection MSNP12notificationServerConnection;
-        MSNP15.NotificationServerConnection MSNP15notificationServerConnection;
+        MSNP.NotificationServerConnection notificationServerConnection;
         ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
         public LoginPage()
@@ -31,8 +30,7 @@ namespace UWPMessengerClient
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            MSNP12notificationServerConnection = null;
-            MSNP15notificationServerConnection = null;
+            notificationServerConnection = null;
             DisableProgressRingAndShowLogin();
             base.OnNavigatedTo(e);
         }
@@ -51,63 +49,39 @@ namespace UWPMessengerClient
             }
             string selected_version = localSettings.Values["MSNP_Version"].ToString();
             bool using_localhost = (bool)localSettings.Values["Using_Localhost"];
-            switch (selected_version)
+            notificationServerConnection = new MSNP.NotificationServerConnection(email, password, using_localhost, selected_version);
+            try
             {
-                case "MSNP12":
-                    MSNP12notificationServerConnection = new MSNP12.NotificationServerConnection(email, password, using_localhost);
-                    try
-                    {
-                        await MSNP12notificationServerConnection.LoginToMessengerAsync();
-                    }
-                    catch (AggregateException ae)
-                    {
-                        for (int i = 0; i < ae.InnerExceptions.Count; i++)
-                        {
-                            await ShowLoginErrorDialog(ae.InnerExceptions[i].Message);
-                        }
-                        DisableProgressRingAndShowLogin();
-                        return;
-                    }
-                    catch (SocketException se)
-                    {
-                        await ShowLoginErrorDialog("Server connection error, code: " + se.NativeErrorCode);
-                        DisableProgressRingAndShowLogin();
-                        return;
-                    }
-                    this.Frame.Navigate(typeof(MSNP12.ContactList), MSNP12notificationServerConnection);
-                    break;
-                case "MSNP15":
-                    MSNP15notificationServerConnection = new MSNP15.NotificationServerConnection(email, password, using_localhost);
-                    try
-                    {
-                        await MSNP15notificationServerConnection.LoginToMessengerAsync();
-                    }
-                    catch (AggregateException ae)
-                    {
-                        for (int i = 0; i < ae.InnerExceptions.Count; i++)
-                        {
-                            await ShowLoginErrorDialog(ae.InnerExceptions[i].Message);
-                        }
-                        DisableProgressRingAndShowLogin();
-                        return;
-                    }
-                    catch (NullReferenceException)
-                    {
-                        await ShowLoginErrorDialog("Incorrect email or password");
-                        DisableProgressRingAndShowLogin();
-                        return;
-                    }
-                    catch (SocketException se)
-                    {
-                        await ShowLoginErrorDialog("Server connection error, code: " + se.NativeErrorCode);
-                        DisableProgressRingAndShowLogin();
-                        return;
-                    }
-                    this.Frame.Navigate(typeof(MSNP15.ContactList), MSNP15notificationServerConnection);
-                    break;
-                default:
-                    throw new Exceptions.VersionNotSelectedException();
+                await notificationServerConnection.LoginToMessengerAsync();
             }
+            catch (AggregateException ae)
+            {
+                for (int i = 0; i < ae.InnerExceptions.Count; i++)
+                {
+                    await ShowLoginErrorDialog(ae.InnerExceptions[i].Message);
+                }
+                DisableProgressRingAndShowLogin();
+                return;
+            }
+            catch (NullReferenceException)
+            {
+                await ShowLoginErrorDialog("Incorrect email or password");
+                DisableProgressRingAndShowLogin();
+                return;
+            }
+            catch (SocketException se)
+            {
+                await ShowLoginErrorDialog("Server connection error, " + se.Message);
+                DisableProgressRingAndShowLogin();
+                return;
+            }
+            catch (Exception e)
+            {
+                await ShowLoginErrorDialog(e.Message);
+                DisableProgressRingAndShowLogin();
+                return;
+            }
+            this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
         }
 
         private void SetConfigDefaultValuesIfNull()
@@ -150,7 +124,7 @@ namespace UWPMessengerClient
             ContentDialog loginErrorDialog = new ContentDialog
             {
                 Title = "Login error",
-                Content = "There was an error logging in: " + error,
+                Content = "There was an error logging in, please try again. Error: " + error,
                 CloseButtonText = "Close"
             };
             ContentDialogResult loginErrorResult = await loginErrorDialog.ShowAsync();

@@ -14,12 +14,12 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 
-namespace UWPMessengerClient.MSNP12
+namespace UWPMessengerClient
 {
     public sealed partial class ChatPage : Page
     {
-        private NotificationServerConnection notificationServerConnection;
-        private SwitchboardConnection switchboardConnection;
+        private MSNP.NotificationServerConnection notificationServerConnection;
+        private MSNP.SwitchboardConnection switchboardConnection;
 
         public ChatPage()
         {
@@ -28,7 +28,7 @@ namespace UWPMessengerClient.MSNP12
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            notificationServerConnection = (NotificationServerConnection)e.Parameter;
+            notificationServerConnection = (MSNP.NotificationServerConnection)e.Parameter;
             switchboardConnection = notificationServerConnection.SBConnection;
             BackButton.IsEnabled = this.Frame.CanGoBack;
             base.OnNavigatedTo(e);
