@@ -31,20 +31,20 @@ namespace UWPMessengerClient
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             notificationServerConnection = null;
-            DisableProgressRingAndShowLogin();
+            DisableProgressRingAndShowButtons();
             base.OnNavigatedTo(e);
         }
 
         private async Task StartLogin()
         {
-            EnableProgressRingAndHideLogin();
+            EnableProgressRingAndHideButtons();
             SetConfigDefaultValuesIfNull();
             string email = Email_box.Text;
             string password = Password_box.Password;
             if (email == "" || password == "")
             {
                 await ShowLoginErrorDialog("Please type login and password");
-                DisableProgressRingAndShowLogin();
+                DisableProgressRingAndShowButtons();
                 return;
             }
             string selected_version = localSettings.Values["MSNP_Version"].ToString();
@@ -60,25 +60,25 @@ namespace UWPMessengerClient
                 {
                     await ShowLoginErrorDialog(ae.InnerExceptions[i].Message);
                 }
-                DisableProgressRingAndShowLogin();
+                DisableProgressRingAndShowButtons();
                 return;
             }
             catch (NullReferenceException)
             {
                 await ShowLoginErrorDialog("Incorrect email or password");
-                DisableProgressRingAndShowLogin();
+                DisableProgressRingAndShowButtons();
                 return;
             }
             catch (SocketException se)
             {
                 await ShowLoginErrorDialog("Server connection error, " + se.Message);
-                DisableProgressRingAndShowLogin();
+                DisableProgressRingAndShowButtons();
                 return;
             }
             catch (Exception e)
             {
                 await ShowLoginErrorDialog(e.Message);
-                DisableProgressRingAndShowLogin();
+                DisableProgressRingAndShowButtons();
                 return;
             }
             this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
@@ -105,18 +105,20 @@ namespace UWPMessengerClient
             await StartLogin();
         }
 
-        private void EnableProgressRingAndHideLogin()
+        private void EnableProgressRingAndHideButtons()
         {
             loginProgress.IsActive = true;
             loginProgress.Visibility = Visibility.Visible;
             Login.Visibility = Visibility.Collapsed;
+            SettingsButton.Visibility = Visibility.Collapsed;
         }
 
-        private void DisableProgressRingAndShowLogin()
+        private void DisableProgressRingAndShowButtons()
         {
             loginProgress.Visibility = Visibility.Collapsed;
             loginProgress.IsActive = false;
             Login.Visibility = Visibility.Visible;
+            SettingsButton.Visibility = Visibility.Visible;
         }
 
         public async Task ShowLoginErrorDialog(string error)
