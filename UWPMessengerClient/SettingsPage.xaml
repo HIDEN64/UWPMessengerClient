@@ -40,7 +40,7 @@
             <x:String>MSNP15</x:String>
             <x:String>MSNP12</x:String>
         </ComboBox>
-        <TextBlock Text="If you're logged in exit then login again to apply these settings" Style="{ThemeResource BodyTextBlockStyle}"
+        <TextBlock Text="If you're already logged in log off and back in to apply these changes" Style="{ThemeResource BodyTextBlockStyle}"
                    Margin="5" TextWrapping="Wrap" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3"/>
     </Grid>
 </Page>
