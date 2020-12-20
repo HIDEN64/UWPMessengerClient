@@ -22,17 +22,24 @@ namespace UWPMessengerClient.MSNP
             {
                 //sequence of commands to login to escargot
                 NSSocket.ConnectSocket();
+                NSSocket.SetReceiveTimeout(15000);
                 //begin receiving from escargot
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
-                NSSocket.SendCommand("VER 1 MSNP12 CVR0\r\n");//send msnp version
-                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");//send client information
-                NSSocket.SendCommand($"USR 3 TWN I {email}\r\n");//sends email to get a string for use in authentication
+                transactionID++;
+                NSSocket.SendCommand($"VER {transactionID} MSNP12 CVR0\r\n");//send msnp version
+                transactionID++;
+                NSSocket.SendCommand($"CVR {transactionID} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");//send client information
+                transactionID++;
+                NSSocket.SendCommand($"USR {transactionID} TWN I {email}\r\n");//sends email to get a string for use in authentication
+                transactionID++;
                 userInfo.Email = email;
                 Task<string> token_task = GetNexusTokenAsync(httpClient);
                 token = token_task.Result;
-                NSSocket.SendCommand($"USR 4 TWN S t={token}\r\n");//sending authentication token
-                NSSocket.SendCommand("SYN 5 0 0\r\n");//sync contact list
-                NSSocket.SendCommand("CHG 6 NLN 0\r\n");//set presence as available
+                NSSocket.SendCommand($"USR {transactionID} TWN S t={token}\r\n");//sending authentication token
+                transactionID++;
+                NSSocket.SendCommand($"SYN {transactionID} 0 0\r\n");//sync contact list
+                transactionID++;
+                NSSocket.SendCommand($"CHG {transactionID} NLN 0\r\n");//set presence as available
             });
             await Task.Run(loginAction);
             CurrentUserPresenceStatus = "NLN";
