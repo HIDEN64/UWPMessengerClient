@@ -21,23 +21,19 @@ namespace UWPMessengerClient.MSNP
             {
                 NSSocket.ConnectSocket();
                 NSSocket.SetReceiveTimeout(15000);
-                transactionID++;
-                NSSocket.SendCommand($"VER {transactionID} MSNP15 CVR0\r\n");
+                NSSocket.SendCommand("VER 1 MSNP15 CVR0\r\n");
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive VER response
-                transactionID++;
-                NSSocket.SendCommand($"CVR {transactionID} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");
+                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive CVR response
-                transactionID++;
-                NSSocket.SendCommand($"USR {transactionID} SSO I {email}\r\n");
+                NSSocket.SendCommand($"USR 3 SSO I {email}\r\n");
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive GCF
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive USR response with nonce
-                transactionID++;
                 userInfo.Email = email;
                 GetMBIKeyOldNonce();
                 SOAPResult = Perform_SSO_SOAP_Request();
                 string response_struct = GetSSOReturnValue();
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
-                NSSocket.SendCommand($"USR {transactionID} SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
+                NSSocket.SendCommand($"USR 4 SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
                 MembershipLists = MakeMembershipListsSOAPRequest();
                 AddressBook = MakeAddressBookSOAPRequest();
                 FillContactListFromSOAP();
@@ -45,8 +41,7 @@ namespace UWPMessengerClient.MSNP
                 SendBLP();
                 SendInitialADL();
                 SendUserDisplayName();
-                transactionID++;
-                NSSocket.SendCommand($"CHG {transactionID} NLN 0\r\n");//setting presence as available
+                NSSocket.SendCommand("CHG 8 NLN 0\r\n");//setting presence as available
                 CurrentUserPresenceStatus = "NLN";
             });
             await Task.Run(loginAction);

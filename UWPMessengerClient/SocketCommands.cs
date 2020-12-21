@@ -72,11 +72,8 @@ namespace UWPMessengerClient
 
         public void CloseSocket()
         {
-            if (socket.Connected)
-            {
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
-            }
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Close();
         }
 
         ~SocketCommands()

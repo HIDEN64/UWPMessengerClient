@@ -129,7 +129,6 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Contact.cs" />
-    <Compile Include="Exceptions\NotConnectedException.cs" />
     <Compile Include="Exceptions\VersionNotSelectedException.cs" />
     <Compile Include="LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
@@ -145,7 +144,7 @@
     <Compile Include="ContactList.xaml.cs">
       <DependentUpon>ContactList.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MSNP\NotificationServerConnection.cs" />
+    <Compile Include="MSNP\NotificationServerConnection.cs"/>
     <Compile Include="MSNP\NotificationServerConnection.ReceivingCallback.cs">
       <DependentUpon>NotificationServerConnection.cs</DependentUpon>
     </Compile>
@@ -158,7 +157,7 @@
     <Compile Include="MSNP\NotificationServerConnection.TWN.cs">
       <DependentUpon>NotificationServerConnection.cs</DependentUpon>
     </Compile>
-    <Compile Include="MSNP\SwitchboardConnection.cs" />
+    <Compile Include="MSNP\SwitchboardConnection.cs"/>
     <Compile Include="MSNP\SwitchboardConnection.ReceivingCallback.cs">
       <DependentUpon>SwitchboardConnection.cs</DependentUpon>
     </Compile>
