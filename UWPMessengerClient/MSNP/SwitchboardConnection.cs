@@ -111,7 +111,7 @@ namespace UWPMessengerClient.MSNP
         {
             if (connected && principalsConnected > 0)
             {
-                await Task.Run(() =>
+                Action message_action = new Action(() =>
                 {
                     string message = "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nX-MMS-IM-Format: FN=Arial; EF=; CO=0; CS=0; PF=22\r\n\r\n" + message_text;
                     byte[] byte_message = Encoding.UTF8.GetBytes(message);
@@ -122,6 +122,27 @@ namespace UWPMessengerClient.MSNP
                         MessageList.Add(new Message() { message_text = message_text, sender = userInfo.displayName });
                     });
                 });
+                try
+                {
+                    await Task.Run(message_action);
+                }
+                catch (AggregateException ae)
+                {
+                    foreach (Exception ie in ae.InnerExceptions)
+                    {
+                        Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ie.Message, sender = "Error" });
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error" });
+                    });
+                }
             }
         }
 

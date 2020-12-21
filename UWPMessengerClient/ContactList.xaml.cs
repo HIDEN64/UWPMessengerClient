@@ -76,12 +76,19 @@ namespace UWPMessengerClient
         {
             if (contactListView.SelectedIndex >= 0)
             {
-                if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
+                try
                 {
-                    notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
-                    await notificationServerConnection.InitiateSB();
+                    if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
+                    {
+                        notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
+                        await notificationServerConnection.InitiateSB();
+                    }
+                    this.Frame.Navigate(typeof(ChatPage), notificationServerConnection);
                 }
-                this.Frame.Navigate(typeof(ChatPage), notificationServerConnection);
+                catch (Exception e)
+                {
+                    await ShowErrorDialog(e.Message);
+                }
             }
             else
             {
@@ -103,9 +110,9 @@ namespace UWPMessengerClient
                 DisplayNameErrors.Text = "";
                 ChangeFlyout.Hide();
             }
-            catch (ArgumentNullException ane)
+            catch (Exception ex)
             {
-                DisplayNameErrors.Text = ane.Message;
+                DisplayNameErrors.Text = "There was an error:\n" + ex.Message;
             }
         }
 
@@ -129,9 +136,9 @@ namespace UWPMessengerClient
                 AddContactErrors.Text = "";
                 addContactAppBarButton.Flyout.Hide();
             }
-            catch (ArgumentNullException ane)
+            catch (Exception ex)
             {
-                AddContactErrors.Text = ane.Message;
+                AddContactErrors.Text = "There was an error:\n" + ex.Message;
             }
         }
 
@@ -185,15 +192,26 @@ namespace UWPMessengerClient
                 personalMessageFlyout.Hide();
                 roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"] = ChangeUserPersonalMessageTextBox.Text;
             }
-            catch (ArgumentNullException ane)
+            catch (Exception ex)
             {
-                PersonalMessageErrors.Text = ane.Message;
+                PersonalMessageErrors.Text = "There was an error:\n" + ex.Message;
             }
         }
 
         private void UserPersonalMessage_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
             FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
+        }
+
+        public async Task ShowErrorDialog(string error)
+        {
+            ContentDialog ErrorDialog = new ContentDialog
+            {
+                Title = "Error",
+                Content = "There was an error, please try again. Error: " + error,
+                CloseButtonText = "Close"
+            };
+            ContentDialogResult ErrorResult = await ErrorDialog.ShowAsync();
         }
     }
 }
