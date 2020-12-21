@@ -17,7 +17,11 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="10"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="5"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
@@ -41,8 +45,14 @@
             <x:String>MSNP15</x:String>
             <x:String>MSNP12</x:String>
         </ComboBox>
-        <TextBlock Text="If you're already logged in log off and back in to apply these changes" Style="{ThemeResource BodyTextBlockStyle}"
+        <TextBlock Text="If you're already logged in log off and back in to apply these settings" Style="{ThemeResource BodyTextBlockStyle}"
                    Margin="5" TextWrapping="Wrap" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3"/>
-        <ListView x:Name="errorList" Grid.Row="8" ItemsSource="{x:Bind errors, Mode=OneWay}" Grid.Column="1" Grid.ColumnSpan="3"/>
+        <Border Grid.Row="7" Grid.ColumnSpan="3" Grid.Column="1" Padding="5"/>
+        <TextBlock Text="Server status viewer" Style="{ThemeResource TitleTextBlockStyle}" Grid.Column="1" Grid.Row="8" Margin="5" Grid.ColumnSpan="3"/>
+        <TextBlock x:Name="server_status" Text="" Grid.Column="1" Grid.Row="9" Margin="5" TextWrapping="Wrap"
+                   Style="{ThemeResource BodyTextBlockStyle}" Grid.ColumnSpan="3"/>
+        <Button x:Name="testServerButton" Content="Click to test server response time again" Grid.Row="10" Grid.Column="1"
+                Click="testServerButton_Click" Grid.ColumnSpan="3"/>
+        <ListView x:Name="errorList" Grid.Row="12" ItemsSource="{x:Bind errors, Mode=OneWay}" Grid.Column="1" Grid.ColumnSpan="3"/>
     </Grid>
 </Page>

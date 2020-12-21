@@ -250,36 +250,36 @@ namespace UWPMessengerClient.MSNP
             {
                 ILNResponses[ILNResponses.Length - 1] = ILNResponses.Last().Remove(rnIndex);
             }
-            for (int i = 1; i < ILNResponses.Length; i++)
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
-                string[] ILNParams = ILNResponses[i].Split(" ");
-                string status = ILNParams[1];
-                string email = ILNParams[2];
-                string displayName = "";
-                switch (MSNPVersion)
+                for (int i = 1; i < ILNResponses.Length; i++)
                 {
-                    case "MSNP12":
-                        displayName = ILNParams[3];
-                        break;
-                    case "MSNP15":
-                        displayName = ILNParams[4];
-                        break;
-                    default:
-                        throw new Exceptions.VersionNotSelectedException();
-                }
-                var contactWithPresence = from contact in contact_list
-                                            where contact.email == email
-                                            select contact;
-                foreach (Contact contact in contactWithPresence)
-                {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
+                    string[] ILNParams = ILNResponses[i].Split(" ");
+                    string status = ILNParams[1];
+                    string email = ILNParams[2];
+                    string displayName = "";
+                    switch (MSNPVersion)
+                    {
+                        case "MSNP12":
+                            displayName = ILNParams[3];
+                            break;
+                        case "MSNP15":
+                            displayName = ILNParams[4];
+                            break;
+                        default:
+                            throw new Exceptions.VersionNotSelectedException();
+                    }
+                    var contactWithPresence = from contact in contact_list
+                                              where contact.email == email
+                                              select contact;
+                    foreach (Contact contact in contactWithPresence)
                     {
                         contact.presenceStatus = status;
                         contact.displayName = displayName;
-                    });
+                    }
                 }
-            }
+            });
         }
 
         public void SetContactPresence()
@@ -291,37 +291,37 @@ namespace UWPMessengerClient.MSNP
             {
                 NLNResponses[NLNResponses.Length - 1] = NLNResponses.Last().Remove(rnIndex);
             }
-            for (int i = 1; i < NLNResponses.Length; i++)
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
-                string[] NLNParams = NLNResponses[i].Split(" ");
-                string status = NLNParams[0];
-                string email = NLNParams[1];
-                string displayName = "";
-                switch (MSNPVersion)
+                for (int i = 1; i < NLNResponses.Length; i++)
                 {
-                    case "MSNP12":
-                        displayName = NLNParams[2];
-                        break;
-                    case "MSNP15":
-                        displayName = NLNParams[3];
-                        break;
-                    default:
-                        throw new Exceptions.VersionNotSelectedException();
-                }
-                
-                var contactWithPresence = from contact in contact_list
-                                            where contact.email == email
-                                            select contact;
-                foreach (Contact contact in contactWithPresence)
-                {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    //for each ILN response gets the parameters, does a LINQ query in the contact list and sets the contact's status
+                    string[] NLNParams = NLNResponses[i].Split(" ");
+                    string status = NLNParams[0];
+                    string email = NLNParams[1];
+                    string displayName = "";
+                    switch (MSNPVersion)
+                    {
+                        case "MSNP12":
+                            displayName = NLNParams[2];
+                            break;
+                        case "MSNP15":
+                            displayName = NLNParams[3];
+                            break;
+                        default:
+                            throw new Exceptions.VersionNotSelectedException();
+                    }
+
+                    var contactWithPresence = from contact in contact_list
+                                              where contact.email == email
+                                              select contact;
+                    foreach (Contact contact in contactWithPresence)
                     {
                         contact.presenceStatus = status;
                         contact.displayName = displayName;
-                    });
+                    }
                 }
-            }
+            });
         }
 
         public void SetContactOffline()
@@ -333,21 +333,21 @@ namespace UWPMessengerClient.MSNP
             {
                 FLNResponses[FLNResponses.Length - 1] = FLNResponses.Last().Remove(rnIndex);
             }
-            for (int i = 1; i < FLNResponses.Length; i++)
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                //for each FLN response gets the email, does a LINQ query in the contact list and sets the contact's status to offline
-                string email = FLNResponses[i].Split(" ")[0];
-                var contactWithPresence = from contact in contact_list
-                                            where contact.email == email
-                                            select contact;
-                foreach (Contact contact in contactWithPresence)
+                for (int i = 1; i < FLNResponses.Length; i++)
                 {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    //for each FLN response gets the email, does a LINQ query in the contact list and sets the contact's status to offline
+                    string email = FLNResponses[i].Split(" ")[0];
+                    var contactWithPresence = from contact in contact_list
+                                              where contact.email == email
+                                              select contact;
+                    foreach (Contact contact in contactWithPresence)
                     {
                         contact.presenceStatus = null;
-                    });
+                    }
                 }
-            }
+            });
         }
 
         public void GetContactsPersonalMessages()
@@ -397,16 +397,16 @@ namespace UWPMessengerClient.MSNP
                 {
                     personal_message = "XML error";
                 }
-                var contactWithPersonalMessage = from contact in contact_list
-                                                    where contact.email == principal_email
-                                                    select contact;
-                foreach (Contact contact in contactWithPersonalMessage)
+                Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    var contactWithPersonalMessage = from contact in contact_list
+                                                     where contact.email == principal_email
+                                                     select contact;
+                    foreach (Contact contact in contactWithPersonalMessage)
                     {
                         contact.personalMessage = personal_message;
-                    });
-                }
+                    }
+                });
             }
         }
 
