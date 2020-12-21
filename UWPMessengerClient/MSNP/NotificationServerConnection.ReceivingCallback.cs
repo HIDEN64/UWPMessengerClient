@@ -29,10 +29,7 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                    {
-                        errorLog.Add("LST processing error: " + e.Message);
-                    });
+                    errorLog.Add("LST processing error: " + e.Message);
                 }
             }
             if (notificationServerConnection.output_string.StartsWith("ADC "))
@@ -43,10 +40,7 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                    {
-                        errorLog.Add("Receiving ADC processing error: " + e.Message);
-                    });
+                    errorLog.Add("Receiving ADC processing error: " + e.Message);
                 }
             }
             if (notificationServerConnection.output_string.Contains("PRP "))
@@ -59,10 +53,7 @@ namespace UWPMessengerClient.MSNP
                     }
                     catch(Exception e)
                     {
-                        Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                        {
-                            errorLog.Add("PRP MFN processing error: " + e.Message);
-                        });
+                        errorLog.Add("PRP MFN processing error: " + e.Message);
                     }
                 }
             }
@@ -74,10 +65,7 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                    {
-                        errorLog.Add("ILN processing error: " + e.Message);
-                    });
+                    errorLog.Add("ILN processing error: " + e.Message);
                 }
             }
             if (notificationServerConnection.output_string.StartsWith("NLN "))
@@ -88,10 +76,7 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                    {
-                        errorLog.Add("NLN processing error: " + e.Message);
-                    });
+                    errorLog.Add("NLN processing error: " + e.Message);
                 }
             }
             if (notificationServerConnection.output_string.Contains("UBX "))
@@ -102,10 +87,7 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                    {
-                        errorLog.Add("UBX processing error: " + e.Message);
-                    });
+                    errorLog.Add("UBX processing error: " + e.Message);
                 }
             }
             if (notificationServerConnection.output_string.StartsWith("FLN "))
@@ -116,10 +98,7 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                    {
-                        errorLog.Add("FLN processing error: " + e.Message);
-                    });
+                    errorLog.Add("FLN processing error: " + e.Message);
                 }
             }
             if (notificationServerConnection.output_string.StartsWith("XFR "))
@@ -130,10 +109,7 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                    {
-                        errorLog.Add("XFR processing error: " + e.Message);
-                    });
+                    errorLog.Add("XFR processing error: " + e.Message);
                 }
             }
             if (notificationServerConnection.output_string.StartsWith("RNG "))
@@ -144,10 +120,7 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                    {
-                        errorLog.Add("RNG processing error: " + e.Message);
-                    });
+                    errorLog.Add("RNG processing error: " + e.Message);
                 }
             }
             if (bytes_read > 0)
@@ -181,39 +154,39 @@ namespace UWPMessengerClient.MSNP
             }
             string email, displayName, guid;
             int listbit = 0;
-            for (int i = 1; i < LSTResponses.Length; i++)
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
-                email = LSTResponses[i].Split("N=")[1];
-                email = email.Remove(email.IndexOf(" "));
-                displayName = LSTResponses[i].Split("F=")[1];
-                displayName = displayName.Remove(displayName.IndexOf(" "));
-                try
+                for (int i = 1; i < LSTResponses.Length; i++)
                 {
-                    guid = LSTResponses[i].Split("C=")[1];
-                    if (guid.Length > 1 && guid.IndexOf(" ") > 0)
+                    email = LSTResponses[i].Split("N=")[1];
+                    email = email.Remove(email.IndexOf(" "));
+                    displayName = LSTResponses[i].Split("F=")[1];
+                    displayName = displayName.Remove(displayName.IndexOf(" "));
+                    try
                     {
-                        guid = guid.Remove(guid.IndexOf(" "));
+                        guid = LSTResponses[i].Split("C=")[1];
+                        if (guid.Length > 1 && guid.IndexOf(" ") > 0)
+                        {
+                            guid = guid.Remove(guid.IndexOf(" "));
+                        }
                     }
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    guid = "";
-                }
-                string[] LSTAndParams = LSTResponses[i].Split(" ");
-                if (int.TryParse(LSTAndParams[LSTAndParams.Length - 2], out listbit))
-                {
-                    int.TryParse(LSTAndParams[LSTAndParams.Length - 3], out listbit);
-                }
-                else
-                {
-                    int.TryParse(LSTAndParams[LSTAndParams.Length - 4], out listbit);
-                }
-                Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                {
+                    catch (IndexOutOfRangeException)
+                    {
+                        guid = "";
+                    }
+                    string[] LSTAndParams = LSTResponses[i].Split(" ");
+                    if (int.TryParse(LSTAndParams[LSTAndParams.Length - 2], out listbit))
+                    {
+                        int.TryParse(LSTAndParams[LSTAndParams.Length - 3], out listbit);
+                    }
+                    else
+                    {
+                        int.TryParse(LSTAndParams[LSTAndParams.Length - 4], out listbit);
+                    }
                     contact_list.Add(new Contact(listbit) { displayName = displayName, email = email, GUID = guid });
-                });
-            }
-            FillForwardListCollection();
+                }
+                FillForwardListCollection();
+            });
         }
 
         public void ReceiveNewContactFromADC()
@@ -226,23 +199,23 @@ namespace UWPMessengerClient.MSNP
                 ADCResponses[ADCResponses.Length - 1] = ADCResponses[ADCResponses.Length - 1].Remove(rnIndex);
             }
             string email, displayName, guid;
-            for (int i = 1; i < ADCResponses.Length; i++)
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
-                email = ADCResponses[i].Split("N=")[1];
-                email = email.Remove(email.IndexOf(" "));
-                displayName = ADCResponses[i].Split("F=")[1];
-                displayName = displayName.Remove(displayName.IndexOf(" "));
-                guid = ADCResponses[i].Split("C=")[1];
-                if (guid.Length > 1 && guid.IndexOf(" ") > 0)
+                for (int i = 1; i < ADCResponses.Length; i++)
                 {
-                    guid = guid.Remove(guid.IndexOf(" "));
-                }
-                Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-                {
+                    email = ADCResponses[i].Split("N=")[1];
+                    email = email.Remove(email.IndexOf(" "));
+                    displayName = ADCResponses[i].Split("F=")[1];
+                    displayName = displayName.Remove(displayName.IndexOf(" "));
+                    guid = ADCResponses[i].Split("C=")[1];
+                    if (guid.Length > 1 && guid.IndexOf(" ") > 0)
+                    {
+                        guid = guid.Remove(guid.IndexOf(" "));
+                    }
                     contact_list.Add(new Contact(1) { displayName = displayName, email = email, GUID = guid });//1 for forward list
                     contacts_in_forward_list.Add(contact_list.Last());
-                });
-            }
+                }
+            });
         }
 
         public void GetUserDisplayName()
