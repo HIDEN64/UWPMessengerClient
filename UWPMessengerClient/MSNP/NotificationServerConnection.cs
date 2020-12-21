@@ -8,10 +8,12 @@ using System.Xml;
 using System.IO;
 using Windows.UI.Core;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace UWPMessengerClient.MSNP
 {
-    public partial class NotificationServerConnection
+    public partial class NotificationServerConnection : INotifyPropertyChanged
     {
         protected SocketCommands NSSocket;
         public SwitchboardConnection SBConnection { get; set; }
@@ -32,7 +34,17 @@ namespace UWPMessengerClient.MSNP
         public bool UsingLocalhost { get => _UsingLocalhost; }
         public string MSNPVersion { get => _MSNPVersion; }
         public UserInfo userInfo { get; set; } = new UserInfo();
-        public ObservableCollection<string> errorLog { get; set; } = new ObservableCollection<string>();
+        public event PropertyChangedEventHandler PropertyChanged;
+        private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
+        public ObservableCollection<string> errorLog
+        {
+            get => _errorLog;
+            set
+            {
+                _errorLog = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version)
         {
@@ -62,6 +74,11 @@ namespace UWPMessengerClient.MSNP
                     await MSNP15LoginToMessengerAsync();
                     break;
             }
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public static HttpWebRequest CreateSOAPRequest(string soap_action, string address)

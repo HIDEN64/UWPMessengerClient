@@ -16,16 +16,28 @@ using Windows.Storage;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace UWPMessengerClient
 {
-    public sealed partial class SettingsPage : Page
+    public sealed partial class SettingsPage : Page, INotifyPropertyChanged
     {
         private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
         private string server_address = "m1.escargot.log1p.xyz";//escargot address
         private int server_port = 1863;
         private SocketCommands TestSocket;
-        private ObservableCollection<string> errors;
+        public event PropertyChangedEventHandler PropertyChanged;
+        private ObservableCollection<string> _errors;
+        private ObservableCollection<string> errors
+        {
+            get => _errors;
+            set
+            {
+                _errors = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         public SettingsPage()
         {
@@ -41,6 +53,11 @@ namespace UWPMessengerClient
             errors = (ObservableCollection<string>)e.Parameter;
             var task = TestServer();
             base.OnNavigatedTo(e);
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
