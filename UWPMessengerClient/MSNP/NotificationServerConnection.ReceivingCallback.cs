@@ -29,7 +29,10 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    errorLog.Add("LST processing error: " + e.Message);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        errorLog.Add("LST processing error: " + e.Message);
+                    });
                 }
             }
             if (notificationServerConnection.output_string.StartsWith("ADC "))
@@ -40,7 +43,10 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    errorLog.Add("Receiving ADC processing error: " + e.Message);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        errorLog.Add("Receiving ADC processing error: " + e.Message);
+                    });
                 }
             }
             if (notificationServerConnection.output_string.Contains("PRP "))
@@ -53,7 +59,10 @@ namespace UWPMessengerClient.MSNP
                     }
                     catch(Exception e)
                     {
-                        errorLog.Add("PRP MFN processing error: " + e.Message);
+                        Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            errorLog.Add("PRP MFN processing error: " + e.Message);
+                        });
                     }
                 }
             }
@@ -65,7 +74,10 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    errorLog.Add("ILN processing error: " + e.Message);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        errorLog.Add("ILN processing error: " + e.Message);
+                    });
                 }
             }
             if (notificationServerConnection.output_string.StartsWith("NLN "))
@@ -76,7 +88,10 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    errorLog.Add("NLN processing error: " + e.Message);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        errorLog.Add("NLN processing error: " + e.Message);
+                    });
                 }
             }
             if (notificationServerConnection.output_string.Contains("UBX "))
@@ -87,7 +102,10 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    errorLog.Add("UBX processing error: " + e.Message);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        errorLog.Add("UBX processing error: " + e.Message);
+                    });
                 }
             }
             if (notificationServerConnection.output_string.StartsWith("FLN "))
@@ -98,7 +116,10 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    errorLog.Add("FLN processing error: " + e.Message);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        errorLog.Add("FLN processing error: " + e.Message);
+                    });
                 }
             }
             if (notificationServerConnection.output_string.StartsWith("XFR "))
@@ -109,7 +130,10 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    errorLog.Add("XFR processing error: " + e.Message);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        errorLog.Add("XFR processing error: " + e.Message);
+                    });
                 }
             }
             if (notificationServerConnection.output_string.StartsWith("RNG "))
@@ -120,7 +144,10 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    errorLog.Add("RNG processing error: " + e.Message);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        errorLog.Add("RNG processing error: " + e.Message);
+                    });
                 }
             }
             if (bytes_read > 0)

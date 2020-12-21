@@ -37,13 +37,19 @@ namespace UWPMessengerClient
 
         public void SendCommand(string msg)
         {
-            byte[] message = Encoding.UTF8.GetBytes(msg);
-            socket.Send(message);
+            if (socket.Connected)
+            {
+                byte[] message = Encoding.UTF8.GetBytes(msg);
+                socket.Send(message);
+            }
         }
 
         public void SendCommand(byte[] message)
         {
-            socket.Send(message);
+            if (socket.Connected)
+            {
+                socket.Send(message);
+            }
         }
 
         public void BeginReceiving(byte[] buffer, AsyncCallback asyncCallback, object stateObject)
