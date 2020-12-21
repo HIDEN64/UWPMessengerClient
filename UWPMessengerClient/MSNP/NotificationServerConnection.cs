@@ -26,6 +26,7 @@ namespace UWPMessengerClient.MSNP
         private string password;
         protected bool _UsingLocalhost = false;
         protected string _MSNPVersion;
+        protected int transactionID = 0;
         public int ContactIndexToChat { get; set; }
         public string CurrentUserPresenceStatus { get; set; }
         public bool UsingLocalhost { get => _UsingLocalhost; }
@@ -111,7 +112,8 @@ namespace UWPMessengerClient.MSNP
             if (status == "") { throw new ArgumentNullException("Status is empty"); }
             Action changePresence = new Action(() =>
             {
-                NSSocket.SendCommand($"CHG 10 {status} 0\r\n");
+                transactionID++;
+                NSSocket.SendCommand($"CHG {transactionID} {status} 0\r\n");
             });
             CurrentUserPresenceStatus = status;
             await Task.Run(changePresence);
@@ -156,7 +158,8 @@ namespace UWPMessengerClient.MSNP
                 MakeSOAPRequest(ab_display_name_change_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
             }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
-            await Task.Run(() => NSSocket.SendCommand($"PRP 10 MFN {urlEncodedNewDisplayName}\r\n"));
+            transactionID++;
+            await Task.Run(() => NSSocket.SendCommand($"PRP {transactionID} MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
         public async Task SendUserPersonalMessage(string newPersonalMessage)
@@ -166,7 +169,8 @@ namespace UWPMessengerClient.MSNP
                 string encodedPersonalMessage = newPersonalMessage.Replace("&", "&amp;");
                 string psm_payload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
                 int payload_length = Encoding.UTF8.GetBytes(psm_payload).Length;
-                NSSocket.SendCommand($"UUX 12 {payload_length}\r\n" + psm_payload);
+                transactionID++;
+                NSSocket.SendCommand($"UUX {transactionID} {payload_length}\r\n" + psm_payload);
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     userInfo.personalMessage = newPersonalMessage;
@@ -179,7 +183,8 @@ namespace UWPMessengerClient.MSNP
         {
             SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
             SBConnection = switchboardConnection;
-            await Task.Run(() => NSSocket.SendCommand("XFR 10 SB\r\n"));
+            transactionID++;
+            await Task.Run(() => NSSocket.SendCommand($"XFR {transactionID} SB\r\n"));
         }
 
         public void Exit()
