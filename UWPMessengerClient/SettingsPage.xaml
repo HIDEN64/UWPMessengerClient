@@ -21,7 +21,8 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="5"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
@@ -53,6 +54,7 @@
                    Style="{ThemeResource BodyTextBlockStyle}" Grid.ColumnSpan="3"/>
         <Button x:Name="testServerButton" Content="Click to test server response time again" Grid.Row="10" Grid.Column="1"
                 Click="testServerButton_Click" Grid.ColumnSpan="3"/>
-        <ListView x:Name="errorList" Grid.Row="12" ItemsSource="{x:Bind errors, Mode=OneWay}" Grid.Column="1" Grid.ColumnSpan="3"/>
+        <TextBlock Text="Errors" Style="{ThemeResource TitleTextBlockStyle}" Margin="5" Grid.Column="1" Grid.Row="12" Grid.ColumnSpan="3"/>
+        <ListView x:Name="errorList" Grid.Row="13" ItemsSource="{x:Bind errors, Mode=OneWay}" Grid.Column="1" Grid.ColumnSpan="3"/>
     </Grid>
 </Page>

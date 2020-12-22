@@ -63,6 +63,14 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
+        public async Task AddToErrorLog(string error)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                errorLog.Add(error);
+            });
+        }
+
         public async Task LoginToMessengerAsync()
         {
             switch (MSNPVersion)
