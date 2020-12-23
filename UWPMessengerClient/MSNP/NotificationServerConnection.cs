@@ -35,6 +35,7 @@ namespace UWPMessengerClient.MSNP
         public string MSNPVersion { get => _MSNPVersion; }
         public UserInfo userInfo { get; set; } = new UserInfo();
         public event PropertyChangedEventHandler PropertyChanged;
+        Dictionary<string, Action> command_handlers;
         private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
         public ObservableCollection<string> errorLog
         {
@@ -48,6 +49,18 @@ namespace UWPMessengerClient.MSNP
 
         public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version)
         {
+            command_handlers = new Dictionary<string, Action>()
+            {
+                {"LST", () => HandleLST() },
+                {"ADC", () => HandleADC() },
+                {"PRP", () => HandlePRP() },
+                {"ILN", () => HandleILN() },
+                {"NLN", () => HandleNLN() },
+                {"FLN", () => HandleFLN() },
+                {"UBX", () => HandleUBX() },
+                {"XFR", async () => await HandleXFR() },
+                {"RNG", () => HandleRNG() }
+            };
             email = messenger_email;
             password = messenger_password;
             _UsingLocalhost = use_localhost;
@@ -122,7 +135,7 @@ namespace UWPMessengerClient.MSNP
         {
             foreach (Contact contact in contact_list)
             {
-                if (contact.onForward == true)
+                if (contact.onForward)
                 {
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
