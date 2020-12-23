@@ -13,6 +13,8 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class SwitchboardConnection
     {
+        private string current_response;
+        private string next_response;
         public ObservableCollection<Message> MessageList { get; set; } = new ObservableCollection<Message>();
 
         public void ReceivingCallback(IAsyncResult asyncResult)
@@ -24,20 +26,34 @@ namespace UWPMessengerClient.MSNP
             {
                 if (switchboardConnection.outputString.Contains("TypingUser"))
                 {
-                    var task = ProduceTypingUser();
+                    var task = switchboardConnection.HandleTypingUser();
                 }
                 else
                 {
-                    AddMessageToList();
+                    switchboardConnection.HandleMSG();
                 }
             }
-            if (switchboardConnection.outputString.Contains("OK"))
+            string[] responses = switchboardConnection.outputString.Split("\r\n");
+            for (var i = 0; i < responses.Length; i++)
             {
-                connected = true;
-            }
-            if (switchboardConnection.outputString.Contains("JOI") || switchboardConnection.outputString.Contains("IRO"))
-            {
-                principalsConnected++;
+                string[] res_params = responses[i].Split(" ");
+                switchboardConnection.current_response = responses[i];
+                if (i != responses.Length - 1)
+                {
+                    switchboardConnection.next_response = responses[i + 1];
+                }
+                try
+                {
+                    switchboardConnection.command_handlers[res_params[0]]();
+                }
+                catch (KeyNotFoundException)
+                {
+                    continue;
+                }
+                catch (Exception e)
+                {
+                    var task = switchboardConnection.AddToErrorLog($"{res_params[0]} processing error: " + e.Message);
+                }
             }
             if (bytes_received > 0)
             {
@@ -45,7 +61,25 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public void AddMessageToList()
+        public void HandleUSR()
+        {
+            string[] usr_params = current_response.Split(" ");
+            if (usr_params[2] == "OK")
+            {
+                connected = true;
+            }
+        }
+
+        public void HandleANS()
+        {
+            string[] ans_params = current_response.Split(" ");
+            if (ans_params[2] == "OK")
+            {
+                connected = true;
+            }
+        }
+
+        public void HandleMSG()
         {
             string messageText = outputString.Substring(outputString.LastIndexOf("\r\n") + 2);//2 counting for \r and \n
             string[] MSGParams = outputString.Split(" ");
@@ -71,7 +105,7 @@ namespace UWPMessengerClient.MSNP
             });
         }
 
-        public async Task ProduceTypingUser()
+        public async Task HandleTypingUser()
         {
             Windows.Foundation.IAsyncAction set_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {

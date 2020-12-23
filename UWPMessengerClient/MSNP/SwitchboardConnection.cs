@@ -4,10 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Core;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace UWPMessengerClient.MSNP
 {
-    public partial class SwitchboardConnection
+    public partial class SwitchboardConnection : INotifyPropertyChanged
     {
         private SocketCommands SBSocket;
         private string SBAddress;
@@ -23,15 +26,41 @@ namespace UWPMessengerClient.MSNP
         public string outputString { get; set; }
         public byte[] outputBuffer { get; set; } = new byte[4096];
         private bool waitingTyping = false;
+        public event PropertyChangedEventHandler PropertyChanged;
+        Dictionary<string, Action> command_handlers;
+        private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
+        public ObservableCollection<string> errorLog
+        {
+            get => _errorLog;
+            set
+            {
+                _errorLog = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         public SwitchboardConnection(string email, string userDisplayName)
         {
+            command_handlers = new Dictionary<string, Action>()
+            {
+                {"USR", () => HandleUSR() },
+                {"ANS", () => HandleANS() },
+                {"JOI", () => principalsConnected++ },
+                {"IRO", () => principalsConnected++ }
+            };
             UserEmail = email;
             userInfo.displayName = userDisplayName;
         }
 
         public SwitchboardConnection(string address, int port, string email, string trID, string userDisplayName)
         {
+            command_handlers = new Dictionary<string, Action>()
+            {
+                {"USR", () => HandleUSR() },
+                {"ANS", () => HandleANS() },
+                {"JOI", () => principalsConnected++ },
+                {"IRO", () => principalsConnected++ }
+            };
             SBAddress = address;
             SBPort = port;
             UserEmail = email;
@@ -41,6 +70,13 @@ namespace UWPMessengerClient.MSNP
 
         public SwitchboardConnection(string address, int port, string email, string trID, string userDisplayName, string principalDisplayName, string sessionID)
         {
+            command_handlers = new Dictionary<string, Action>()
+            {
+                {"USR", () => HandleUSR() },
+                {"ANS", () => HandleANS() },
+                {"JOI", () => principalsConnected++ },
+                {"IRO", () => principalsConnected++ }
+            };
             SBAddress = address;
             SBPort = port;
             UserEmail = email;
@@ -55,6 +91,19 @@ namespace UWPMessengerClient.MSNP
             SBAddress = address;
             SBPort = port;
             TrID = trID;
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public async Task AddToErrorLog(string error)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                errorLog.Add(error);
+            });
         }
 
         public async Task LoginToNewSwitchboardAsync()
