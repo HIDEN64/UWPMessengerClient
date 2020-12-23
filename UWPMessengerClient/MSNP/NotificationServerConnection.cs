@@ -29,6 +29,7 @@ namespace UWPMessengerClient.MSNP
         protected bool _UsingLocalhost = false;
         protected string _MSNPVersion;
         protected int transactionID = 0;
+        protected uint clientCapabilities = 0x84140020;
         public int ContactIndexToChat { get; set; }
         public string CurrentUserPresenceStatus { get; set; }
         public bool UsingLocalhost { get => _UsingLocalhost; }
@@ -151,7 +152,7 @@ namespace UWPMessengerClient.MSNP
             Action changePresence = new Action(() =>
             {
                 transactionID++;
-                NSSocket.SendCommand($"CHG {transactionID} {status} 0\r\n");
+                NSSocket.SendCommand($"CHG {transactionID} {status} {clientCapabilities}\r\n");
             });
             CurrentUserPresenceStatus = status;
             await Task.Run(changePresence);

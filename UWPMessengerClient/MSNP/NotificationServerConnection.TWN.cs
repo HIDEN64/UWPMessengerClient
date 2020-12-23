@@ -39,7 +39,7 @@ namespace UWPMessengerClient.MSNP
                 transactionID++;
                 NSSocket.SendCommand($"SYN {transactionID} 0 0\r\n");//sync contact list
                 transactionID++;
-                NSSocket.SendCommand($"CHG {transactionID} NLN 0\r\n");//set presence as available
+                NSSocket.SendCommand($"CHG {transactionID} NLN {clientCapabilities}\r\n");//set presence as available
             });
             await Task.Run(loginAction);
             CurrentUserPresenceStatus = "NLN";
