@@ -71,5 +71,10 @@ namespace UWPMessengerClient
                 await switchboardConnection.SendTypingUser();
             }
         }
+
+        private async void nudgeButton_Click(object sender, RoutedEventArgs e)
+        {
+            await switchboardConnection.SendNudge();
+        }
     }
 }

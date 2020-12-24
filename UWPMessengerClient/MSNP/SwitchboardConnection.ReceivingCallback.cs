@@ -135,6 +135,15 @@ namespace UWPMessengerClient.MSNP
             });
         }
 
+        protected void AddToMessageList(string message_text, string sender_name)
+        {
+            var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PrincipalInfo.typingUser = null;
+                MessageList.Add(new Message() { message_text = message_text, sender = sender_name });
+            });
+        }
+
         public void HandleDatacast(string msg_payload)
         {
             string[] MSGPayloadParams = msg_payload.Split("\r\n");
