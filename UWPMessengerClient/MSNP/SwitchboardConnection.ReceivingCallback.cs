@@ -67,18 +67,18 @@ namespace UWPMessengerClient.MSNP
         protected void HandleUSR()
         {
             string[] usr_params = current_response.Split(" ");
-            if (usr_params[2] == "OK")
+            if (usr_params[2] != "OK")
             {
-                connected = true;
+                connected = false;
             }
         }
 
         protected void HandleANS()
         {
             string[] ans_params = current_response.Split(" ");
-            if (ans_params[2] == "OK")
+            if (ans_params[2] != "OK")
             {
-                connected = true;
+                connected = false;
             }
         }
 
@@ -93,20 +93,21 @@ namespace UWPMessengerClient.MSNP
             string msg_payload = SeparatePayloadFromResponseWithPayload(outputString, msg_length);
             string[] MSGPayloadParams = msg_payload.Split("\r\n");
             string[] ContentTypeParams = MSGPayloadParams[1].Split(" ");
-            Action msmsgsAction = new Action(() =>
+            Action msmsgscontrolAction = new Action(() =>
             {
                 //first parameter of the third header in the payload
                 switch (MSGPayloadParams[2].Split(" ")[0])
                 {
                     case "TypingUser:":
-                        var task = HandleTypingUser();
+                        var task = ShowTypingUser();
                         break;
                 }
             });
             Dictionary<string, Action> ContentTypeDictionary = new Dictionary<string, Action>()
             {
                 {"text/plain;", () => AddMessage(MSGPayloadParams[4], senderDisplayName) },
-                {"text/x-msmsgscontrol", msmsgsAction }
+                {"text/x-msmsgscontrol", msmsgscontrolAction },
+                {"text/x-msnmsgr-datacast", () => HandleDatacast(msg_payload) }
             };
             ContentTypeDictionary[ContentTypeParams[1]]();
         }
@@ -134,7 +135,18 @@ namespace UWPMessengerClient.MSNP
             });
         }
 
-        public async Task HandleTypingUser()
+        public void HandleDatacast(string msg_payload)
+        {
+            string[] MSGPayloadParams = msg_payload.Split("\r\n");
+            switch (MSGPayloadParams[3])
+            {
+                case "ID: 1":
+                    ShowNudge();
+                    break;
+            }
+        }
+
+        public async Task ShowTypingUser()
         {
             var Typing_Task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
@@ -145,6 +157,12 @@ namespace UWPMessengerClient.MSNP
             {
                 PrincipalInfo.typingUser = null;
             });
+        }
+
+        public void ShowNudge()
+        {
+            string nudge_text = $"{HttpUtility.UrlDecode(PrincipalInfo.displayName)} sent you a nudge!";
+            AddMessage(nudge_text, "");
         }
     }
 }

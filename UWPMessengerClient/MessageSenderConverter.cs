@@ -13,7 +13,11 @@ namespace UWPMessengerClient
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             string name = (string)value;
-            string nameSays = HttpUtility.UrlDecode(name) + " says:";
+            string nameSays = "";
+            if (name != "" && name != null)
+            {
+                nameSays = HttpUtility.UrlDecode(name) + " says:";
+            }
             return nameSays;
         }
 
