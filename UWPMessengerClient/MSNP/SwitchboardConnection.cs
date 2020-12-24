@@ -46,7 +46,8 @@ namespace UWPMessengerClient.MSNP
                 {"USR", () => HandleUSR() },
                 {"ANS", () => HandleANS() },
                 {"JOI", () => principalsConnected++ },
-                {"IRO", () => principalsConnected++ }
+                {"IRO", () => principalsConnected++ },
+                {"MSG", () => HandleMSG() }
             };
             UserEmail = email;
             userInfo.displayName = userDisplayName;
@@ -59,7 +60,8 @@ namespace UWPMessengerClient.MSNP
                 {"USR", () => HandleUSR() },
                 {"ANS", () => HandleANS() },
                 {"JOI", () => principalsConnected++ },
-                {"IRO", () => principalsConnected++ }
+                {"IRO", () => principalsConnected++ },
+                {"MSG", () => HandleMSG() }
             };
             SBAddress = address;
             SBPort = port;
@@ -75,7 +77,8 @@ namespace UWPMessengerClient.MSNP
                 {"USR", () => HandleUSR() },
                 {"ANS", () => HandleANS() },
                 {"JOI", () => principalsConnected++ },
-                {"IRO", () => principalsConnected++ }
+                {"IRO", () => principalsConnected++ },
+                {"MSG", () => HandleMSG() }
             };
             SBAddress = address;
             SBPort = port;

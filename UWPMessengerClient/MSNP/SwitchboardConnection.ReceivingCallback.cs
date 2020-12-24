@@ -22,17 +22,6 @@ namespace UWPMessengerClient.MSNP
             SwitchboardConnection switchboardConnection = (SwitchboardConnection)asyncResult.AsyncState;
             int bytes_received = switchboardConnection.SBSocket.StopReceiving(asyncResult);
             switchboardConnection.outputString = Encoding.UTF8.GetString(switchboardConnection.outputBuffer, 0, bytes_received);
-            if (switchboardConnection.outputString.StartsWith("MSG"))
-            {
-                if (switchboardConnection.outputString.Contains("TypingUser"))
-                {
-                    var task = switchboardConnection.HandleTypingUser();
-                }
-                else
-                {
-                    switchboardConnection.HandleMSG();
-                }
-            }
             string[] responses = switchboardConnection.outputString.Split("\r\n");
             for (var i = 0; i < responses.Length; i++)
             {
@@ -61,7 +50,21 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public void HandleUSR()
+        protected string SeparatePayloadFromResponseWithPayload(string response, int payload_size)
+        {
+            string payload_response = response;
+            if (response.Contains("\r\n"))
+            {
+                payload_response = response.Split("\r\n", 2)[1];
+            }
+            byte[] response_bytes = Encoding.UTF8.GetBytes(payload_response);
+            byte[] payload_bytes = new byte[payload_size];
+            Buffer.BlockCopy(response_bytes, 0, payload_bytes, 0, payload_size);
+            string payload = Encoding.UTF8.GetString(payload_bytes);
+            return payload;
+        }
+
+        protected void HandleUSR()
         {
             string[] usr_params = current_response.Split(" ");
             if (usr_params[2] == "OK")
@@ -70,7 +73,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public void HandleANS()
+        protected void HandleANS()
         {
             string[] ans_params = current_response.Split(" ");
             if (ans_params[2] == "OK")
@@ -79,15 +82,41 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public void HandleMSG()
+        protected void HandleMSG()
         {
-            string messageText = outputString.Substring(outputString.LastIndexOf("\r\n") + 2);//2 counting for \r and \n
-            string[] MSGParams = outputString.Split(" ");
+            string[] MSG_Responses = outputString.Split("\r\n");
+            string[] MSGParams = MSG_Responses[0].Split(" ");
             string senderDisplayName = MSGParams[2];
+            string length_str = MSGParams[3];
+            int msg_length;
+            int.TryParse(length_str, out msg_length);
+            string msg_payload = SeparatePayloadFromResponseWithPayload(outputString, msg_length);
+            string[] MSGPayloadParams = msg_payload.Split("\r\n");
+            string[] ContentTypeParams = MSGPayloadParams[1].Split(" ");
+            Action msmsgsAction = new Action(() =>
+            {
+                //first parameter of the third header in the payload
+                switch (MSGPayloadParams[2].Split(" ")[0])
+                {
+                    case "TypingUser:":
+                        var task = HandleTypingUser();
+                        break;
+                }
+            });
+            Dictionary<string, Action> ContentTypeDictionary = new Dictionary<string, Action>()
+            {
+                {"text/plain;", () => AddMessage(MSGPayloadParams[4], senderDisplayName) },
+                {"text/x-msmsgscontrol", msmsgsAction }
+            };
+            ContentTypeDictionary[ContentTypeParams[1]]();
+        }
+
+        protected void AddMessage(string message_text, string sender_name)
+        {
             var content = new ToastContentBuilder()
                 .AddToastActivationInfo("newMessages", ToastActivationType.Foreground)
-                .AddText(HttpUtility.UrlDecode(senderDisplayName))
-                .AddText(messageText)
+                .AddText(HttpUtility.UrlDecode(sender_name))
+                .AddText(message_text)
                 .GetToastContent();
             try
             {
@@ -98,21 +127,21 @@ namespace UWPMessengerClient.MSNP
                 ToastNotificationManager.CreateToastNotifier().Show(notif);
             }
             catch (ArgumentException) { }
-            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 PrincipalInfo.typingUser = null;
-                MessageList.Add(new Message() { message_text = messageText, sender = senderDisplayName });
+                MessageList.Add(new Message() { message_text = message_text, sender = sender_name });
             });
         }
 
         public async Task HandleTypingUser()
         {
-            Windows.Foundation.IAsyncAction set_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            var Typing_Task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 PrincipalInfo.typingUser = $"{HttpUtility.UrlDecode(PrincipalInfo.displayName)} is typing...";
             });
             await Task.Delay(6000);
-            Windows.Foundation.IAsyncAction null_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            var Null_Task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 PrincipalInfo.typingUser = null;
             });

@@ -51,7 +51,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected void SeparateAndProcessCommandFromResponseWithPayload(string response, int payload_size)
+        protected void SeparateAndProcessCommandFromPayloadWithResponse(string response, int payload_size)
         {
             byte[] response_bytes = Encoding.UTF8.GetBytes(response);
             byte[] payload_bytes = new byte[payload_size];
@@ -63,7 +63,7 @@ namespace UWPMessengerClient.MSNP
             command_handlers[cmd_params[0]]();
         }
 
-        protected string SeparatePayloadFromResponseWithPayload(string response, int payload_size)
+        protected string SeparatePayloadFromPayloadWithResponse(string response, int payload_size)
         {
             byte[] response_bytes = Encoding.UTF8.GetBytes(response);
             byte[] payload_bytes = new byte[payload_size];
@@ -241,7 +241,7 @@ namespace UWPMessengerClient.MSNP
             }
             int ubx_length;
             int.TryParse(length_str, out ubx_length);
-            string payload = SeparatePayloadFromResponseWithPayload(next_response, ubx_length);
+            string payload = SeparatePayloadFromPayloadWithResponse(next_response, ubx_length);
             XmlDocument personalMessagePayload = new XmlDocument();
             try
             {
@@ -264,7 +264,7 @@ namespace UWPMessengerClient.MSNP
                     contact.personalMessage = personal_message;
                 }
             });
-            SeparateAndProcessCommandFromResponseWithPayload(next_response, ubx_length);
+            SeparateAndProcessCommandFromPayloadWithResponse(next_response, ubx_length);
         }
 
         public async Task HandleXFR()

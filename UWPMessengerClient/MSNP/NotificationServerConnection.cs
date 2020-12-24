@@ -29,7 +29,7 @@ namespace UWPMessengerClient.MSNP
         protected bool _UsingLocalhost = false;
         protected string _MSNPVersion;
         protected int transactionID = 0;
-        protected uint clientCapabilities = 0x84140020;
+        protected uint clientCapabilities = 0x84140420;
         public int ContactIndexToChat { get; set; }
         public string CurrentUserPresenceStatus { get; set; }
         public bool UsingLocalhost { get => _UsingLocalhost; }
