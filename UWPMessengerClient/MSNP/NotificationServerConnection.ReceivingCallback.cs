@@ -275,19 +275,19 @@ namespace UWPMessengerClient.MSNP
             string sb_address = address_and_port[0];
             int sb_port;
             int.TryParse(address_and_port[1], out sb_port);
-            string trID = "";
+            string auth_string = "";
             switch (MSNPVersion)
             {
                 case "MSNP12":
-                    trID = XFRParams.Last();
+                    auth_string = XFRParams.Last();
                     break;
                 case "MSNP15":
-                    trID = XFRParams[5];
+                    auth_string = XFRParams[5];
                     break;
                 default:
                     throw new Exceptions.VersionNotSelectedException();
             }
-            SBConnection.SetAddressPortAndTrID(sb_address, sb_port, trID);
+            SBConnection.SetAddressPortAndAuthString(sb_address, sb_port, auth_string);
             await SBConnection.LoginToNewSwitchboardAsync();
             await SBConnection.InvitePrincipal(contacts_in_forward_list[ContactIndexToChat].email, contacts_in_forward_list[ContactIndexToChat].displayName);
         }
@@ -300,9 +300,9 @@ namespace UWPMessengerClient.MSNP
             int sb_port;
             string sb_address = address_and_port[0];
             int.TryParse(address_and_port[1], out sb_port);
-            string trID = RNGParams[4];
+            string authString = RNGParams[4];
             string principalName = RNGParams[6];
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, trID, userInfo.displayName, principalName, sessionID);
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, authString, userInfo.displayName, principalName, sessionID);
             SBConnection = switchboardConnection;
             _ = SBConnection.AnswerRNG();
         }

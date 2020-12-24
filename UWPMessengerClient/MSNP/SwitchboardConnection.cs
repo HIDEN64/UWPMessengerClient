@@ -16,7 +16,7 @@ namespace UWPMessengerClient.MSNP
         private string SBAddress;
         private int SBPort = 0;
         private string UserEmail;
-        private string TrID;
+        private string AuthString;
         private string SessionID;
         protected int transactionID = 0;
         public UserInfo PrincipalInfo { get; set; } = new UserInfo();
@@ -53,7 +53,7 @@ namespace UWPMessengerClient.MSNP
             userInfo.displayName = userDisplayName;
         }
 
-        public SwitchboardConnection(string address, int port, string email, string trID, string userDisplayName)
+        public SwitchboardConnection(string address, int port, string email, string authString, string userDisplayName)
         {
             command_handlers = new Dictionary<string, Action>()
             {
@@ -66,11 +66,11 @@ namespace UWPMessengerClient.MSNP
             SBAddress = address;
             SBPort = port;
             UserEmail = email;
-            TrID = trID;
+            AuthString = authString;
             userInfo.displayName = userDisplayName;
         }
 
-        public SwitchboardConnection(string address, int port, string email, string trID, string userDisplayName, string principalDisplayName, string sessionID)
+        public SwitchboardConnection(string address, int port, string email, string authString, string userDisplayName, string principalDisplayName, string sessionID)
         {
             command_handlers = new Dictionary<string, Action>()
             {
@@ -83,17 +83,17 @@ namespace UWPMessengerClient.MSNP
             SBAddress = address;
             SBPort = port;
             UserEmail = email;
-            TrID = trID;
+            AuthString = authString;
             SessionID = sessionID;
             userInfo.displayName = userDisplayName;
             PrincipalInfo.displayName = principalDisplayName;
         }
 
-        public void SetAddressPortAndTrID(string address, int port, string trID)
+        public void SetAddressPortAndAuthString(string address, int port, string AuthString)
         {
             SBAddress = address;
             SBPort = port;
-            TrID = trID;
+            this.AuthString = AuthString;
         }
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -117,7 +117,7 @@ namespace UWPMessengerClient.MSNP
                 SBSocket.ConnectSocket();
                 SBSocket.BeginReceiving(outputBuffer, new AsyncCallback(ReceivingCallback), this);
                 transactionID++;
-                SBSocket.SendCommand($"USR {transactionID} {UserEmail} {TrID}\r\n");
+                SBSocket.SendCommand($"USR {transactionID} {UserEmail} {AuthString}\r\n");
             });
             await Task.Run(sbconnect);
             connected = true;
@@ -223,7 +223,7 @@ namespace UWPMessengerClient.MSNP
                 SBSocket.ConnectSocket();
                 SBSocket.BeginReceiving(outputBuffer, new AsyncCallback(ReceivingCallback), this);
                 transactionID++;
-                SBSocket.SendCommand($"ANS {transactionID} {UserEmail} {TrID} {SessionID}\r\n");
+                SBSocket.SendCommand($"ANS {transactionID} {UserEmail} {AuthString} {SessionID}\r\n");
             });
         }
 
