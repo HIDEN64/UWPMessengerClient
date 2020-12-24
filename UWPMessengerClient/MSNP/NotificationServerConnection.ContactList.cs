@@ -378,15 +378,16 @@ namespace UWPMessengerClient.MSNP
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
                         NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n");
                         NSSocket.SendCommand(contact_payload);
+                        Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            //1 for forward list
+                            contact_list.Add(new Contact(1) { displayName = newContactDisplayName, email = newContactEmail });
+                            contacts_in_forward_list.Add(contact_list.Last());
+                        });
                         break;
                     default:
                         throw new Exceptions.VersionNotSelectedException();
                 }
-                Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                {
-                    contact_list.Add(new Contact() { displayName = newContactDisplayName, email = newContactEmail, onForward = true });
-                    contacts_in_forward_list.Add(new Contact() { displayName = newContactDisplayName, email = newContactEmail, onForward = true });
-                });
             });
         }
 

@@ -122,7 +122,8 @@ namespace UWPMessengerClient.MSNP
             guid = ADCResponses[5].Replace("C=", "");
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
-                contact_list.Add(new Contact(1) { displayName = displayName, email = email, GUID = guid });//1 for forward list
+                //1 for forward list
+                contact_list.Add(new Contact(1) { displayName = displayName, email = email, GUID = guid });
                 contacts_in_forward_list.Add(contact_list.Last());
             });
         }
