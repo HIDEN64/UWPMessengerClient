@@ -7,39 +7,100 @@ using System.Net;
 using System.Xml;
 using System.IO;
 using Windows.UI.Core;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
-namespace UWPMessengerClient.MSNP15
+namespace UWPMessengerClient.MSNP
 {
-    public partial class NotificationServerConnection
+    public partial class NotificationServerConnection : INotifyPropertyChanged
     {
-        private SocketCommands NSSocket;
+        protected SocketCommands NSSocket;
         public SwitchboardConnection SBConnection { get; set; }
         //notification server(escargot) address and address for SSO auth
-        private string NSaddress = "m1.escargot.log1p.xyz";
-        private string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
-        //local addresses are 127.0.0.1 for NSaddress and http://localhost/RST.srf for RST_address
-        private readonly int port = 1863;
+        protected string NSaddress = "m1.escargot.log1p.xyz";
+        protected string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
+        protected string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
+        //local addresses are 127.0.0.1 for NSaddress, http://localhost/RST.srf for RST_address
+        //and http://localhost/nexus-mock for nexus_address
+        protected readonly int port = 1863;
         private string email;
         private string password;
-        private bool _UsingLocalhost = false;
+        protected bool _UsingLocalhost = false;
+        protected string _MSNPVersion;
+        protected int transactionID = 0;
+        protected uint clientCapabilities = 0x84140420;
         public int ContactIndexToChat { get; set; }
         public string CurrentUserPresenceStatus { get; set; }
         public bool UsingLocalhost { get => _UsingLocalhost; }
+        public string MSNPVersion { get => _MSNPVersion; }
         public UserInfo userInfo { get; set; } = new UserInfo();
-
-        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost)
+        public event PropertyChangedEventHandler PropertyChanged;
+        Dictionary<string, Action> command_handlers;
+        private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
+        public ObservableCollection<string> errorLog
         {
+            get => _errorLog;
+            set
+            {
+                _errorLog = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version)
+        {
+            command_handlers = new Dictionary<string, Action>()
+            {
+                {"LST", () => HandleLST() },
+                {"ADC", () => HandleADC() },
+                {"PRP", () => HandlePRP() },
+                {"ILN", () => HandleILN() },
+                {"NLN", () => HandleNLN() },
+                {"FLN", () => HandleFLN() },
+                {"UBX", () => HandleUBX() },
+                {"XFR", async () => await HandleXFR() },
+                {"RNG", () => HandleRNG() }
+            };
             email = messenger_email;
             password = messenger_password;
             _UsingLocalhost = use_localhost;
+            _MSNPVersion = msnp_version;
             if (_UsingLocalhost)
             {
                 NSaddress = "127.0.0.1";
                 RST_address = "http://localhost/RST.srf";
+                nexus_address = "http://localhost/nexus-mock";
                 SharingService_url = "http://localhost/abservice/SharingService.asmx";
                 abservice_url = "http://localhost/abservice/abservice.asmx";
                 //setting local addresses
             }
+        }
+
+        public async Task AddToErrorLog(string error)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                errorLog.Add(error);
+            });
+        }
+
+        public async Task LoginToMessengerAsync()
+        {
+            switch (MSNPVersion)
+            {
+                case "MSNP12":
+                    await MSNP12LoginToMessengerAsync();
+                    break;
+                case "MSNP15":
+                    await MSNP15LoginToMessengerAsync();
+                    break;
+            }
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public static HttpWebRequest CreateSOAPRequest(string soap_action, string address)
@@ -71,16 +132,11 @@ namespace UWPMessengerClient.MSNP15
             }
         }
 
-        public static byte[] JoinBytes(byte[] first, byte[] second)
-        {
-            return first.Concat(second).ToArray();
-        }
-
         public void FillForwardListCollection()
         {
             foreach (Contact contact in contact_list)
             {
-                if (contact.onForward == true)
+                if (contact.onForward)
                 {
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
@@ -95,7 +151,8 @@ namespace UWPMessengerClient.MSNP15
             if (status == "") { throw new ArgumentNullException("Status is empty"); }
             Action changePresence = new Action(() =>
             {
-                NSSocket.SendCommand($"CHG 10 {status} 0\r\n");
+                transactionID++;
+                NSSocket.SendCommand($"CHG {transactionID} {status} {clientCapabilities}\r\n");
             });
             CurrentUserPresenceStatus = status;
             await Task.Run(changePresence);
@@ -135,9 +192,13 @@ namespace UWPMessengerClient.MSNP15
                     </ABContactUpdate>
                 </soap:Body>
             </soap:Envelope>";
-            MakeSOAPRequest(ab_display_name_change_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
+            if (MSNPVersion == "MSNP15")
+            {
+                MakeSOAPRequest(ab_display_name_change_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
+            }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
-            await Task.Run(() => NSSocket.SendCommand($"PRP 10 MFN {urlEncodedNewDisplayName}\r\n"));
+            transactionID++;
+            await Task.Run(() => NSSocket.SendCommand($"PRP {transactionID} MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
         public async Task SendUserPersonalMessage(string newPersonalMessage)
@@ -147,7 +208,8 @@ namespace UWPMessengerClient.MSNP15
                 string encodedPersonalMessage = newPersonalMessage.Replace("&", "&amp;");
                 string psm_payload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
                 int payload_length = Encoding.UTF8.GetBytes(psm_payload).Length;
-                NSSocket.SendCommand($"UUX 12 {payload_length}\r\n" + psm_payload);
+                transactionID++;
+                NSSocket.SendCommand($"UUX {transactionID} {payload_length}\r\n" + psm_payload);
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     userInfo.personalMessage = newPersonalMessage;
@@ -160,7 +222,8 @@ namespace UWPMessengerClient.MSNP15
         {
             SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
             SBConnection = switchboardConnection;
-            await Task.Run(() => NSSocket.SendCommand("XFR 10 SB\r\n"));
+            transactionID++;
+            await Task.Run(() => NSSocket.SendCommand($"XFR {transactionID} SB\r\n"));
         }
 
         public void Exit()

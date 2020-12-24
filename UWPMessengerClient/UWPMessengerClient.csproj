@@ -129,6 +129,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Contact.cs" />
+    <Compile Include="Exceptions\NotConnectedException.cs" />
     <Compile Include="Exceptions\VersionNotSelectedException.cs" />
     <Compile Include="LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
@@ -138,26 +139,29 @@
     </Compile>
     <Compile Include="Message.cs" />
     <Compile Include="MessageSenderConverter.cs" />
-    <Compile Include="MSNP12\ChatPage.xaml.cs">
+    <Compile Include="ChatPage.xaml.cs">
       <DependentUpon>ChatPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MSNP12\ContactList.xaml.cs">
+    <Compile Include="ContactList.xaml.cs">
       <DependentUpon>ContactList.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MSNP12\NotificationServerConnection.cs" />
-    <Compile Include="MSNP15\ChatPage.xaml.cs">
-      <DependentUpon>ChatPage.xaml</DependentUpon>
+    <Compile Include="MSNP\NotificationServerConnection.cs" />
+    <Compile Include="MSNP\NotificationServerConnection.ReceivingCallback.cs">
+      <DependentUpon>NotificationServerConnection.cs</DependentUpon>
     </Compile>
-    <Compile Include="MSNP15\ContactList.xaml.cs">
-      <DependentUpon>ContactList.xaml</DependentUpon>
+    <Compile Include="MSNP\NotificationServerConnection.ContactList.cs">
+      <DependentUpon>NotificationServerConnection.cs</DependentUpon>
     </Compile>
-    <Compile Include="MSNP15\NotificationServerConnection.MSNP15.ContactList.cs" />
-    <Compile Include="MSNP15\NotificationServerConnection.MSNP15.cs" />
-    <Compile Include="MSNP15\NotificationServerConnection.MSNP15.ReceivingCallback.cs" />
-    <Compile Include="MSNP15\NotificationServerConnection.MSNP15.SSO.cs" />
-    <Compile Include="MSNP12\NotificationServerConnection.ReceivingCallback.cs" />
-    <Compile Include="MSNP15\SwitchboardConnection.MSNP15.cs" />
-    <Compile Include="MSNP15\SwitchboardConnection.MSNP15.ReceivingCallback.cs" />
+    <Compile Include="MSNP\NotificationServerConnection.SSO.cs">
+      <DependentUpon>NotificationServerConnection.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MSNP\NotificationServerConnection.TWN.cs">
+      <DependentUpon>NotificationServerConnection.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MSNP\SwitchboardConnection.cs" />
+    <Compile Include="MSNP\SwitchboardConnection.ReceivingCallback.cs">
+      <DependentUpon>SwitchboardConnection.cs</DependentUpon>
+    </Compile>
     <Compile Include="PersonalMessageConverter.cs" />
     <Compile Include="PresenceStatuses.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -166,8 +170,6 @@
     </Compile>
     <Compile Include="SocketCommands.cs" />
     <Compile Include="StatusConverter.cs" />
-    <Compile Include="MSNP12\SwitchboardConnection.cs" />
-    <Compile Include="MSNP12\SwitchboardConnection.ReceivingCallback.cs" />
     <Compile Include="UrlDecodingConverter.cs" />
     <Compile Include="UserInfo.cs" />
   </ItemGroup>
@@ -199,19 +201,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="MSNP12\ChatPage.xaml">
+    <Page Include="ChatPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MSNP12\ContactList.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="MSNP15\ChatPage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="MSNP15\ContactList.xaml">
+    <Page Include="ContactList.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

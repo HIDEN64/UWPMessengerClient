@@ -7,41 +7,46 @@ using System.Net;
 using System.Xml;
 using System.Security.Cryptography;
 
-namespace UWPMessengerClient.MSNP15
+namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection
     {
         private string MBIKeyOldNonce;
         private string TicketToken;
 
-        public async Task LoginToMessengerAsync()
+        protected async Task MSNP15LoginToMessengerAsync()
         {
             NSSocket = new SocketCommands(NSaddress, port);
             Action loginAction = new Action(() =>
             {
                 NSSocket.ConnectSocket();
                 NSSocket.SetReceiveTimeout(15000);
-                NSSocket.SendCommand("VER 1 MSNP15 CVR0\r\n");
+                transactionID++;
+                NSSocket.SendCommand($"VER {transactionID} MSNP15 CVR0\r\n");
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive VER response
-                NSSocket.SendCommand("CVR 2 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");
+                transactionID++;
+                NSSocket.SendCommand($"CVR {transactionID} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive CVR response
-                NSSocket.SendCommand($"USR 3 SSO I {email}\r\n");
+                transactionID++;
+                NSSocket.SendCommand($"USR {transactionID} SSO I {email}\r\n");
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive GCF
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive USR response with nonce
+                transactionID++;
                 userInfo.Email = email;
                 GetMBIKeyOldNonce();
                 SOAPResult = Perform_SSO_SOAP_Request();
                 string response_struct = GetSSOReturnValue();
-                NSSocket.BeginReceiving(received_bytes, new AsyncCallback(MSNP15ReceivingCallback), this);
-                NSSocket.SendCommand($"USR 4 SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
+                NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
+                NSSocket.SendCommand($"USR {transactionID} SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
                 MembershipLists = MakeMembershipListsSOAPRequest();
                 AddressBook = MakeAddressBookSOAPRequest();
-                FillContactList();
-                FillContactsInForwardList();
+                FillContactListFromSOAP();
+                FillContactsInForwardListFromSOAP();
                 SendBLP();
                 SendInitialADL();
                 SendUserDisplayName();
-                NSSocket.SendCommand("CHG 8 NLN 0\r\n");//setting presence as available
+                transactionID++;
+                NSSocket.SendCommand($"CHG {transactionID} NLN {clientCapabilities}\r\n");//setting presence as available
                 CurrentUserPresenceStatus = "NLN";
             });
             await Task.Run(loginAction);
@@ -110,6 +115,11 @@ namespace UWPMessengerClient.MSNP15
                 </Body>
             </Envelope>";
             return MakeSOAPRequest(SSO_XML, RST_address, "http://www.msn.com/webservices/storage/w10/");
+        }
+
+        public static byte[] JoinBytes(byte[] first, byte[] second)
+        {
+            return first.Concat(second).ToArray();
         }
 
         protected byte[] GetResultFromSSOHashs(byte[] key, string ws_secure)

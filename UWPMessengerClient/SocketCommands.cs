@@ -8,7 +8,7 @@ using System.Net.Sockets;
 
 namespace UWPMessengerClient
 {
-    class SocketCommands
+    public class SocketCommands
     {
         private Socket socket;
         private string server_address = "";
@@ -37,13 +37,19 @@ namespace UWPMessengerClient
 
         public void SendCommand(string msg)
         {
-            byte[] message = Encoding.UTF8.GetBytes(msg);
-            socket.Send(message);
+            if (socket.Connected)
+            {
+                byte[] message = Encoding.UTF8.GetBytes(msg);
+                socket.Send(message);
+            }
         }
 
         public void SendCommand(byte[] message)
         {
-            socket.Send(message);
+            if (socket.Connected)
+            {
+                socket.Send(message);
+            }
         }
 
         public void BeginReceiving(byte[] buffer, AsyncCallback asyncCallback, object stateObject)
@@ -72,8 +78,11 @@ namespace UWPMessengerClient
 
         public void CloseSocket()
         {
-            socket.Shutdown(SocketShutdown.Both);
-            socket.Close();
+            if (socket.Connected)
+            {
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Close();
+            }
         }
 
         ~SocketCommands()

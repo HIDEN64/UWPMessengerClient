@@ -13,24 +13,51 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Windows.Storage;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using System.Diagnostics;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace UWPMessengerClient
 {
-    public sealed partial class SettingsPage : Page
+    public sealed partial class SettingsPage : Page, INotifyPropertyChanged
     {
-        ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+        private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+        private string server_address = "m1.escargot.log1p.xyz";//escargot address
+        private int server_port = 1863;
+        private SocketCommands TestSocket;
+        public event PropertyChangedEventHandler PropertyChanged;
+        private ObservableCollection<string> _errors;
+        private ObservableCollection<string> errors
+        {
+            get => _errors;
+            set
+            {
+                _errors = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         public SettingsPage()
         {
             this.InitializeComponent();
             SetConfigDefaultValuesIfNull();
+            TestSocket = new SocketCommands(server_address, server_port);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             BackButton.IsEnabled = this.Frame.CanGoBack;
             SetSavedSettings();
+            errors = (ObservableCollection<string>)e.Parameter;
+            var task = TestServer();
             base.OnNavigatedTo(e);
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -68,10 +95,51 @@ namespace UWPMessengerClient
             }
         }
 
+        private async Task TestServer()
+        {
+            server_status.Text = "Testing server response time...";
+            Stopwatch stopwatch = new Stopwatch();
+            string status = "";
+            await Task.Run(() =>
+            {
+                TestSocket.ConnectSocket();
+                TestSocket.SetReceiveTimeout(15000);//15 seconds means server offline
+                byte[] buffer = new byte[4096];
+                TestSocket.SendCommand("VER 1 MSNP15 CVR0\r\n");
+                stopwatch.Start();
+                try
+                {
+                    TestSocket.ReceiveMessage(buffer);
+                }
+                catch (System.Net.Sockets.SocketException e)
+                {
+                    if (e.SocketErrorCode == System.Net.Sockets.SocketError.TimedOut)
+                    {
+                        status = "offline";
+                    }
+                }
+                stopwatch.Stop();
+            });
+            if (stopwatch.Elapsed.TotalSeconds > 5 && stopwatch.Elapsed.TotalSeconds < 15)//acceptable response time is 5 seconds, greater than this means congested server
+            {
+                status = "congested";
+            }
+            else if (stopwatch.Elapsed.TotalSeconds < 5)
+            {
+                status = "online";
+            }
+            server_status.Text = $"The server is currently {status} - {stopwatch.Elapsed.TotalSeconds} seconds response time";
+        }
+
         private void SetSavedSettings()
         {
             version_box.SelectedIndex = (int)localSettings.Values["MSNP_Version_Index"];
             localhost_toggle.IsOn = (bool)localSettings.Values["Using_Localhost"];
+        }
+
+        private async void testServerButton_Click(object sender, RoutedEventArgs e)
+        {
+            await TestServer();
         }
     }
 }
