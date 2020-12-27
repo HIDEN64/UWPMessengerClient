@@ -43,5 +43,10 @@ namespace UWPMessengerClient
         {
             get { return "LUN"; }
         }
+
+        public static string Hidden
+        {
+            get { return "HDN"; }
+        }
     }
 }

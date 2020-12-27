@@ -12,12 +12,12 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class SwitchboardConnection : INotifyPropertyChanged
     {
-        private SocketCommands SBSocket;
-        private string SBAddress;
-        private int SBPort = 0;
-        private string UserEmail;
-        private string AuthString;
-        private string SessionID;
+        protected SocketCommands SBSocket;
+        protected string SBAddress;
+        protected int SBPort = 0;
+        protected string UserEmail;
+        protected string AuthString;
+        protected string SessionID;
         protected int transactionID = 0;
         public UserInfo PrincipalInfo { get; set; } = new UserInfo();
         public UserInfo userInfo { get; set; } = new UserInfo();
@@ -25,7 +25,8 @@ namespace UWPMessengerClient.MSNP
         public int principalsConnected { get; set; }
         public string outputString { get; set; }
         public byte[] outputBuffer { get; set; } = new byte[4096];
-        private bool waitingTyping = false;
+        protected bool waitingTyping = false;
+        protected bool waitingNudge = false;
         public event PropertyChangedEventHandler PropertyChanged;
         Dictionary<string, Action> command_handlers;
         private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
@@ -210,8 +211,45 @@ namespace UWPMessengerClient.MSNP
                     SBSocket.SendCommand($"MSG {transactionID} U {byte_message.Length}\r\n{message}");
                 });
                 waitingTyping = true;
+                //sending TypingUser every 5 seconds only
                 await Task.Delay(5000);
                 waitingTyping = false;
+            }
+        }
+
+        public async Task SendNudge()
+        {
+            if (connected && principalsConnected > 0)
+            {
+                if (!waitingNudge)
+                {
+                    try
+                    {
+                        await Task.Run(() =>
+                        {
+                            string nudge_message = "MIME-Version: 1.0\r\nContent-Type: text/x-msnmsgr-datacast\r\n\r\nID: 1\r\n";
+                            byte[] byte_message = Encoding.UTF8.GetBytes(nudge_message);
+                            transactionID++;
+                            SBSocket.SendCommand($"MSG {transactionID} A {byte_message.Length}\r\n{nudge_message}");
+                        });
+                        AddToMessageList($"You sent {PrincipalInfo.displayName} a nudge", "");
+                    }
+                    catch (Exception ex)
+                    {
+                        await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error" });
+                        });
+                    }
+                    waitingNudge = true;
+                    //12 second cooldown, about the same as the wlm 2009 client
+                    await Task.Delay(12000);
+                    waitingNudge = false;
+                }
+                else
+                {
+                    AddToMessageList("Wait before sending nudge again", "");
+                }
             }
         }
 

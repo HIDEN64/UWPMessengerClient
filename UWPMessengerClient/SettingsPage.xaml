@@ -12,16 +12,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="15"/>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="10"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="10"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="15"/>
@@ -37,24 +27,30 @@
                    Click="BackButton_Click"/>
         <TextBlock Text="Settings" Style="{ThemeResource HeaderTextBlockStyle}" TextWrapping="Wrap"
                    Grid.Column="2" Grid.Row="1" TextAlignment="Center"/>
-        <TextBlock Text="Login settings" Style="{ThemeResource TitleTextBlockStyle}" TextWrapping="Wrap"
-                   Grid.Column="1" Grid.Row="3" Grid.ColumnSpan="2" Padding="5"/>
-        <ToggleSwitch x:Name="localhost_toggle" Header="Use localhost" Grid.Row="4" Grid.Column="1" Margin="5"
-                      Grid.ColumnSpan="2" Toggled="localhost_toggle_Toggled"/>
-        <ComboBox x:Name="version_box" Header="MSNP version" Grid.Column="1" Grid.Row="5"
-                  Grid.ColumnSpan="2" Margin="5" SelectionChanged="version_box_SelectionChanged">
-            <x:String>MSNP15</x:String>
-            <x:String>MSNP12</x:String>
-        </ComboBox>
-        <TextBlock Text="If you're already logged in log off and back in to apply these settings" Style="{ThemeResource BodyTextBlockStyle}"
-                   Margin="5" TextWrapping="Wrap" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3"/>
-        <Border Grid.Row="7" Grid.ColumnSpan="3" Grid.Column="1" Padding="5"/>
-        <TextBlock Text="Server status viewer" Style="{ThemeResource TitleTextBlockStyle}" Grid.Column="1" Grid.Row="8" Margin="5" Grid.ColumnSpan="3"/>
-        <TextBlock x:Name="server_status" Text="" Grid.Column="1" Grid.Row="9" Margin="5" TextWrapping="Wrap"
-                   Style="{ThemeResource BodyTextBlockStyle}" Grid.ColumnSpan="3"/>
-        <Button x:Name="testServerButton" Content="Click to test server response time again" Grid.Row="10" Grid.Column="1"
-                Click="testServerButton_Click" Grid.ColumnSpan="3"/>
-        <TextBlock Text="Errors" Style="{ThemeResource TitleTextBlockStyle}" Margin="5" Grid.Column="1" Grid.Row="12" Grid.ColumnSpan="3"/>
-        <ListView x:Name="errorList" Grid.Row="13" ItemsSource="{x:Bind errors, Mode=OneWay}" Grid.Column="1" Grid.ColumnSpan="3"/>
+        <Pivot x:Name="pivot" Grid.Row="2" Grid.ColumnSpan="3" Grid.Column="1">
+            <PivotItem Header="Login">
+                <StackPanel>
+                    <ToggleSwitch x:Name="localhost_toggle" Header="Use localhost" Margin="5" Toggled="localhost_toggle_Toggled"/>
+                    <ComboBox x:Name="version_box" Header="MSNP version"
+                        Margin="5" SelectionChanged="version_box_SelectionChanged">
+                        <x:String>MSNP15</x:String>
+                        <x:String>MSNP12</x:String>
+                    </ComboBox>
+                    <TextBlock Text="If you're already logged in log off and back in to apply these settings" Style="{ThemeResource BodyTextBlockStyle}"
+                        Margin="5" TextWrapping="Wrap"/>
+                </StackPanel>
+            </PivotItem>
+            <PivotItem Header="Server connection">
+                <StackPanel>
+                    <TextBlock Text="Server connection viewer" Style="{ThemeResource TitleTextBlockStyle}" Margin="5"/>
+                    <TextBlock x:Name="server_connection_status" Text="" Margin="5" TextWrapping="Wrap"
+                        Style="{ThemeResource BodyTextBlockStyle}"/>
+                    <Button x:Name="testServerButton" Content="Click to test server response time again" Click="testServerButton_Click"/>
+                </StackPanel>
+            </PivotItem>
+            <PivotItem Header="Errors">
+                <ListView x:Name="errorList" ItemsSource="{x:Bind errors, Mode=OneWay}"/>
+            </PivotItem>
+        </Pivot>
     </Grid>
 </Page>

@@ -39,7 +39,7 @@
                 Grid.ColumnSpan="2" SelectionMode="None" VerticalAlignment="Top" HorizontalAlignment="Stretch">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:Message">
-                    <StackPanel>
+                    <StackPanel Margin="3">
                         <TextBlock x:Name="messageSender" Text="{x:Bind sender, Converter={StaticResource MessengerSenderConverter}, Mode=OneWay}" FontSize="14" FontWeight="Bold" TextWrapping="Wrap"/>
                         <TextBlock x:Name="messageText" Text="{x:Bind message_text, Mode=OneWay}" FontSize="16" TextWrapping="Wrap"/>
                     </StackPanel>
@@ -55,8 +55,10 @@
                    Margin="5" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="2"/>
         <TextBox x:Name="messageBox" Grid.Column="1" Grid.Row="7" Margin="5" Grid.ColumnSpan="2" KeyDown="messageBox_KeyDown"
                  TextChanged="messageBox_TextChanged"/>
-        <Button x:Name="sendButton" Content="Send" HorizontalAlignment="Left" Grid.Row="8" Grid.Column="1"
-                Grid.ColumnSpan="2" Margin="5" Click="sendButton_Click"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="8" Grid.ColumnSpan="2">
+            <Button x:Name="nudgeButton" Content="Nudge" Margin="5" Click="nudgeButton_Click"/>
+            <Button x:Name="sendButton" Content="Send message" Margin="5" Click="sendButton_Click"/>
+        </StackPanel>
         <TextBlock Text="{x:Bind switchboardConnection.userInfo.displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="24" FontWeight="Bold" TextWrapping="Wrap"
                    Grid.ColumnSpan="2" Grid.Column="1" Grid.Row="9"/>
     </Grid>

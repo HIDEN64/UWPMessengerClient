@@ -28,6 +28,7 @@ namespace UWPMessengerClient
         private int server_port = 1863;
         private SocketCommands TestSocket;
         public event PropertyChangedEventHandler PropertyChanged;
+        private MSNP.NotificationServerConnection notificationServerConnection;
         private ObservableCollection<string> _errors;
         private ObservableCollection<string> errors
         {
@@ -50,7 +51,11 @@ namespace UWPMessengerClient
         {
             BackButton.IsEnabled = this.Frame.CanGoBack;
             SetSavedSettings();
-            errors = (ObservableCollection<string>)e.Parameter;
+            if (e.Parameter != null)
+            {
+                notificationServerConnection = (MSNP.NotificationServerConnection)e.Parameter;
+                errors = notificationServerConnection.errorLog;
+            }
             var task = TestServer();
             base.OnNavigatedTo(e);
         }
@@ -97,38 +102,31 @@ namespace UWPMessengerClient
 
         private async Task TestServer()
         {
-            server_status.Text = "Testing server response time...";
+            server_connection_status.Text = "Testing server response time...";
             Stopwatch stopwatch = new Stopwatch();
             string status = "";
             await Task.Run(() =>
             {
                 TestSocket.ConnectSocket();
-                TestSocket.SetReceiveTimeout(15000);//15 seconds means server offline
+                TestSocket.SetReceiveTimeout(20000);
                 byte[] buffer = new byte[4096];
                 TestSocket.SendCommand("VER 1 MSNP15 CVR0\r\n");
                 stopwatch.Start();
                 try
                 {
                     TestSocket.ReceiveMessage(buffer);
+                    status = "Connected to server";
                 }
                 catch (System.Net.Sockets.SocketException e)
                 {
                     if (e.SocketErrorCode == System.Net.Sockets.SocketError.TimedOut)
                     {
-                        status = "offline";
+                        status = "Could not connect to server";
                     }
                 }
                 stopwatch.Stop();
             });
-            if (stopwatch.Elapsed.TotalSeconds > 5 && stopwatch.Elapsed.TotalSeconds < 15)//acceptable response time is 5 seconds, greater than this means congested server
-            {
-                status = "congested";
-            }
-            else if (stopwatch.Elapsed.TotalSeconds < 5)
-            {
-                status = "online";
-            }
-            server_status.Text = $"The server is currently {status} - {stopwatch.Elapsed.TotalSeconds} seconds response time";
+            server_connection_status.Text = $"{status} - {stopwatch.Elapsed.TotalSeconds} seconds response time";
         }
 
         private void SetSavedSettings()
