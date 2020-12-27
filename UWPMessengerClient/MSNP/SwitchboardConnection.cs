@@ -223,14 +223,24 @@ namespace UWPMessengerClient.MSNP
             {
                 if (!waitingNudge)
                 {
-                    await Task.Run(() =>
+                    try
                     {
-                        string nudge_message = "MIME-Version: 1.0\r\nContent-Type: text/x-msnmsgr-datacast\r\n\r\nID: 1\r\n";
-                        byte[] byte_message = Encoding.UTF8.GetBytes(nudge_message);
-                        transactionID++;
-                        SBSocket.SendCommand($"MSG {transactionID} A {byte_message.Length}\r\n{nudge_message}");
-                    });
-                    AddToMessageList($"You sent {PrincipalInfo.displayName} a nudge", "");
+                        await Task.Run(() =>
+                        {
+                            string nudge_message = "MIME-Version: 1.0\r\nContent-Type: text/x-msnmsgr-datacast\r\n\r\nID: 1\r\n";
+                            byte[] byte_message = Encoding.UTF8.GetBytes(nudge_message);
+                            transactionID++;
+                            SBSocket.SendCommand($"MSG {transactionID} A {byte_message.Length}\r\n{nudge_message}");
+                        });
+                        AddToMessageList($"You sent {PrincipalInfo.displayName} a nudge", "");
+                    }
+                    catch (Exception ex)
+                    {
+                        await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error" });
+                        });
+                    }
                     waitingNudge = true;
                     //12 second cooldown, about the same as the wlm 2009 client
                     await Task.Delay(12000);

@@ -164,7 +164,7 @@ namespace UWPMessengerClient
 
         private void settings_button_Click(object sender, RoutedEventArgs e)
         {
-            this.Frame.Navigate(typeof(SettingsPage), notificationServerConnection.errorLog);
+            this.Frame.Navigate(typeof(SettingsPage), notificationServerConnection);
         }
 
         private void addContactFlyout_Closed(object sender, object e)

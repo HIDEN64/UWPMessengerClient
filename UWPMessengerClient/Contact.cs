@@ -46,6 +46,18 @@ namespace UWPMessengerClient
             return listbit;
         }
 
+        public int GetListbit()
+        {
+            int onForwardInt = onForward ? 1 : 0;
+            int onAllowInt = onAllow ? 2 : 0;
+            int onBlockInt = onBlock ? 4 : 0;
+            int onReverseInt = onReverse ? 8 : 0;
+            int PendingInt = pending ? 16 : 0;
+            //respective value of each list if true and 0 if false
+            int listbit = (onForwardInt & 1) + (onAllowInt & 2) + (onBlockInt & 4) + (onReverseInt & 8) + (PendingInt & 16);
+            return listbit;
+        }
+
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
