@@ -43,6 +43,9 @@ namespace UWPMessengerClient
                 case "AWY":
                     fullStatus = "Away";
                     break;
+                case "HDN":
+                    fullStatus = "Invisible";
+                    break;
             }
             Presence.SelectedItem = fullStatus;
             if (roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"] != null)
@@ -67,6 +70,9 @@ namespace UWPMessengerClient
                         break;
                     case "Away":
                         await notificationServerConnection.ChangePresence(PresenceStatuses.Away);
+                        break;
+                    case "Invisible":
+                        await notificationServerConnection.ChangePresence(PresenceStatuses.Hidden);
                         break;
                 }
             }

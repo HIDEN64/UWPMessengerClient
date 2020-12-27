@@ -62,6 +62,7 @@
             <x:String>Available</x:String>
             <x:String>Busy</x:String>
             <x:String>Away</x:String>
+            <x:String>Invisible</x:String>
         </ComboBox>
         <ListView x:Name="contactListView" ItemsSource="{x:Bind notificationServerConnection.contacts_in_forward_list, Mode=OneWay}" HorizontalAlignment="Stretch"
                   Grid.ColumnSpan="3" Grid.Row="6" Grid.Column="1">
