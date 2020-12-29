@@ -46,8 +46,7 @@ namespace UWPMessengerClient.MSNP
                 SendInitialADL();
                 SendUserDisplayName();
                 transactionID++;
-                NSSocket.SendCommand($"CHG {transactionID} NLN {clientCapabilities}\r\n");//setting presence as available
-                CurrentUserPresenceStatus = "NLN";
+                NSSocket.SendCommand($"CHG {transactionID} {UserPresenceStatus} {clientCapabilities}\r\n");//setting presence as available
             });
             await Task.Run(loginAction);
         }

@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using UWPMessengerClient.MSNP;
 
 namespace UWPMessengerClient
 {
@@ -28,7 +29,7 @@ namespace UWPMessengerClient
         private int server_port = 1863;
         private SocketCommands TestSocket;
         public event PropertyChangedEventHandler PropertyChanged;
-        private MSNP.NotificationServerConnection notificationServerConnection;
+        private NotificationServerConnection notificationServerConnection;
         private ObservableCollection<string> _errors;
         private ObservableCollection<string> errors
         {
@@ -53,7 +54,7 @@ namespace UWPMessengerClient
             SetSavedSettings();
             if (e.Parameter != null)
             {
-                notificationServerConnection = (MSNP.NotificationServerConnection)e.Parameter;
+                notificationServerConnection = (NotificationServerConnection)e.Parameter;
                 errors = notificationServerConnection.errorLog;
             }
             var task = TestServer();
@@ -108,7 +109,7 @@ namespace UWPMessengerClient
             await Task.Run(() =>
             {
                 TestSocket.ConnectSocket();
-                TestSocket.SetReceiveTimeout(20000);
+                TestSocket.SetReceiveTimeout(25000);
                 byte[] buffer = new byte[4096];
                 TestSocket.SendCommand("VER 1 MSNP15 CVR0\r\n");
                 stopwatch.Start();

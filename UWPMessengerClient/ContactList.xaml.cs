@@ -14,12 +14,13 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 using Windows.Storage;
+using UWPMessengerClient.MSNP;
 
 namespace UWPMessengerClient
 {
     public sealed partial class ContactList : Page
     {
-        private MSNP.NotificationServerConnection notificationServerConnection;
+        private NotificationServerConnection notificationServerConnection;
         ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
 
         public ContactList()
@@ -29,21 +30,21 @@ namespace UWPMessengerClient
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            notificationServerConnection = (MSNP.NotificationServerConnection)e.Parameter;
-            string status = notificationServerConnection.CurrentUserPresenceStatus;
+            notificationServerConnection = (NotificationServerConnection)e.Parameter;
+            string status = notificationServerConnection.UserPresenceStatus;
             string fullStatus = null;
             switch (status)
             {
-                case "NLN":
+                case PresenceStatuses.Available:
                     fullStatus = "Available";
                     break;
-                case "BSY":
+                case PresenceStatuses.Busy:
                     fullStatus = "Busy";
                     break;
-                case "AWY":
+                case PresenceStatuses.Away:
                     fullStatus = "Away";
                     break;
-                case "HDN":
+                case PresenceStatuses.Hidden:
                     fullStatus = "Invisible";
                     break;
             }

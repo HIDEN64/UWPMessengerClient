@@ -31,7 +31,7 @@ namespace UWPMessengerClient.MSNP
         protected int transactionID = 0;
         protected uint clientCapabilities = 0x84140420;
         public int ContactIndexToChat { get; set; }
-        public string CurrentUserPresenceStatus { get; set; }
+        public string UserPresenceStatus { get; set; }
         public bool UsingLocalhost { get => _UsingLocalhost; }
         public string MSNPVersion { get => _MSNPVersion; }
         public UserInfo userInfo { get; set; } = new UserInfo();
@@ -48,7 +48,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version)
+        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version, string initial_status = PresenceStatuses.Available)
         {
             command_handlers = new Dictionary<string, Action>()
             {
@@ -66,6 +66,7 @@ namespace UWPMessengerClient.MSNP
             password = messenger_password;
             _UsingLocalhost = use_localhost;
             _MSNPVersion = msnp_version;
+            UserPresenceStatus = initial_status;
             if (_UsingLocalhost)
             {
                 NSaddress = "127.0.0.1";
@@ -154,7 +155,7 @@ namespace UWPMessengerClient.MSNP
                 transactionID++;
                 NSSocket.SendCommand($"CHG {transactionID} {status} {clientCapabilities}\r\n");
             });
-            CurrentUserPresenceStatus = status;
+            UserPresenceStatus = status;
             await Task.Run(changePresence);
         }
 

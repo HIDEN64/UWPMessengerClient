@@ -8,45 +8,21 @@ namespace UWPMessengerClient
 {
     class PresenceStatuses
     {
-        //using properties that return presence statuses
-        public static string Available
-        {
-            get { return "NLN"; }
-        }
+        //using constants that are presence statuses
+        public const string Available = "NLN";
 
-        public static string Busy
-        {
-            get { return "BSY"; }
-        }
+        public const string Busy = "BSY";
 
-        public static string Idle
-        {
-            get { return "IDL"; }
-        }
+        public const string Idle = "IDL";
 
-        public static string BeRightBack
-        {
-            get { return "BRB"; }
-        }
+        public const string BeRightBack = "BRB";
 
-        public static string Away
-        {
-            get { return "AWY"; }
-        }
+        public const string Away = "AWY";
 
-        public static string OnThePhone
-        {
-            get { return "PHN"; }
-        }
+        public const string OnThePhone = "PHN";
 
-        public static string OutToLunch
-        {
-            get { return "LUN"; }
-        }
+        public const string OutToLunch = "LUN";
 
-        public static string Hidden
-        {
-            get { return "HDN"; }
-        }
+        public const string Hidden = "HDN";
     }
 }

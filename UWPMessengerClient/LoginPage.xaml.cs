@@ -15,12 +15,13 @@ using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using Windows.Storage;
+using UWPMessengerClient.MSNP;
 
 namespace UWPMessengerClient
 {
     public sealed partial class LoginPage : Page
     {
-        MSNP.NotificationServerConnection notificationServerConnection;
+        NotificationServerConnection notificationServerConnection;
         ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
         public LoginPage()
@@ -49,7 +50,23 @@ namespace UWPMessengerClient
             }
             string selected_version = localSettings.Values["MSNP_Version"].ToString();
             bool using_localhost = (bool)localSettings.Values["Using_Localhost"];
-            notificationServerConnection = new MSNP.NotificationServerConnection(email, password, using_localhost, selected_version);
+            string initial_status = PresenceStatuses.Available;
+            switch (InitialStatusBox.SelectedItem.ToString())
+            {
+                case "Available":
+                    initial_status = PresenceStatuses.Available;
+                    break;
+                case "Busy":
+                    initial_status = PresenceStatuses.Busy;
+                    break;
+                case "Away":
+                    initial_status = PresenceStatuses.Away;
+                    break;
+                case "Invisible":
+                    initial_status = PresenceStatuses.Hidden;
+                    break;
+            }
+            notificationServerConnection = new NotificationServerConnection(email, password, using_localhost, selected_version, initial_status);
             try
             {
                 await notificationServerConnection.LoginToMessengerAsync();
