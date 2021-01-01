@@ -273,7 +273,7 @@ namespace UWPMessengerClient.MSNP
                         {
                             foreach (Contact contact_in_list in contactInList)
                             {
-                                contact_in_list.displayName = displayNameNode.InnerText;
+                                contact_in_list.displayName = displayName;
                                 contact_in_list.contactID = contactID.InnerText;
                                 contact_in_list.onForward = true;
                             }
