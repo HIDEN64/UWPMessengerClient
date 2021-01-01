@@ -137,7 +137,7 @@ namespace UWPMessengerClient.MSNP
                 if (PRPParams[1] == "MFN")
                 {
                     string displayName = PlusCharactersRegex.Replace(PRPParams[2], "");
-                    userInfo.displayName = PRPParams[2];
+                    userInfo.displayName = displayName;
                 }
                 else if (PRPParams[2] == "MFN")
                 {
