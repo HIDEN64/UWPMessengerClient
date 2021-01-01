@@ -10,6 +10,7 @@ using Windows.UI.Core;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace UWPMessengerClient.MSNP
 {
@@ -26,6 +27,7 @@ namespace UWPMessengerClient.MSNP
         protected readonly int port = 1863;
         private string email;
         private string password;
+        protected Regex PlusCharactersRegex = new Regex("\\[(.*?)\\]");
         protected bool _UsingLocalhost = false;
         protected string _MSNPVersion;
         protected int transactionID = 0;

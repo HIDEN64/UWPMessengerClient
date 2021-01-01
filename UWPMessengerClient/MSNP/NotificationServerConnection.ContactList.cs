@@ -246,10 +246,11 @@ namespace UWPMessengerClient.MSNP
                 {
                     case "Me":
                         xPath = "./ab:contactInfo/ab:displayName";
-                        XmlNode userDisplayName = contact.SelectSingleNode(xPath, NSmanager);
+                        XmlNode userDisplayNameNode = contact.SelectSingleNode(xPath, NSmanager);
+                        string userDisplayName = PlusCharactersRegex.Replace(userDisplayNameNode.InnerText, "");
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            userInfo.displayName = userDisplayName.InnerText;
+                            userInfo.displayName = userDisplayName;
                         });
                         xPath = "./ab:contactInfo/ab:annotations/ab:Annotation[ab:Name='MSN.IM.BLP']/ab:Value";
                         XmlNode BLP_value = contact.SelectSingleNode(xPath, NSmanager);
@@ -259,19 +260,20 @@ namespace UWPMessengerClient.MSNP
                         xPath = "./ab:contactInfo/ab:passportName";
                         XmlNode passportName = contact.SelectSingleNode(xPath, NSmanager);
                         xPath = "./ab:contactInfo/ab:displayName";
-                        XmlNode displayName = contact.SelectSingleNode(xPath, NSmanager);
+                        XmlNode displayNameNode = contact.SelectSingleNode(xPath, NSmanager);
+                        string displayName = PlusCharactersRegex.Replace(displayNameNode.InnerText, "");
                         var contactInList = from contact_in_list in contact_list
                                             where contact_in_list.email == passportName.InnerText
                                             select contact_in_list;
                         if (!contactInList.Any())
                         {
-                            contact_list.Add(new Contact() { displayName = displayName.InnerText, email = passportName.InnerText, contactID = contactID.InnerText, onForward = true });
+                            contact_list.Add(new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = displayName, email = passportName.InnerText, contactID = contactID.InnerText, onForward = true });
                         }
                         else
                         {
                             foreach (Contact contact_in_list in contactInList)
                             {
-                                contact_in_list.displayName = displayName.InnerText;
+                                contact_in_list.displayName = displayNameNode.InnerText;
                                 contact_in_list.contactID = contactID.InnerText;
                                 contact_in_list.onForward = true;
                             }
@@ -380,8 +382,7 @@ namespace UWPMessengerClient.MSNP
                         NSSocket.SendCommand(contact_payload);
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            //1 for forward list
-                            contact_list.Add(new Contact(1) { displayName = newContactDisplayName, email = newContactEmail });
+                            contact_list.Add(new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = newContactDisplayName, email = newContactEmail });
                             contacts_in_forward_list.Add(contact_list.Last());
                         });
                         break;

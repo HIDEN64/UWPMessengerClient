@@ -129,6 +129,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Contact.cs" />
+    <Compile Include="Enums.cs" />
     <Compile Include="Exceptions\NotConnectedException.cs" />
     <Compile Include="Exceptions\VersionNotSelectedException.cs" />
     <Compile Include="LoginPage.xaml.cs">
