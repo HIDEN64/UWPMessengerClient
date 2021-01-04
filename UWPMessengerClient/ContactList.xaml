@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:UWPMessengerClient"
+    xmlns:msnp_local="using:UWPMessengerClient.MSNP"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d"
@@ -67,7 +68,7 @@
         <ListView x:Name="contactListView" ItemsSource="{x:Bind notificationServerConnection.contacts_in_forward_list, Mode=OneWay}" HorizontalAlignment="Stretch"
                   Grid.ColumnSpan="3" Grid.Row="6" Grid.Column="1">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:Contact">
+                <DataTemplate x:DataType="msnp_local:Contact">
                     <StackPanel DoubleTapped="StackPanel_DoubleTapped" Margin="3">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{x:Bind displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="18" FontWeight="Bold" TextWrapping="Wrap"/>

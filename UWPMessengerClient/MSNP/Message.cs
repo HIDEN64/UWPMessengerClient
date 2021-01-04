@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP
 {
     public class Message : INotifyPropertyChanged
     {

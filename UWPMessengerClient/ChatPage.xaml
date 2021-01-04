@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:UWPMessengerClient"
+    xmlns:msnp_local="using:UWPMessengerClient.MSNP"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -38,7 +39,7 @@
         <ListView x:Name="messageList" Grid.Column="1" Grid.Row="4" ItemsSource="{x:Bind switchboardConnection.MessageList, Mode=OneWay}"
                 Grid.ColumnSpan="2" SelectionMode="None" VerticalAlignment="Top" HorizontalAlignment="Stretch">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:Message">
+                <DataTemplate x:DataType="msnp_local:Message">
                     <StackPanel Margin="3">
                         <TextBlock x:Name="messageSender" Text="{x:Bind sender, Converter={StaticResource MessengerSenderConverter}, Mode=OneWay}" FontSize="14" FontWeight="Bold" TextWrapping="Wrap"/>
                         <TextBlock x:Name="messageText" Text="{x:Bind message_text, Mode=OneWay}" FontSize="16" TextWrapping="Wrap"/>

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP
 {
     class PresenceStatuses
     {
