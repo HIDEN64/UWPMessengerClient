@@ -252,7 +252,7 @@ namespace UWPMessengerClient.MSNP
                         return false;
                     }
                 });
-                await Task.Delay(10000);
+                await Task.Delay(60000);
             }
             while (IsConnected);
         }
