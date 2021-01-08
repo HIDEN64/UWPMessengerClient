@@ -15,6 +15,7 @@ using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 using Windows.Storage;
 using UWPMessengerClient.MSNP;
+using Windows.UI.Core;
 
 namespace UWPMessengerClient
 {
@@ -31,6 +32,7 @@ namespace UWPMessengerClient
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             notificationServerConnection = (NotificationServerConnection)e.Parameter;
+            notificationServerConnection.NotConnected += NotificationServerConnection_NotConnected;
             string status = notificationServerConnection.UserPresenceStatus;
             string fullStatus = null;
             switch (status)
@@ -54,6 +56,22 @@ namespace UWPMessengerClient
                 _ = notificationServerConnection.SendUserPersonalMessage((string)roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"]);
             }
             base.OnNavigatedTo(e);
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            notificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
+            notificationServerConnection = null;
+            base.OnNavigatedFrom(e);
+        }
+
+        private async void NotificationServerConnection_NotConnected(object sender, EventArgs e)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                await ShowDialog("Error", "Connection to the server was lost: exiting...");
+                this.Frame.Navigate(typeof(LoginPage));
+            });
         }
 
         private async void Presence_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -94,13 +112,20 @@ namespace UWPMessengerClient
                 }
                 catch (Exception e)
                 {
-                    await ShowErrorDialog(e.Message);
+                    await ShowDialog("Error", $"There was an error, please try again. Error: {e.Message}");
                 }
             }
             else
             {
                 return;
             }
+        }
+
+        private void Exit()
+        {
+            notificationServerConnection.Exit();
+            notificationServerConnection = null;
+            this.Frame.Navigate(typeof(LoginPage));
         }
 
         private async void start_chat_button_Click(object sender, RoutedEventArgs e)
@@ -151,9 +176,7 @@ namespace UWPMessengerClient
 
         private void exitButton_Click(object sender, RoutedEventArgs e)
         {
-            notificationServerConnection.Exit();
-            notificationServerConnection = null;
-            this.Frame.Navigate(typeof(LoginPage));
+            Exit();
         }
 
         private void addContactAppBarButton_Click(object sender, RoutedEventArgs e)
@@ -210,15 +233,15 @@ namespace UWPMessengerClient
             FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
         }
 
-        public async Task ShowErrorDialog(string error)
+        public async Task ShowDialog(string title, string message)
         {
-            ContentDialog ErrorDialog = new ContentDialog
+            ContentDialog Dialog = new ContentDialog
             {
-                Title = "Error",
-                Content = "There was an error, please try again. Error: " + error,
+                Title = title,
+                Content = message,
                 CloseButtonText = "Close"
             };
-            ContentDialogResult ErrorResult = await ErrorDialog.ShowAsync();
+            ContentDialogResult DialogResult = await Dialog.ShowAsync();
         }
     }
 }

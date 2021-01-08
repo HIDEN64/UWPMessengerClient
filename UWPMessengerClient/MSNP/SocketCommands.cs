@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 
-namespace UWPMessengerClient
+namespace UWPMessengerClient.MSNP
 {
     public class SocketCommands
     {
@@ -42,6 +42,10 @@ namespace UWPMessengerClient
                 byte[] message = Encoding.UTF8.GetBytes(msg);
                 socket.Send(message);
             }
+            else
+            {
+                throw new MSNP.Exceptions.NotConnectedException();
+            }
         }
 
         public void SendCommand(byte[] message)
@@ -49,6 +53,10 @@ namespace UWPMessengerClient
             if (socket.Connected)
             {
                 socket.Send(message);
+            }
+            else
+            {
+                throw new MSNP.Exceptions.NotConnectedException();
             }
         }
 

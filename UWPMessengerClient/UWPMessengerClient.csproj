@@ -169,7 +169,7 @@
     <Compile Include="SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SocketCommands.cs" />
+    <Compile Include="MSNP\SocketCommands.cs" />
     <Compile Include="StatusConverter.cs" />
     <Compile Include="UrlDecodingConverter.cs" />
     <Compile Include="MSNP\UserInfo.cs" />

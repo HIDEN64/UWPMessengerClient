@@ -11,6 +11,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using UWPMessengerClient.MSNP.Exceptions;
+using System.Net.Sockets;
 
 namespace UWPMessengerClient.MSNP
 {
@@ -38,7 +40,8 @@ namespace UWPMessengerClient.MSNP
         public string MSNPVersion { get => _MSNPVersion; }
         public UserInfo userInfo { get; set; } = new UserInfo();
         public event PropertyChangedEventHandler PropertyChanged;
-        Dictionary<string, Action> command_handlers;
+        public event EventHandler<EventArgs> NotConnected;
+        protected Dictionary<string, Action> command_handlers;
         private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
         public ObservableCollection<string> errorLog
         {
@@ -99,6 +102,9 @@ namespace UWPMessengerClient.MSNP
                     await MSNP15LoginToMessengerAsync();
                     break;
             }
+#pragma warning disable CS4014 // Como esta chamada não é esperada, a execução do método atual continua antes de a chamada ser concluída
+            Ping();
+#pragma warning restore CS4014 // Como esta chamada não é esperada, a execução do método atual continua antes de a chamada ser concluída
         }
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -219,6 +225,36 @@ namespace UWPMessengerClient.MSNP
                 });
             });
             await Task.Run(psm_action);
+        }
+
+        public async Task Ping()
+        {
+            bool IsConnected;
+            do
+            {
+                IsConnected = await Task.Run(() =>
+                {
+                    try
+                    {
+                        NSSocket.SendCommand("PNG\r\n");
+                        return true;
+                    }
+                    catch (NotConnectedException)
+                    {
+                        NSSocket.CloseSocket();
+                        NotConnected?.Invoke(this, new EventArgs());
+                        return false;
+                    }
+                    catch (SocketException)
+                    {
+                        NSSocket.CloseSocket();
+                        NotConnected?.Invoke(this, new EventArgs());
+                        return false;
+                    }
+                });
+                await Task.Delay(10000);
+            }
+            while (IsConnected);
         }
 
         public async Task InitiateSB()
