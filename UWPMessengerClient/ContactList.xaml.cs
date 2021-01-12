@@ -124,7 +124,6 @@ namespace UWPMessengerClient
         private void Exit()
         {
             notificationServerConnection.Exit();
-            notificationServerConnection = null;
             this.Frame.Navigate(typeof(LoginPage));
         }
 

@@ -44,7 +44,7 @@ namespace UWPMessengerClient.MSNP
             }
             else
             {
-                throw new MSNP.Exceptions.NotConnectedException();
+                throw new Exceptions.NotConnectedException();
             }
         }
 
@@ -56,7 +56,7 @@ namespace UWPMessengerClient.MSNP
             }
             else
             {
-                throw new MSNP.Exceptions.NotConnectedException();
+                throw new Exceptions.NotConnectedException();
             }
         }
 
