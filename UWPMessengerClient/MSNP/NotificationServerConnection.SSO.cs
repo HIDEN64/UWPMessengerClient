@@ -35,6 +35,7 @@ namespace UWPMessengerClient.MSNP
                 userInfo.Email = email;
                 GetMBIKeyOldNonce();
                 SOAPResult = Perform_SSO_SOAP_Request();
+                GetContactsFromDatabase();
                 string response_struct = GetSSOReturnValue();
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 NSSocket.SendCommand($"USR {transactionID} SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR

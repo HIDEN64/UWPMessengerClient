@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using Windows.UI.Core;
 using System.Collections.ObjectModel;
+using Newtonsoft.Json;
 
 namespace UWPMessengerClient.MSNP
 {
@@ -154,6 +155,16 @@ namespace UWPMessengerClient.MSNP
             return MakeSOAPRequest(remove_contact_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactDelete");
         }
 
+        protected void GetContactsFromDatabase()
+        {
+            List<string> JSONContactList = DatabaseAccess.GetUserContacts(userInfo.Email);
+            foreach(string JSONContact in JSONContactList)
+            {
+                Contact contact = JsonConvert.DeserializeObject<Contact>(JSONContact);
+                contact_list.Add(contact);
+            }
+        }
+
         protected void FillContactListFromSOAP()
         {
             XmlDocument member_list = new XmlDocument();
@@ -199,6 +210,7 @@ namespace UWPMessengerClient.MSNP
                                 break;
                         }
                         contact_list.Add(contact);
+                        DatabaseAccess.AddContactToTable(userInfo.Email, contact);
                     }
                     else
                     {
@@ -267,7 +279,9 @@ namespace UWPMessengerClient.MSNP
                                             select contact_in_list;
                         if (!contactInList.Any())
                         {
-                            contact_list.Add(new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = displayName, email = passportName.InnerText, contactID = contactID.InnerText, onForward = true });
+                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = displayName, email = passportName.InnerText, contactID = contactID.InnerText, onForward = true };
+                            contact_list.Add(newContact);
+                            DatabaseAccess.AddContactToTable(userInfo.Email, newContact);
                         }
                         else
                         {

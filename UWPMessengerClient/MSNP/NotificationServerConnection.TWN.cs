@@ -23,6 +23,8 @@ namespace UWPMessengerClient.MSNP
                 //sequence of commands to login to escargot
                 NSSocket.ConnectSocket();
                 NSSocket.SetReceiveTimeout(15000);
+                userInfo.Email = email;
+                GetContactsFromDatabase();
                 //begin receiving from escargot
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 transactionID++;
@@ -32,7 +34,6 @@ namespace UWPMessengerClient.MSNP
                 transactionID++;
                 NSSocket.SendCommand($"USR {transactionID} TWN I {email}\r\n");//sends email to get a string for use in authentication
                 transactionID++;
-                userInfo.Email = email;
                 Task<string> token_task = GetNexusTokenAsync(httpClient);
                 token = token_task.Result;
                 NSSocket.SendCommand($"USR {transactionID} TWN S t={token}\r\n");//sending authentication token

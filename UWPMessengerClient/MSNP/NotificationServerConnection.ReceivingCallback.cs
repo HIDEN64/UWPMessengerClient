@@ -103,15 +103,38 @@ namespace UWPMessengerClient.MSNP
             }
             int.TryParse(LSTParams[4], out listbit);
             displayName = PlusCharactersRegex.Replace(displayName, "");
-            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+            var contactInList = from contact_in_list in contact_list
+                                where contact_in_list.email == email
+                                select contact_in_list;
+            if (!contactInList.Any())
             {
-                Contact contact = new Contact(listbit) { displayName = displayName, email = email, GUID = guid };
-                contact_list.Add(contact);
-                if (contact.onForward)
+                Contact newContact = new Contact(listbit) { displayName = displayName, email = email, GUID = guid };
+                contact_list.Add(newContact);
+                DatabaseAccess.AddContactToTable(userInfo.Email, newContact);
+                if (newContact.onForward)
                 {
-                    contacts_in_forward_list.Add(contact);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        contacts_in_forward_list.Add(newContact);
+                    });
                 }
-            });
+            }
+            else
+            {
+                foreach (Contact contact_in_list in contactInList)
+                {
+                    contact_in_list.SetListsFromListbit(listbit);
+                    contact_in_list.displayName = displayName;
+                    contact_in_list.GUID = guid;
+                    if (contact_in_list.onForward)
+                    {
+                        Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            contacts_in_forward_list.Add(contact_in_list);
+                        });
+                    }
+                }
+            }
         }
 
         public void HandleADC()
@@ -175,6 +198,7 @@ namespace UWPMessengerClient.MSNP
                 {
                     contact.presenceStatus = status;
                     contact.displayName = displayName;
+                    DatabaseAccess.UpdateContact(userInfo.Email, contact);
                 }
             });
         }
@@ -207,6 +231,7 @@ namespace UWPMessengerClient.MSNP
                 {
                     contact.presenceStatus = status;
                     contact.displayName = displayName;
+                    DatabaseAccess.UpdateContact(userInfo.Email, contact);
                 }
             });
         }
@@ -268,6 +293,7 @@ namespace UWPMessengerClient.MSNP
                 foreach (Contact contact in contactWithPersonalMessage)
                 {
                     contact.personalMessage = personal_message;
+                    DatabaseAccess.UpdateContact(userInfo.Email, contact);
                 }
             });
             SeparateAndProcessCommandFromPayloadWithResponse(next_response, ubx_length);
