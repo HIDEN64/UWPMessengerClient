@@ -236,7 +236,7 @@ namespace UWPMessengerClient.MSNP
                 {
                     try
                     {
-                        NSSocket.SendCommand("PNG\r\n");
+                        NSSocket.SendCommandWithException("PNG\r\n");
                         return true;
                     }
                     catch (NotConnectedException)

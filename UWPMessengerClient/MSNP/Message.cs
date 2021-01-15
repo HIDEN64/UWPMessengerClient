@@ -12,6 +12,9 @@ namespace UWPMessengerClient.MSNP
     {
         private string _message_text;
         private string _sender;
+        private string _receiver;
+        private string _sender_email;
+        private string _receiver_email;
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -35,6 +38,36 @@ namespace UWPMessengerClient.MSNP
             set
             {
                 _sender = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string receiver
+        {
+            get => _receiver;
+            set
+            {
+                _receiver = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string sender_email
+        {
+            get => _sender_email;
+            set
+            {
+                _sender_email = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public string receiver_email
+        {
+            get => _receiver_email;
+            set
+            {
+                _receiver_email = value;
                 NotifyPropertyChanged();
             }
         }

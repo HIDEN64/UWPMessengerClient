@@ -105,18 +105,18 @@ namespace UWPMessengerClient.MSNP
             });
             Dictionary<string, Action> ContentTypeDictionary = new Dictionary<string, Action>()
             {
-                {"text/plain;", () => AddMessage(MSGPayloadParams[4], senderDisplayName) },
+                {"text/plain;", () => AddMessage(MSGPayloadParams[4], PrincipalInfo, userInfo) },
                 {"text/x-msmsgscontrol", msmsgscontrolAction },
                 {"text/x-msnmsgr-datacast", () => HandleDatacast(msg_payload) }
             };
             ContentTypeDictionary[ContentTypeParams[1]]();
         }
 
-        protected void AddMessage(string message_text, string sender_name)
+        protected void AddMessage(string message_text, UserInfo sender, UserInfo receiver)
         {
             var content = new ToastContentBuilder()
                 .AddToastActivationInfo("newMessages", ToastActivationType.Foreground)
-                .AddText(HttpUtility.UrlDecode(sender_name))
+                .AddText(HttpUtility.UrlDecode(sender.displayName))
                 .AddText(message_text)
                 .GetToastContent();
             try
@@ -128,19 +128,36 @@ namespace UWPMessengerClient.MSNP
                 ToastNotificationManager.CreateToastNotifier().Show(notif);
             }
             catch (ArgumentException) { }
-            var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                PrincipalInfo.typingUser = null;
-                MessageList.Add(new Message() { message_text = message_text, sender = sender_name });
-            });
+            Message newMessage = new Message() { message_text = message_text, sender = sender.displayName, receiver = receiver.displayName, sender_email = sender.Email, receiver_email = receiver.Email };
+            AddToMessageList(newMessage);
         }
 
-        protected void AddToMessageList(string message_text, string sender_name)
+        protected void AddMessage(Message message)
+        {
+            var content = new ToastContentBuilder()
+                .AddToastActivationInfo("newMessages", ToastActivationType.Foreground)
+                .AddText(HttpUtility.UrlDecode(message.sender))
+                .AddText(message.message_text)
+                .GetToastContent();
+            try
+            {
+                var notif = new ToastNotification(content.GetXml())
+                {
+                    Group = "messages"
+                };
+                ToastNotificationManager.CreateToastNotifier().Show(notif);
+            }
+            catch (ArgumentException) { }
+            AddToMessageList(message);
+        }
+
+        protected void AddToMessageList(Message message)
         {
             var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 PrincipalInfo.typingUser = null;
-                MessageList.Add(new Message() { message_text = message_text, sender = sender_name });
+                MessageList.Add(message);
+                DatabaseAccess.AddMessageToTable(userInfo.Email, PrincipalInfo.Email, message);
             });
         }
 
@@ -171,7 +188,8 @@ namespace UWPMessengerClient.MSNP
         public void ShowNudge()
         {
             string nudge_text = $"{HttpUtility.UrlDecode(PrincipalInfo.displayName)} sent you a nudge!";
-            AddMessage(nudge_text, "");
+            Message newMessage = new Message() { message_text = nudge_text, receiver = userInfo.displayName, sender_email = PrincipalInfo.Email, receiver_email = userInfo.Email };
+            AddMessage(newMessage);
         }
     }
 }

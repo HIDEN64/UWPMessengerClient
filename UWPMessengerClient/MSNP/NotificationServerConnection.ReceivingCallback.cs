@@ -332,8 +332,9 @@ namespace UWPMessengerClient.MSNP
             string sb_address = address_and_port[0];
             int.TryParse(address_and_port[1], out sb_port);
             string authString = RNGParams[4];
+            string principalEmail = RNGParams[5];
             string principalName = RNGParams[6];
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, authString, userInfo.displayName, principalName, sessionID);
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, authString, userInfo.displayName, principalName, principalEmail, sessionID);
             SBConnection = switchboardConnection;
             _ = SBConnection.AnswerRNG();
         }

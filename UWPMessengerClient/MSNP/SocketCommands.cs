@@ -42,6 +42,15 @@ namespace UWPMessengerClient.MSNP
                 byte[] message = Encoding.UTF8.GetBytes(msg);
                 socket.Send(message);
             }
+        }
+
+        public void SendCommandWithException(string msg)
+        {
+            if (socket.Connected)
+            {
+                byte[] message = Encoding.UTF8.GetBytes(msg);
+                socket.Send(message);
+            }
             else
             {
                 throw new Exceptions.NotConnectedException();
@@ -49,6 +58,14 @@ namespace UWPMessengerClient.MSNP
         }
 
         public void SendCommand(byte[] message)
+        {
+            if (socket.Connected)
+            {
+                socket.Send(message);
+            }
+        }
+
+        public void SendCommandWithException(byte[] message)
         {
             if (socket.Connected)
             {

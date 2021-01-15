@@ -128,7 +128,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="DatabaseAccess.cs" />
+    <Compile Include="MSNP\DatabaseAccess.cs" />
     <Compile Include="MSNP\Contact.cs" />
     <Compile Include="MSNP\Enums.cs" />
     <Compile Include="MSNP\Exceptions\NotConnectedException.cs" />

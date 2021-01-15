@@ -22,7 +22,7 @@ namespace UWPMessengerClient.MSNP
             {
                 //sequence of commands to login to escargot
                 NSSocket.ConnectSocket();
-                NSSocket.SetReceiveTimeout(15000);
+                NSSocket.SetReceiveTimeout(25000);
                 userInfo.Email = email;
                 GetContactsFromDatabase();
                 //begin receiving from escargot

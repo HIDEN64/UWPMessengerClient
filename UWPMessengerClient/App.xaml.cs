@@ -34,7 +34,7 @@ namespace UWPMessengerClient
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
-            DatabaseAccess.InitializeDatabase();
+            MSNP.DatabaseAccess.InitializeDatabase();
         }
 
         /// <summary>

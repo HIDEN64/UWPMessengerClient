@@ -20,7 +20,7 @@ namespace UWPMessengerClient.MSNP
             Action loginAction = new Action(() =>
             {
                 NSSocket.ConnectSocket();
-                NSSocket.SetReceiveTimeout(15000);
+                NSSocket.SetReceiveTimeout(25000);
                 transactionID++;
                 NSSocket.SendCommand($"VER {transactionID} MSNP15 CVR0\r\n");
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive VER response
