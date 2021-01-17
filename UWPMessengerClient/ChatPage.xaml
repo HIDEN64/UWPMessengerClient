@@ -11,13 +11,15 @@
     <UserControl.Resources>
         <local:MessageSenderConverter x:Key="MessengerSenderConverter"/>
         <local:UrlDecodingConverter x:Key="UrlDecodingConverter"/>
+        <local:MessageHistoryConverter x:Key="MessageHistoryConverter"/>
+        <CollectionViewSource x:Name="MessageCVS" x:Key="MessageCVS" IsSourceGrouped="True"/>
     </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="15"/>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="10"/>
+            <RowDefinition Height="5"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="5"/>
@@ -36,7 +38,7 @@
         <Button x:Name="BackButton" Style="{ThemeResource NavigationBackButtonNormalStyle}" Click="BackButton_Click" Grid.Column="1" Grid.Row="1"/>
         <TextBlock Text="{x:Bind switchboardConnection.PrincipalInfo.displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontWeight="Bold" TextWrapping="Wrap"
                    Grid.Column="2" Grid.Row="1" FontSize="24"/>
-        <ListView x:Name="messageList" Grid.Column="1" Grid.Row="4" ItemsSource="{x:Bind switchboardConnection.MessageList, Mode=OneWay}"
+        <ListView x:Name="messageList" Grid.Column="1" Grid.Row="4" ItemsSource="{x:Bind MessageCVS.View, Mode=OneWay}"
                 Grid.ColumnSpan="2" SelectionMode="None" VerticalAlignment="Top" HorizontalAlignment="Stretch">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="msnp_local:Message">
@@ -51,6 +53,15 @@
                     <ItemsStackPanel ItemsUpdatingScrollMode="KeepLastItemInView"/>
                 </ItemsPanelTemplate>
             </ListView.ItemsPanel>
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate x:DataType="local:GroupInfoList">
+                            <TextBlock Text="{x:Bind Key, Mode=OneWay, Converter={StaticResource MessageHistoryConverter}}"/>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListView.GroupStyle>
         </ListView>
         <TextBlock Text="{x:Bind switchboardConnection.PrincipalInfo.typingUser, Mode=OneWay}" FontSize="14" 
                    Margin="5" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="2"/>

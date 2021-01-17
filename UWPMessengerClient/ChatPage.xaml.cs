@@ -14,6 +14,10 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 using UWPMessengerClient.MSNP;
+using Windows.UI.Core;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace UWPMessengerClient
 {
@@ -31,8 +35,32 @@ namespace UWPMessengerClient
         {
             notificationServerConnection = (NotificationServerConnection)e.Parameter;
             switchboardConnection = notificationServerConnection.SBConnection;
+            Task task = GroupMessages();
+            switchboardConnection.HistoryLoaded += SwitchboardConnection_HistoryLoaded;
+            switchboardConnection.MessageReceived += SwitchboardConnection_MessageReceived;
             BackButton.IsEnabled = this.Frame.CanGoBack;
             base.OnNavigatedTo(e);
+        }
+
+        private async void SwitchboardConnection_MessageReceived(object sender, EventArgs e)
+        {
+            await GroupMessages();
+        }
+
+        private async void SwitchboardConnection_HistoryLoaded(object sender, EventArgs e)
+        {
+            await GroupMessages();
+        }
+
+        private async Task GroupMessages()
+        {
+            var groups = from message in switchboardConnection.MessageList
+                         group message by message.IsHistory into message_group
+                         select new GroupInfoList(message_group) { Key = message_group.Key };
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                MessageCVS.Source = new ObservableCollection<GroupInfoList>(groups);
+            });
         }
 
         private async Task SendMessage()
@@ -41,6 +69,7 @@ namespace UWPMessengerClient
             {
                 await switchboardConnection.SendMessage(messageBox.Text);
                 messageBox.Text = "";
+                await GroupMessages();
             }
         }
 
@@ -76,6 +105,27 @@ namespace UWPMessengerClient
         private async void nudgeButton_Click(object sender, RoutedEventArgs e)
         {
             await switchboardConnection.SendNudge();
+        }
+    }
+
+    public class GroupInfoList : List<object>, INotifyPropertyChanged
+    {
+        public GroupInfoList(IEnumerable<object> items) : base(items) { }
+        public event PropertyChangedEventHandler PropertyChanged;
+        private object _Key;
+        public object Key
+        {
+            get => _Key;
+            set
+            {
+                _Key = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

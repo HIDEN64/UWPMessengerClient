@@ -28,6 +28,7 @@ namespace UWPMessengerClient.MSNP
         protected bool waitingTyping = false;
         protected bool waitingNudge = false;
         public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler HistoryLoaded;
         Dictionary<string, Action> command_handlers;
         private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
         public ObservableCollection<string> errorLog
@@ -131,11 +132,13 @@ namespace UWPMessengerClient.MSNP
             foreach (string JSONMessage in JSONMessages)
             {
                 Message pastMessage = JsonConvert.DeserializeObject<Message>(JSONMessage);
+                pastMessage.IsHistory = true;
                 var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     MessageList.Add(pastMessage);
                 });
             }
+            HistoryLoaded?.Invoke(this, new EventArgs());
         }
 
         public async Task InvitePrincipal(string principal_email)
@@ -190,7 +193,7 @@ namespace UWPMessengerClient.MSNP
                     SBSocket.SendCommand($"MSG {transactionID} N {byte_message.Length}\r\n{message}");
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        Message newMessage = new Message() { message_text = message_text, sender = userInfo.displayName, receiver = PrincipalInfo.displayName, sender_email = userInfo.Email, receiver_email = PrincipalInfo.Email };
+                        Message newMessage = new Message() { message_text = message_text, sender = userInfo.displayName, receiver = PrincipalInfo.displayName, sender_email = userInfo.Email, receiver_email = PrincipalInfo.Email, IsHistory = false };
                         MessageList.Add(newMessage);
                         DatabaseAccess.AddMessageToTable(userInfo.Email, PrincipalInfo.Email, newMessage);
                     });
@@ -205,7 +208,7 @@ namespace UWPMessengerClient.MSNP
                     {
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ie.Message, sender = "Error" });
+                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ie.Message, sender = "Error", IsHistory = false });
                         });
                     }
                 }
@@ -213,7 +216,7 @@ namespace UWPMessengerClient.MSNP
                 {
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error" });
+                        MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
                     });
                 }
             }
@@ -253,14 +256,14 @@ namespace UWPMessengerClient.MSNP
                             SBSocket.SendCommand($"MSG {transactionID} A {byte_message.Length}\r\n{nudge_message}");
                         });
                         string nudge_text = $"You sent {PrincipalInfo.displayName} a nudge";
-                        Message newMessage = new Message() { message_text = nudge_text, receiver = PrincipalInfo.displayName, sender_email = userInfo.Email, receiver_email = PrincipalInfo.Email };
+                        Message newMessage = new Message() { message_text = nudge_text, receiver = PrincipalInfo.displayName, sender_email = userInfo.Email, receiver_email = PrincipalInfo.Email, IsHistory = false };
                         AddToMessageList(newMessage);
                     }
                     catch (Exception ex)
                     {
                         await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error" });
+                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
                         });
                     }
                     waitingNudge = true;
@@ -272,7 +275,7 @@ namespace UWPMessengerClient.MSNP
                 {
                     await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        MessageList.Add(new Message() { message_text = "Wait before sending nudge again", sender = "" });
+                        MessageList.Add(new Message() { message_text = "Wait before sending nudge again", sender = "", IsHistory = false });
                     });
                 }
             }

@@ -15,6 +15,7 @@ namespace UWPMessengerClient.MSNP
         private string _receiver;
         private string _sender_email;
         private string _receiver_email;
+        private bool _IsHistory;
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -68,6 +69,16 @@ namespace UWPMessengerClient.MSNP
             set
             {
                 _receiver_email = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public bool IsHistory
+        {
+            get => _IsHistory;
+            set
+            {
+                _IsHistory = value;
                 NotifyPropertyChanged();
             }
         }

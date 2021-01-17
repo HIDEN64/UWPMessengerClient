@@ -16,6 +16,7 @@ namespace UWPMessengerClient.MSNP
         private string current_response;
         private string next_response;
         public ObservableCollection<Message> MessageList { get; set; } = new ObservableCollection<Message>();
+        public event EventHandler MessageReceived;
 
         public void ReceivingCallback(IAsyncResult asyncResult)
         {
@@ -128,7 +129,7 @@ namespace UWPMessengerClient.MSNP
                 ToastNotificationManager.CreateToastNotifier().Show(notif);
             }
             catch (ArgumentException) { }
-            Message newMessage = new Message() { message_text = message_text, sender = sender.displayName, receiver = receiver.displayName, sender_email = sender.Email, receiver_email = receiver.Email };
+            Message newMessage = new Message() { message_text = message_text, sender = sender.displayName, receiver = receiver.displayName, sender_email = sender.Email, receiver_email = receiver.Email, IsHistory = false };
             AddToMessageList(newMessage);
         }
 
@@ -158,6 +159,7 @@ namespace UWPMessengerClient.MSNP
                 PrincipalInfo.typingUser = null;
                 MessageList.Add(message);
                 DatabaseAccess.AddMessageToTable(userInfo.Email, PrincipalInfo.Email, message);
+                MessageReceived?.Invoke(this, new EventArgs());
             });
         }
 
@@ -188,7 +190,7 @@ namespace UWPMessengerClient.MSNP
         public void ShowNudge()
         {
             string nudge_text = $"{HttpUtility.UrlDecode(PrincipalInfo.displayName)} sent you a nudge!";
-            Message newMessage = new Message() { message_text = nudge_text, receiver = userInfo.displayName, sender_email = PrincipalInfo.Email, receiver_email = userInfo.Email };
+            Message newMessage = new Message() { message_text = nudge_text, receiver = userInfo.displayName, sender_email = PrincipalInfo.Email, receiver_email = userInfo.Email, IsHistory = false };
             AddMessage(newMessage);
         }
     }
