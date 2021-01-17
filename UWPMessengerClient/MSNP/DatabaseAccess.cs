@@ -12,7 +12,7 @@ namespace UWPMessengerClient.MSNP
 {
     public static class DatabaseAccess
     {
-        public async static void InitializeDatabase()
+        public async static Task InitializeDatabase()
         {
             await ApplicationData.Current.LocalFolder.CreateFileAsync("UWPMessengerClient.db", CreationCollisionOption.OpenIfExists);
             string dbpath = Path.Combine(ApplicationData.Current.LocalFolder.Path, "UWPMessengerClient.db");
