@@ -39,7 +39,6 @@ namespace UWPMessengerClient
         private async Task StartLogin()
         {
             EnableProgressRingAndHideButtons();
-            SetConfigDefaultValuesIfNull();
             string email = Email_box.Text;
             string password = Password_box.Password;
             if (email == "" || password == "")
@@ -48,8 +47,16 @@ namespace UWPMessengerClient
                 DisableProgressRingAndShowButtons();
                 return;
             }
-            string selected_version = localSettings.Values["MSNP_Version"].ToString();
-            bool using_localhost = (bool)localSettings.Values["Using_Localhost"];
+            string selected_version = "MSNP15";
+            if (localSettings.Values["MSNP_Version"] != null)
+            {
+                selected_version = localSettings.Values["MSNP_Version"].ToString();
+            }
+            bool using_localhost = false;
+            if (localSettings.Values["Using_Localhost"] != null)
+            {
+                using_localhost = (bool)localSettings.Values["Using_Localhost"];
+            }
             string initial_status = PresenceStatuses.Available;
             switch (InitialStatusBox.SelectedItem.ToString())
             {
@@ -67,6 +74,10 @@ namespace UWPMessengerClient
                     break;
             }
             notificationServerConnection = new NotificationServerConnection(email, password, using_localhost, selected_version, initial_status);
+            if (localSettings.Values["KeepHistory"] != null)
+            {
+                notificationServerConnection.KeepMessagingHistoryInSwitchboard = (bool)localSettings.Values["KeepHistory"];
+            }
             try
             {
                 await notificationServerConnection.LoginToMessengerAsync();
@@ -99,22 +110,6 @@ namespace UWPMessengerClient
                 return;
             }
             this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
-        }
-
-        private void SetConfigDefaultValuesIfNull()
-        {
-            if (localSettings.Values["MSNP_Version"] == null)
-            {
-                localSettings.Values["MSNP_Version"] = "MSNP15";
-            }
-            if (localSettings.Values["MSNP_Version_Index"] == null)
-            {
-                localSettings.Values["MSNP_Version_Index"] = 0;
-            }
-            if (localSettings.Values["Using_Localhost"] == null)
-            {
-                localSettings.Values["Using_Localhost"] = false;
-            }
         }
 
         private async void Login_Click(object sender, RoutedEventArgs e)

@@ -25,6 +25,7 @@ namespace UWPMessengerClient.MSNP
         public int principalsConnected { get; set; }
         public string outputString { get; set; }
         public byte[] outputBuffer { get; set; } = new byte[4096];
+        public bool KeepMessagingHistory { get; set; } = true;
         protected bool waitingTyping = false;
         protected bool waitingNudge = false;
         public event PropertyChangedEventHandler PropertyChanged;
@@ -128,17 +129,20 @@ namespace UWPMessengerClient.MSNP
 
         public void FillMessageHistory()
         {
-            List<string> JSONMessages = DatabaseAccess.ReturnMessagesFromSenderAndReceiver(userInfo.Email, PrincipalInfo.Email);
-            foreach (string JSONMessage in JSONMessages)
+            if (KeepMessagingHistory)
             {
-                Message pastMessage = JsonConvert.DeserializeObject<Message>(JSONMessage);
-                pastMessage.IsHistory = true;
-                var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                List<string> JSONMessages = DatabaseAccess.ReturnMessagesFromSenderAndReceiver(userInfo.Email, PrincipalInfo.Email);
+                foreach (string JSONMessage in JSONMessages)
                 {
-                    MessageList.Add(pastMessage);
-                });
+                    Message pastMessage = JsonConvert.DeserializeObject<Message>(JSONMessage);
+                    pastMessage.IsHistory = true;
+                    var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        MessageList.Add(pastMessage);
+                    });
+                }
+                HistoryLoaded?.Invoke(this, new EventArgs());
             }
-            HistoryLoaded?.Invoke(this, new EventArgs());
         }
 
         public async Task InvitePrincipal(string principal_email)

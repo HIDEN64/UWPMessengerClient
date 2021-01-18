@@ -56,6 +56,7 @@ namespace UWPMessengerClient
             {
                 notificationServerConnection = (NotificationServerConnection)e.Parameter;
                 errors = notificationServerConnection.errorLog;
+                notificationServerConnection.KeepMessagingHistoryInSwitchboard = (bool)localSettings.Values["KeepHistory"];
             }
             var task = TestServer();
             base.OnNavigatedTo(e);
@@ -99,6 +100,10 @@ namespace UWPMessengerClient
             {
                 localSettings.Values["Using_Localhost"] = false;
             }
+            if (localSettings.Values["KeepHistory"] == null)
+            {
+                localSettings.Values["KeepHistory"] = true;
+            }
         }
 
         private async Task TestServer()
@@ -134,11 +139,21 @@ namespace UWPMessengerClient
         {
             version_box.SelectedIndex = (int)localSettings.Values["MSNP_Version_Index"];
             localhost_toggle.IsOn = (bool)localSettings.Values["Using_Localhost"];
+            MessagingHistorySwitch.IsOn = (bool)localSettings.Values["KeepHistory"];
         }
 
         private async void testServerButton_Click(object sender, RoutedEventArgs e)
         {
             await TestServer();
+        }
+
+        private void MessagingHistorySwitch_Toggled(object sender, RoutedEventArgs e)
+        {
+            localSettings.Values["KeepHistory"] = MessagingHistorySwitch.IsOn;
+            if (notificationServerConnection != null)
+            {
+                notificationServerConnection.KeepMessagingHistoryInSwitchboard = (bool)localSettings.Values["KeepHistory"];
+            }
         }
     }
 }

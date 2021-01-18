@@ -158,7 +158,10 @@ namespace UWPMessengerClient.MSNP
             {
                 PrincipalInfo.typingUser = null;
                 MessageList.Add(message);
-                DatabaseAccess.AddMessageToTable(userInfo.Email, PrincipalInfo.Email, message);
+                if (KeepMessagingHistory)
+                {
+                    DatabaseAccess.AddMessageToTable(userInfo.Email, PrincipalInfo.Email, message);
+                }
                 MessageReceived?.Invoke(this, new EventArgs());
             });
         }

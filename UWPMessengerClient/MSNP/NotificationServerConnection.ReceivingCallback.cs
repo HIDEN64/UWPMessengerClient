@@ -336,6 +336,7 @@ namespace UWPMessengerClient.MSNP
             string principalName = RNGParams[6];
             SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, authString, userInfo.displayName, principalName, principalEmail, sessionID);
             SBConnection = switchboardConnection;
+            SBConnection.KeepMessagingHistory = KeepMessagingHistoryInSwitchboard;
             _ = SBConnection.AnswerRNG();
         }
     }

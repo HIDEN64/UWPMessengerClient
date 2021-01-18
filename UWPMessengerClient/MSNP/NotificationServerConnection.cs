@@ -31,13 +31,14 @@ namespace UWPMessengerClient.MSNP
         private string password;
         protected Regex PlusCharactersRegex = new Regex("\\[(.*?)\\]");
         protected bool _UsingLocalhost = false;
-        protected string _MSNPVersion;
+        protected string _MSNPVersion = "MSNP15";
         protected int transactionID = 0;
         protected uint clientCapabilities = 0x84140420;
         public int ContactIndexToChat { get; set; }
         public string UserPresenceStatus { get; set; }
         public bool UsingLocalhost { get => _UsingLocalhost; }
         public string MSNPVersion { get => _MSNPVersion; }
+        public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;
         public UserInfo userInfo { get; set; } = new UserInfo();
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler<EventArgs> NotConnected;
@@ -261,6 +262,7 @@ namespace UWPMessengerClient.MSNP
         {
             SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
             SBConnection = switchboardConnection;
+            SBConnection.KeepMessagingHistory = KeepMessagingHistoryInSwitchboard;
             transactionID++;
             await Task.Run(() => NSSocket.SendCommand($"XFR {transactionID} SB\r\n"));
         }
