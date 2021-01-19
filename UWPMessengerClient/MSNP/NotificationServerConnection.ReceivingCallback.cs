@@ -145,10 +145,11 @@ namespace UWPMessengerClient.MSNP
             displayName = ADCResponses[4].Replace("F=", "");
             displayName = PlusCharactersRegex.Replace(displayName, "");
             guid = ADCResponses[5].Replace("C=", "");
-            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = displayName, email = email, GUID = guid };
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                contact_list.Add(new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = displayName, email = email, GUID = guid });
-                contacts_in_forward_list.Add(contact_list.Last());
+                contact_list.Add(newContact);
+                contacts_in_forward_list.Add(newContact);
             });
         }
 

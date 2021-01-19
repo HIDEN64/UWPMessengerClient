@@ -91,6 +91,27 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
+        public static void DeleteContactFromTable(string userEmail, Contact contact)
+        {
+            string dbpath = Path.Combine(ApplicationData.Current.LocalFolder.Path, "UWPMessengerClient.db");
+            using (SqliteConnection db =
+              new SqliteConnection($"Filename={dbpath}"))
+            {
+                db.Open();
+
+                SqliteCommand deleteCommand = new SqliteCommand
+                {
+                    Connection = db
+                };
+                deleteCommand.CommandText = "DELETE FROM Contacts WHERE UserAccount = @account AND Email = @contact_email";
+                deleteCommand.Parameters.AddWithValue("@account", userEmail);
+                deleteCommand.Parameters.AddWithValue("@contact_email", contact.email);
+                deleteCommand.ExecuteReader();
+
+                db.Close();
+            }
+        }
+
         public static List<string> GetUserContacts(string userEmail)
         {
             List<string> entries = new List<string>();

@@ -264,10 +264,11 @@ namespace UWPMessengerClient.MSNP
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
                         NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n");
                         NSSocket.SendCommand(contact_payload);
+                        Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = newContactDisplayName, email = newContactEmail };
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            contact_list.Add(new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = newContactDisplayName, email = newContactEmail });
-                            contacts_in_forward_list.Add(contact_list.Last());
+                            contact_list.Add(newContact);
+                            contacts_in_forward_list.Add(newContact);
                         });
                         break;
                     default:
@@ -301,6 +302,7 @@ namespace UWPMessengerClient.MSNP
                 {
                     contacts_in_forward_list.Remove(contactToRemove);
                 });
+                DatabaseAccess.DeleteContactFromTable(userInfo.Email, contactToRemove);
             });
         }
 
