@@ -162,6 +162,13 @@
     <Compile Include="MSNP\NotificationServerConnection.TWN.cs">
       <DependentUpon>NotificationServerConnection.cs</DependentUpon>
     </Compile>
+    <Compile Include="MSNP\SOAP\SOAPRequests.cs" />
+    <Compile Include="MSNP\SOAP\SOAPRequests.ABService.cs">
+      <DependentUpon>SOAPRequests.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MSNP\SOAP\SOAPRequests.SharingService.cs">
+      <DependentUpon>SOAPRequests.cs</DependentUpon>
+    </Compile>
     <Compile Include="MSNP\SwitchboardConnection.cs" />
     <Compile Include="MSNP\SwitchboardConnection.ReceivingCallback.cs">
       <DependentUpon>SwitchboardConnection.cs</DependentUpon>

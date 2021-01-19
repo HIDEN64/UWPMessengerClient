@@ -56,7 +56,7 @@ namespace UWPMessengerClient.MSNP
             string[] SplitHeadersString = headersString.Split("DALogin=");
             string DALogin = SplitHeadersString[1];
             DALogin = DALogin.Remove(DALogin.IndexOf("\r"));
-            if (_UsingLocalhost)
+            if (UsingLocalhost)
             {
                 DALogin = "http://localhost/login";
             }

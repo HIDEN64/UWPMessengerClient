@@ -12,6 +12,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using UWPMessengerClient.MSNP.Exceptions;
+using UWPMessengerClient.MSNP.SOAP;
 using System.Net.Sockets;
 
 namespace UWPMessengerClient.MSNP
@@ -22,7 +23,6 @@ namespace UWPMessengerClient.MSNP
         public SwitchboardConnection SBConnection { get; set; }
         //notification server(escargot) address and address for SSO auth
         protected string NSaddress = "m1.escargot.log1p.xyz";
-        protected string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
         protected string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
         //local addresses are 127.0.0.1 for NSaddress, http://localhost/RST.srf for RST_address
         //and http://localhost/nexus-mock for nexus_address
@@ -30,14 +30,12 @@ namespace UWPMessengerClient.MSNP
         private string email;
         private string password;
         protected Regex PlusCharactersRegex = new Regex("\\[(.*?)\\]");
-        protected bool _UsingLocalhost = false;
-        protected string _MSNPVersion = "MSNP15";
+        public bool UsingLocalhost { get; protected set; } = false;
+        public string MSNPVersion { get; protected set; } = "MSNP15";
         protected int transactionID = 0;
         protected uint clientCapabilities = 0x84140420;
         public int ContactIndexToChat { get; set; }
         public string UserPresenceStatus { get; set; }
-        public bool UsingLocalhost { get => _UsingLocalhost; }
-        public string MSNPVersion { get => _MSNPVersion; }
         public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;
         public UserInfo userInfo { get; set; } = new UserInfo();
         public event PropertyChangedEventHandler PropertyChanged;
@@ -70,18 +68,16 @@ namespace UWPMessengerClient.MSNP
             };
             email = messenger_email;
             password = messenger_password;
-            _UsingLocalhost = use_localhost;
-            _MSNPVersion = msnp_version;
+            UsingLocalhost = use_localhost;
+            MSNPVersion = msnp_version;
             UserPresenceStatus = initial_status;
-            if (_UsingLocalhost)
+            if (UsingLocalhost)
             {
                 NSaddress = "127.0.0.1";
-                RST_address = "http://localhost/RST.srf";
                 nexus_address = "http://localhost/nexus-mock";
-                SharingService_url = "http://localhost/abservice/SharingService.asmx";
-                abservice_url = "http://localhost/abservice/abservice.asmx";
                 //setting local addresses
             }
+            SOAPRequests = new SOAPRequests(UsingLocalhost);
         }
 
         public async Task AddToErrorLog(string error)
@@ -113,35 +109,6 @@ namespace UWPMessengerClient.MSNP
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public static HttpWebRequest CreateSOAPRequest(string soap_action, string address)
-        {
-            HttpWebRequest request = WebRequest.CreateHttp(address);
-            request.Headers.Add($@"SOAPAction:{soap_action}");
-            request.ContentType = "text/xml;charset=\"utf-8\"";
-            request.Accept = "text/xml";
-            request.Method = "POST";
-            return request;
-        }
-
-        public static string MakeSOAPRequest(string SOAP_body, string address, string soap_action)
-        {
-            HttpWebRequest SOAPRequest = CreateSOAPRequest(soap_action, address);
-            XmlDocument SoapXMLBody = new XmlDocument();
-            SoapXMLBody.LoadXml(SOAP_body);
-            using (Stream stream = SOAPRequest.GetRequestStream())
-            {
-                SoapXMLBody.Save(stream);
-            }
-            using (WebResponse webResponse = SOAPRequest.GetResponse())
-            {
-                using (StreamReader rd = new StreamReader(webResponse.GetResponseStream()))
-                {
-                    var result = rd.ReadToEnd();
-                    return result;
-                }
-            }
-        }
-
         public void FillForwardListCollection()
         {
             foreach (Contact contact in contact_list)
@@ -171,40 +138,9 @@ namespace UWPMessengerClient.MSNP
         public async Task ChangeUserDisplayName(string newDisplayName)
         {
             if (newDisplayName == "") { throw new ArgumentNullException("Display name is empty"); }
-            string ab_display_name_change_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-            <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" 
-                           xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
-                           xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" 
-                           xmlns:soapenc=""http://schemas.xmlsoap.org/soap/encoding/"">
-                <soap:Header>
-                    <ABApplicationHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <ApplicationId>CFE80F9D-180F-4399-82AB-413F33A1FA11</ApplicationId>
-                        <IsMigration>false</IsMigration>
-                        <PartnerScenario>Timer</PartnerScenario>
-                    </ABApplicationHeader>
-                    <ABAuthHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <ManagedGroupRequest>false</ManagedGroupRequest>
-                        <TicketToken>{TicketToken}</TicketToken>
-                    </ABAuthHeader>
-                </soap:Header>
-                <soap:Body>
-                    <ABContactUpdate xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <abId>00000000-0000-0000-0000-000000000000</abId>
-                        <contacts>
-                            <Contact xmlns=""http://www.msn.com/webservices/AddressBook"">
-                                <contactInfo>
-                                    <contactType>Me</contactType>
-                                    <displayName>{newDisplayName}</displayName>
-                                </contactInfo>
-                                <propertiesChanged>DisplayName</propertiesChanged>
-                            </Contact>
-                        </contacts>
-                    </ABContactUpdate>
-                </soap:Body>
-            </soap:Envelope>";
             if (MSNPVersion == "MSNP15")
             {
-                MakeSOAPRequest(ab_display_name_change_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
+                SOAPRequests.MakeChangeUserDisplayNameSOAPRequest(newDisplayName);
             }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
             transactionID++;
