@@ -22,7 +22,8 @@ namespace UWPMessengerClient
     public sealed partial class ContactList : Page
     {
         private NotificationServerConnection notificationServerConnection;
-        ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
+        private ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
+        private Contact ContactInContext;
 
         public ContactList()
         {
@@ -152,11 +153,6 @@ namespace UWPMessengerClient
             FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
         }
 
-        private async void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            await StartChat();
-        }
-
         private async void addContactButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -241,6 +237,90 @@ namespace UWPMessengerClient
                 CloseButtonText = "Close"
             };
             ContentDialogResult DialogResult = await Dialog.ShowAsync();
+        }
+
+        private void contactListView_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            ListView contactListView = (ListView)sender;
+            ContactMenuFlyout.ShowAt(contactListView, e.GetPosition(contactListView));
+            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            if (ContactInContext != null)
+            {
+                if (ContactInContext.onBlock)
+                {
+                    UnblockItem.Visibility = Visibility.Visible;
+                    BlockItem.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    BlockItem.Visibility = Visibility.Visible;
+                    UnblockItem.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        private async void contactListView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            await StartChat();
+        }
+
+        private void contactListView_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            ListView contactListView = (ListView)sender;
+            ContactMenuFlyout.ShowAt(contactListView, e.GetPosition(contactListView));
+            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            if (ContactInContext != null)
+            {
+                if (ContactInContext.onBlock)
+                {
+                    UnblockItem.Visibility = Visibility.Visible;
+                    BlockItem.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    BlockItem.Visibility = Visibility.Visible;
+                    UnblockItem.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        private async void RemoveItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await notificationServerConnection.RemoveContact(ContactInContext);
+            }
+            catch (Exception ex)
+            {
+                await ShowDialog("Error", ex.Message);
+            }
+            ContactInContext = null;
+        }
+
+        private async void BlockItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await notificationServerConnection.BlockContact(ContactInContext);
+            }
+            catch (Exception ex)
+            {
+                await ShowDialog("Error", ex.Message);
+            }
+            ContactInContext = null;
+        }
+
+        private async void UnblockItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await notificationServerConnection.UnblockContact(ContactInContext);
+            }
+            catch (Exception ex)
+            {
+                await ShowDialog("Error", ex.Message);
+            }
+            ContactInContext = null;
         }
     }
 }

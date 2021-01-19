@@ -37,8 +37,9 @@ namespace UWPMessengerClient.MSNP
                 SOAPResult = Perform_SSO_SOAP_Request();
                 GetContactsFromDatabase();
                 string response_struct = GetSSOReturnValue();
-                NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 NSSocket.SendCommand($"USR {transactionID} SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
+                output_string = NSSocket.ReceiveMessage(received_bytes);//receive USR OK
+                NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 MembershipLists = MakeMembershipListsSOAPRequest();
                 AddressBook = MakeAddressBookSOAPRequest();
                 FillContactListFromSOAP();

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Windows.UI.Core;
 
 namespace UWPMessengerClient.MSNP
 {
@@ -16,7 +17,12 @@ namespace UWPMessengerClient.MSNP
         private string _contactID;
         private string _presenceStatus;
         private string _personalMessage;
-        public bool onForward, onAllow, onBlock, onReverse, pending;
+        public string MembershipID { get; set; }
+        public bool onForward { get; set; }
+        public bool onAllow { get; set; }
+        private bool _onBlock;
+        public bool onReverse { get; set; }
+        public bool Pending { get; set; }
         private List<string> _groupIDs;
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -33,7 +39,7 @@ namespace UWPMessengerClient.MSNP
             onAllow = (listbit & (int)ListNumbers.Allow) == (int)ListNumbers.Allow;
             onBlock = (listbit & (int)ListNumbers.Block) == (int)ListNumbers.Block;
             onReverse = (listbit & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse;
-            pending = (listbit & (int)ListNumbers.Pending) == (int)ListNumbers.Pending;
+            Pending = (listbit & (int)ListNumbers.Pending) == (int)ListNumbers.Pending;
         }
 
         public int GetListbitFromForwardAllowBlock()
@@ -52,7 +58,7 @@ namespace UWPMessengerClient.MSNP
             int onAllowInt = onAllow ? (int)ListNumbers.Allow : 0;
             int onBlockInt = onBlock ? (int)ListNumbers.Block : 0;
             int onReverseInt = onReverse ? (int)ListNumbers.Reverse : 0;
-            int PendingInt = pending ? (int)ListNumbers.Pending : 0;
+            int PendingInt = Pending ? (int)ListNumbers.Pending : 0;
             //respective value of each list if true and 0 if false
             int listbit = (onForwardInt & (int)ListNumbers.Forward) + (onAllowInt & (int)ListNumbers.Allow) + (onBlockInt & (int)ListNumbers.Block) + (onReverseInt & (int)ListNumbers.Reverse) + (PendingInt & (int)ListNumbers.Pending);
             return listbit;
@@ -60,7 +66,10 @@ namespace UWPMessengerClient.MSNP
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            });
         }
 
         public string email
@@ -119,6 +128,16 @@ namespace UWPMessengerClient.MSNP
             set
             {
                 _personalMessage = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public bool onBlock
+        {
+            get => _onBlock;
+            set
+            {
+                _onBlock = value;
                 NotifyPropertyChanged();
             }
         }
