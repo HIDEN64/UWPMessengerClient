@@ -102,15 +102,39 @@ namespace UWPMessengerClient.MSNP
                 guid = "";
             }
             int.TryParse(LSTParams[4], out listbit);
-            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+            displayName = PlusCharactersRegex.Replace(displayName, "");
+            var contactInList = from contact_in_list in contact_list
+                                where contact_in_list.email == email
+                                select contact_in_list;
+            if (!contactInList.Any())
             {
-                Contact contact = new Contact(listbit) { displayName = displayName, email = email, GUID = guid };
-                contact_list.Add(contact);
-                if (contact.onForward)
+                Contact newContact = new Contact(listbit) { displayName = displayName, email = email, GUID = guid };
+                contact_list.Add(newContact);
+                DatabaseAccess.AddContactToTable(userInfo.Email, newContact);
+                if (newContact.onForward)
                 {
-                    contacts_in_forward_list.Add(contact);
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        contacts_in_forward_list.Add(newContact);
+                    });
                 }
-            });
+            }
+            else
+            {
+                foreach (Contact contact_in_list in contactInList)
+                {
+                    contact_in_list.SetListsFromListbit(listbit);
+                    contact_in_list.displayName = displayName;
+                    contact_in_list.GUID = guid;
+                    if (contact_in_list.onForward)
+                    {
+                        Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            contacts_in_forward_list.Add(contact_in_list);
+                        });
+                    }
+                }
+            }
         }
 
         public void HandleADC()
@@ -119,12 +143,13 @@ namespace UWPMessengerClient.MSNP
             string email, displayName, guid;
             email = ADCResponses[3].Replace("N=", "");
             displayName = ADCResponses[4].Replace("F=", "");
+            displayName = PlusCharactersRegex.Replace(displayName, "");
             guid = ADCResponses[5].Replace("C=", "");
-            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = displayName, email = email, GUID = guid };
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                //1 for forward list
-                contact_list.Add(new Contact(1) { displayName = displayName, email = email, GUID = guid });
-                contacts_in_forward_list.Add(contact_list.Last());
+                contact_list.Add(newContact);
+                contacts_in_forward_list.Add(newContact);
             });
         }
 
@@ -135,11 +160,13 @@ namespace UWPMessengerClient.MSNP
             {
                 if (PRPParams[1] == "MFN")
                 {
-                    userInfo.displayName = PRPParams[2];
+                    string displayName = PlusCharactersRegex.Replace(PRPParams[2], "");
+                    userInfo.displayName = displayName;
                 }
                 else if (PRPParams[2] == "MFN")
                 {
-                    userInfo.displayName = PRPParams[3];
+                    string displayName = PlusCharactersRegex.Replace(PRPParams[3], "");
+                    userInfo.displayName = displayName;
                 }
             });
         }
@@ -162,6 +189,7 @@ namespace UWPMessengerClient.MSNP
                 default:
                     throw new Exceptions.VersionNotSelectedException();
             }
+            displayName = PlusCharactersRegex.Replace(displayName, "");
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
                 var contactWithPresence = from contact in contact_list
@@ -171,6 +199,7 @@ namespace UWPMessengerClient.MSNP
                 {
                     contact.presenceStatus = status;
                     contact.displayName = displayName;
+                    DatabaseAccess.UpdateContact(userInfo.Email, contact);
                 }
             });
         }
@@ -193,6 +222,7 @@ namespace UWPMessengerClient.MSNP
                 default:
                     throw new Exceptions.VersionNotSelectedException();
             }
+            displayName = PlusCharactersRegex.Replace(displayName, "");
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
                 var contactWithPresence = from contact in contact_list
@@ -202,6 +232,7 @@ namespace UWPMessengerClient.MSNP
                 {
                     contact.presenceStatus = status;
                     contact.displayName = displayName;
+                    DatabaseAccess.UpdateContact(userInfo.Email, contact);
                 }
             });
         }
@@ -263,6 +294,7 @@ namespace UWPMessengerClient.MSNP
                 foreach (Contact contact in contactWithPersonalMessage)
                 {
                     contact.personalMessage = personal_message;
+                    DatabaseAccess.UpdateContact(userInfo.Email, contact);
                 }
             });
             SeparateAndProcessCommandFromPayloadWithResponse(next_response, ubx_length);
@@ -301,9 +333,11 @@ namespace UWPMessengerClient.MSNP
             string sb_address = address_and_port[0];
             int.TryParse(address_and_port[1], out sb_port);
             string authString = RNGParams[4];
+            string principalEmail = RNGParams[5];
             string principalName = RNGParams[6];
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, authString, userInfo.displayName, principalName, sessionID);
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, authString, userInfo.displayName, principalName, principalEmail, sessionID);
             SBConnection = switchboardConnection;
+            SBConnection.KeepMessagingHistory = KeepMessagingHistoryInSwitchboard;
             _ = SBConnection.AnswerRNG();
         }
     }

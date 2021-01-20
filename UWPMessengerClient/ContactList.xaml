@@ -3,14 +3,16 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:UWPMessengerClient"
+    xmlns:msnp_local="using:UWPMessengerClient.MSNP"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource SystemControlAcrylicWindowBrush}">
     <UserControl.Resources>
         <local:StatusConverter x:Key="StatusConverter"/>
         <local:UrlDecodingConverter x:Key="UrlDecodingConverter"/>
         <local:PersonalMessageConverter x:Key="PersonalMessageConverter"/>
+        <local:ContactBlockedConverter x:Key="ContactBlockedConverter"/>
     </UserControl.Resources>
 
     <Grid>
@@ -65,19 +67,32 @@
             <x:String>Invisible</x:String>
         </ComboBox>
         <ListView x:Name="contactListView" ItemsSource="{x:Bind notificationServerConnection.contacts_in_forward_list, Mode=OneWay}" HorizontalAlignment="Stretch"
-                  Grid.ColumnSpan="3" Grid.Row="6" Grid.Column="1">
+                  Grid.ColumnSpan="3" Grid.Row="6" Grid.Column="1" RightTapped="contactListView_RightTapped" DoubleTapped="contactListView_DoubleTapped"
+                  Holding="contactListView_Holding">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:Contact">
-                    <StackPanel DoubleTapped="StackPanel_DoubleTapped" Margin="3">
+                <DataTemplate x:DataType="msnp_local:Contact">
+                    <StackPanel Margin="3">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{x:Bind displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="18" FontWeight="Bold" TextWrapping="Wrap"/>
                             <TextBlock Text="- " FontSize="18"/>
                             <TextBlock Text="{x:Bind personalMessage, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="16" TextWrapping="Wrap"/>
                         </StackPanel>
-                        <TextBlock Text="{x:Bind presenceStatus, Converter={StaticResource StatusConverter}, Mode=OneWay}" FontSize="14"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Bind presenceStatus, Converter={StaticResource StatusConverter}, Mode=OneWay}" FontSize="14"/>
+                            <TextBlock Text="{x:Bind onBlock, Converter={StaticResource ContactBlockedConverter}, Mode=OneWay}" FontSize="14"/>
+                        </StackPanel>
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
+            <ListView.Resources>
+                <MenuFlyout x:Name="ContactMenuFlyout">
+                    <MenuFlyout.Items>
+                        <MenuFlyoutItem x:Name="BlockItem" Text="Block" Click="BlockItem_Click"/>
+                        <MenuFlyoutItem x:Name="UnblockItem" Text="Unblock" Click="UnblockItem_Click"/>
+                        <MenuFlyoutItem x:Name="RemoveItem" Text="Remove" Click="RemoveItem_Click"/>
+                    </MenuFlyout.Items>
+                </MenuFlyout>
+            </ListView.Resources>
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <ItemsStackPanel ItemsUpdatingScrollMode="KeepLastItemInView"/>
@@ -87,7 +102,6 @@
         <CommandBar Grid.Column="1" Grid.Row="8" HorizontalAlignment="Center" Grid.ColumnSpan="3">
             <AppBarButton x:Name="exitButton" Icon="Back" Label="Back to login(exit)" Click="exitButton_Click"/>
             <AppBarButton x:Name="chatButton" Icon="Message" Label="Chat with contact" Click="start_chat_button_Click"/>
-            <AppBarButton x:Name="removeContactAppBarButton" Icon="Remove" Label="Remove Contact" Click="removeContactAppBarButton_Click"/>
             <AppBarButton x:Name="addContactAppBarButton" Icon="AddFriend" Label="Add Contact" Click="addContactAppBarButton_Click" AllowFocusOnInteraction="True">
                 <AppBarButton.Flyout>
                     <Flyout x:Name="addContactFlyout" Closed="addContactFlyout_Closed">

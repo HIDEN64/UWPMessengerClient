@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UWPMessengerClient.Exceptions
+namespace UWPMessengerClient.MSNP.Exceptions
 {
     class VersionNotSelectedException : Exception
     {

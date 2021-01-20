@@ -7,6 +7,7 @@ using Windows.UI.Core;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Newtonsoft.Json;
 
 namespace UWPMessengerClient.MSNP
 {
@@ -15,7 +16,6 @@ namespace UWPMessengerClient.MSNP
         protected SocketCommands SBSocket;
         protected string SBAddress;
         protected int SBPort = 0;
-        protected string UserEmail;
         protected string AuthString;
         protected string SessionID;
         protected int transactionID = 0;
@@ -25,9 +25,11 @@ namespace UWPMessengerClient.MSNP
         public int principalsConnected { get; set; }
         public string outputString { get; set; }
         public byte[] outputBuffer { get; set; } = new byte[4096];
+        public bool KeepMessagingHistory { get; set; } = true;
         protected bool waitingTyping = false;
         protected bool waitingNudge = false;
         public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler HistoryLoaded;
         Dictionary<string, Action> command_handlers;
         private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
         public ObservableCollection<string> errorLog
@@ -50,7 +52,7 @@ namespace UWPMessengerClient.MSNP
                 {"IRO", () => principalsConnected++ },
                 {"MSG", () => HandleMSG() }
             };
-            UserEmail = email;
+            userInfo.Email = email;
             userInfo.displayName = userDisplayName;
         }
 
@@ -66,12 +68,12 @@ namespace UWPMessengerClient.MSNP
             };
             SBAddress = address;
             SBPort = port;
-            UserEmail = email;
+            userInfo.Email = email;
             AuthString = authString;
             userInfo.displayName = userDisplayName;
         }
 
-        public SwitchboardConnection(string address, int port, string email, string authString, string userDisplayName, string principalDisplayName, string sessionID)
+        public SwitchboardConnection(string address, int port, string email, string authString, string userDisplayName, string principalDisplayName, string principalEmail, string sessionID)
         {
             command_handlers = new Dictionary<string, Action>()
             {
@@ -83,11 +85,12 @@ namespace UWPMessengerClient.MSNP
             };
             SBAddress = address;
             SBPort = port;
-            UserEmail = email;
+            userInfo.Email = email;
             AuthString = authString;
             SessionID = sessionID;
             userInfo.displayName = userDisplayName;
             PrincipalInfo.displayName = principalDisplayName;
+            PrincipalInfo.Email = principalEmail;
         }
 
         public void SetAddressPortAndAuthString(string address, int port, string AuthString)
@@ -118,20 +121,40 @@ namespace UWPMessengerClient.MSNP
                 SBSocket.ConnectSocket();
                 SBSocket.BeginReceiving(outputBuffer, new AsyncCallback(ReceivingCallback), this);
                 transactionID++;
-                SBSocket.SendCommand($"USR {transactionID} {UserEmail} {AuthString}\r\n");
+                SBSocket.SendCommand($"USR {transactionID} {userInfo.Email} {AuthString}\r\n");
             });
             await Task.Run(sbconnect);
             connected = true;
+        }
+
+        public void FillMessageHistory()
+        {
+            if (KeepMessagingHistory)
+            {
+                List<string> JSONMessages = DatabaseAccess.ReturnMessagesFromSenderAndReceiver(userInfo.Email, PrincipalInfo.Email);
+                foreach (string JSONMessage in JSONMessages)
+                {
+                    Message pastMessage = JsonConvert.DeserializeObject<Message>(JSONMessage);
+                    pastMessage.IsHistory = true;
+                    var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        MessageList.Add(pastMessage);
+                    });
+                }
+                HistoryLoaded?.Invoke(this, new EventArgs());
+            }
         }
 
         public async Task InvitePrincipal(string principal_email)
         {
             if (connected)
             {
+                PrincipalInfo.Email = principal_email;
                 transactionID++;
                 await Task.Run(() =>
                 {
                     SBSocket.SendCommand($"CAL {transactionID} {principal_email}\r\n");
+                    FillMessageHistory();
                 });
             }
             else
@@ -144,6 +167,7 @@ namespace UWPMessengerClient.MSNP
         {
             if (connected)
             {
+                PrincipalInfo.Email = principal_email;
                 transactionID++;
                 await Task.Run(() =>
                 {
@@ -152,11 +176,12 @@ namespace UWPMessengerClient.MSNP
                     {
                         PrincipalInfo.displayName = principal_display_name;
                     });
+                    FillMessageHistory();
                 });
             }
             else
             {
-                throw new Exception();
+                throw new Exceptions.NotConnectedException();
             }
         }
 
@@ -172,7 +197,9 @@ namespace UWPMessengerClient.MSNP
                     SBSocket.SendCommand($"MSG {transactionID} N {byte_message.Length}\r\n{message}");
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        MessageList.Add(new Message() { message_text = message_text, sender = userInfo.displayName });
+                        Message newMessage = new Message() { message_text = message_text, sender = userInfo.displayName, receiver = PrincipalInfo.displayName, sender_email = userInfo.Email, receiver_email = PrincipalInfo.Email, IsHistory = false };
+                        MessageList.Add(newMessage);
+                        DatabaseAccess.AddMessageToTable(userInfo.Email, PrincipalInfo.Email, newMessage);
                     });
                 });
                 try
@@ -185,7 +212,7 @@ namespace UWPMessengerClient.MSNP
                     {
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ie.Message, sender = "Error" });
+                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ie.Message, sender = "Error", IsHistory = false });
                         });
                     }
                 }
@@ -193,7 +220,7 @@ namespace UWPMessengerClient.MSNP
                 {
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error" });
+                        MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
                     });
                 }
             }
@@ -205,7 +232,7 @@ namespace UWPMessengerClient.MSNP
             {
                 await Task.Run(() =>
                 {
-                    string message = $"MIME-Version: 1.0\r\nContent-Type: text/x-msmsgscontrol\r\nTypingUser: {UserEmail}\r\n\r\n\r\n";
+                    string message = $"MIME-Version: 1.0\r\nContent-Type: text/x-msmsgscontrol\r\nTypingUser: {userInfo.Email}\r\n\r\n\r\n";
                     byte[] byte_message = Encoding.UTF8.GetBytes(message);
                     transactionID++;
                     SBSocket.SendCommand($"MSG {transactionID} U {byte_message.Length}\r\n{message}");
@@ -232,13 +259,15 @@ namespace UWPMessengerClient.MSNP
                             transactionID++;
                             SBSocket.SendCommand($"MSG {transactionID} A {byte_message.Length}\r\n{nudge_message}");
                         });
-                        AddToMessageList($"You sent {PrincipalInfo.displayName} a nudge", "");
+                        string nudge_text = $"You sent {PrincipalInfo.displayName} a nudge";
+                        Message newMessage = new Message() { message_text = nudge_text, receiver = PrincipalInfo.displayName, sender_email = userInfo.Email, receiver_email = PrincipalInfo.Email, IsHistory = false };
+                        AddToMessageList(newMessage);
                     }
                     catch (Exception ex)
                     {
                         await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error" });
+                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
                         });
                     }
                     waitingNudge = true;
@@ -248,7 +277,10 @@ namespace UWPMessengerClient.MSNP
                 }
                 else
                 {
-                    AddToMessageList("Wait before sending nudge again", "");
+                    await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        MessageList.Add(new Message() { message_text = "Wait before sending nudge again", sender = "", IsHistory = false });
+                    });
                 }
             }
         }
@@ -261,7 +293,7 @@ namespace UWPMessengerClient.MSNP
                 SBSocket.ConnectSocket();
                 SBSocket.BeginReceiving(outputBuffer, new AsyncCallback(ReceivingCallback), this);
                 transactionID++;
-                SBSocket.SendCommand($"ANS {transactionID} {UserEmail} {AuthString} {SessionID}\r\n");
+                SBSocket.SendCommand($"ANS {transactionID} {userInfo.Email} {AuthString} {SessionID}\r\n");
             });
         }
 

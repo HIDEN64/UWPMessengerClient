@@ -6,152 +6,27 @@ using System.Threading.Tasks;
 using System.Xml;
 using Windows.UI.Core;
 using System.Collections.ObjectModel;
+using Newtonsoft.Json;
+using UWPMessengerClient.MSNP.SOAP;
 
 namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection
     {
+        private SOAPRequests SOAPRequests;
         private string MembershipLists;
         private string AddressBook;
-        private string SharingService_url = "https://m1.escargot.log1p.xyz/abservice/SharingService.asmx";
-        private string abservice_url = "https://m1.escargot.log1p.xyz/abservice/abservice.asmx";
-        //local adresses are http://localhost/abservice/SharingService.asmx for SharingService_url and
-        //http://localhost/abservice/abservice.asmx for abservice_url
         public ObservableCollection<Contact> contact_list { get; set; } = new ObservableCollection<Contact>();
         public ObservableCollection<Contact> contacts_in_forward_list { get; set; } = new ObservableCollection<Contact>();
 
-        public string MakeMembershipListsSOAPRequest()
+        protected void GetContactsFromDatabase()
         {
-            string membership_lists_xml = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
-            <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
-               <soap:Header xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
-                   <ABApplicationHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                       <ApplicationId xmlns=""http://www.msn.com/webservices/AddressBook"">CFE80F9D-180F-4399-82AB-413F33A1FA11</ApplicationId>
-                       <IsMigration xmlns=""http://www.msn.com/webservices/AddressBook"">false</IsMigration>
-                       <PartnerScenario xmlns=""http://www.msn.com/webservices/AddressBook"">Initial</PartnerScenario>
-                   </ABApplicationHeader>
-                   <ABAuthHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                       <ManagedGroupRequest xmlns=""http://www.msn.com/webservices/AddressBook"">false</ManagedGroupRequest>
-                       <TicketToken>{TicketToken}</TicketToken>
-                   </ABAuthHeader>
-               </soap:Header>
-               <soap:Body xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
-                   <FindMembership xmlns=""http://www.msn.com/webservices/AddressBook"">
-                       <serviceFilter xmlns=""http://www.msn.com/webservices/AddressBook"">
-                           <Types xmlns=""http://www.msn.com/webservices/AddressBook"">
-                               <ServiceType xmlns=""http://www.msn.com/webservices/AddressBook"">Messenger</ServiceType>
-                               <ServiceType xmlns=""http://www.msn.com/webservices/AddressBook"">Space</ServiceType>
-                               <ServiceType xmlns=""http://www.msn.com/webservices/AddressBook"">Profile</ServiceType>
-                           </Types>
-                       </serviceFilter>
-                   </FindMembership>
-               </soap:Body>
-            </soap:Envelope>";
-            return MakeSOAPRequest(membership_lists_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/FindMembership");
-        }
-
-        public string MakeAddressBookSOAPRequest()
-        {
-            string address_book_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-            <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/""
-                           xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" 
-                           xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" 
-                           xmlns:soapenc=""http://schemas.xmlsoap.org/soap/encoding/"">
-	            <soap:Header>
-		            <ABApplicationHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-			            <ApplicationId>CFE80F9D-180F-4399-82AB-413F33A1FA11</ApplicationId>
-			            <IsMigration>false</IsMigration>
-			            <PartnerScenario>Initial</PartnerScenario>
-		            </ABApplicationHeader>
-		            <ABAuthHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-			            <ManagedGroupRequest>false</ManagedGroupRequest>
-                        <TicketToken>{TicketToken}</TicketToken>
-		            </ABAuthHeader>
-	            </soap:Header>
-	            <soap:Body>
-		            <ABFindAll xmlns=""http://www.msn.com/webservices/AddressBook"">
-			            <abId>00000000-0000-0000-0000-000000000000</abId>
-			            <abView>Full</abView>
-			            <deltasOnly>false</deltasOnly>
-			            <lastChange>0001-01-01T00:00:00.0000000-08:00</lastChange>
-		            </ABFindAll>
-	            </soap:Body>
-            </soap:Envelope>";
-            return MakeSOAPRequest(address_book_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABFindAll");
-        }
-
-        public string MakeAddContactSOAPRequest(string newContactEmail, string newContactDisplayName = "")
-        {
-            string add_contact_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-            <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/""
-                           xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
-                           xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
-                           xmlns:soapenc=""http://schemas.xmlsoap.org/soap/encoding/"">
-                <soap:Header>
-                    <ABApplicationHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <ApplicationId>996CDE1B-AA53-4477-B943-2BB802EA6166</ApplicationId>
-                        <IsMigration>false</IsMigration>
-                        <PartnerScenario>ContactSave</PartnerScenario>
-                    </ABApplicationHeader>
-                    <ABAuthHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <ManagedGroupRequest>false</ManagedGroupRequest>
-                        <TicketToken>{TicketToken}</TicketToken>
-                    </ABAuthHeader>
-                </soap:Header>
-                <soap:Body>
-                    <ABContactAdd xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <abId>00000000-0000-0000-0000-000000000000</abId>
-                        <contacts>
-                            <Contact xmlns=""http://www.msn.com/webservices/AddressBook"">
-                                <contactInfo>
-                                    <contactType>LivePending</contactType>
-                                    <passportName>{newContactEmail}</passportName>
-                                    <isMessengerUser>true</isMessengerUser>
-                                    <MessengerMemberInfo>
-                                        <DisplayName>{newContactDisplayName}</DisplayName>
-                                    </MessengerMemberInfo>
-                                </contactInfo>
-                            </Contact>
-                        </contacts>
-                        <options>
-                            <EnableAllowListManagement>true</EnableAllowListManagement>
-                        </options>
-                    </ABContactAdd>
-                </soap:Body>
-            </soap:Envelope>";
-            return MakeSOAPRequest(add_contact_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactAdd");
-        }
-
-        public string MakeRemoveContactSOAPRequest(Contact contact)
-        {
-            string remove_contact_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-            <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/""
-                           xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
-                           xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
-                           xmlns:soapenc=""http://schemas.xmlsoap.org/soap/encoding/"">
-                <soap:Header>
-                    <ABApplicationHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <ApplicationId>996CDE1B-AA53-4477-B943-2BB802EA6166</ApplicationId>
-                        <IsMigration>false</IsMigration>
-                        <PartnerScenario>Timer</PartnerScenario>
-                    </ABApplicationHeader>
-                    <ABAuthHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <ManagedGroupRequest>false</ManagedGroupRequest>
-                        <TicketToken>{TicketToken}</TicketToken>
-                    </ABAuthHeader>
-                </soap:Header>
-                <soap:Body>
-                    <ABContactDelete xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <abId>00000000-0000-0000-0000-000000000000</abId>
-                        <contacts>
-                            <Contact>
-                                <contactId>{contact.contactID}</contactId>
-                            </Contact>
-                        </contacts>
-                    </ABContactDelete>
-                </soap:Body>
-            </soap:Envelope>";
-            return MakeSOAPRequest(remove_contact_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactDelete");
+            List<string> JSONContactList = DatabaseAccess.GetUserContacts(userInfo.Email);
+            foreach (string JSONContact in JSONContactList)
+            {
+                Contact contact = JsonConvert.DeserializeObject<Contact>(JSONContact);
+                contact_list.Add(contact);
+            }
         }
 
         protected void FillContactListFromSOAP()
@@ -176,6 +51,8 @@ namespace UWPMessengerClient.MSNP
                 {
                     xPathString = "./ab:PassportName";
                     XmlNode passport_name = member.SelectSingleNode(xPathString, NSmanager);
+                    xPathString = "./ab:MembershipId";
+                    XmlNode membership_id = member.SelectSingleNode(xPathString, NSmanager);
                     var contactInList = from contact_in_list in contact_list
                                         where contact_in_list.email == passport_name.InnerText
                                         select contact_in_list;
@@ -187,18 +64,21 @@ namespace UWPMessengerClient.MSNP
                         {
                             case "Allow":
                                 contact.onAllow = true;
+                                contact.MembershipID = membership_id.InnerText;
                                 break;
                             case "Block":
                                 contact.onBlock = true;
+                                contact.MembershipID = membership_id.InnerText;
                                 break;
                             case "Reverse":
                                 contact.onReverse = true;
                                 break;
                             case "Pending":
-                                contact.pending = true;
+                                contact.Pending = true;
                                 break;
                         }
                         contact_list.Add(contact);
+                        DatabaseAccess.AddContactToTable(userInfo.Email, contact);
                     }
                     else
                     {
@@ -208,15 +88,17 @@ namespace UWPMessengerClient.MSNP
                             {
                                 case "Allow":
                                     list_contact.onAllow = true;
+                                    list_contact.MembershipID = membership_id.InnerText;
                                     break;
                                 case "Block":
                                     list_contact.onBlock = true;
+                                    list_contact.MembershipID = membership_id.InnerText;
                                     break;
                                 case "Reverse":
                                     list_contact.onReverse = true;
                                     break;
                                 case "Pending":
-                                    list_contact.pending = true;
+                                    list_contact.Pending = true;
                                     break;
                             }
                         }
@@ -246,10 +128,11 @@ namespace UWPMessengerClient.MSNP
                 {
                     case "Me":
                         xPath = "./ab:contactInfo/ab:displayName";
-                        XmlNode userDisplayName = contact.SelectSingleNode(xPath, NSmanager);
+                        XmlNode userDisplayNameNode = contact.SelectSingleNode(xPath, NSmanager);
+                        string userDisplayName = PlusCharactersRegex.Replace(userDisplayNameNode.InnerText, "");
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            userInfo.displayName = userDisplayName.InnerText;
+                            userInfo.displayName = userDisplayName;
                         });
                         xPath = "./ab:contactInfo/ab:annotations/ab:Annotation[ab:Name='MSN.IM.BLP']/ab:Value";
                         XmlNode BLP_value = contact.SelectSingleNode(xPath, NSmanager);
@@ -259,19 +142,22 @@ namespace UWPMessengerClient.MSNP
                         xPath = "./ab:contactInfo/ab:passportName";
                         XmlNode passportName = contact.SelectSingleNode(xPath, NSmanager);
                         xPath = "./ab:contactInfo/ab:displayName";
-                        XmlNode displayName = contact.SelectSingleNode(xPath, NSmanager);
+                        XmlNode displayNameNode = contact.SelectSingleNode(xPath, NSmanager);
+                        string displayName = PlusCharactersRegex.Replace(displayNameNode.InnerText, "");
                         var contactInList = from contact_in_list in contact_list
                                             where contact_in_list.email == passportName.InnerText
                                             select contact_in_list;
                         if (!contactInList.Any())
                         {
-                            contact_list.Add(new Contact() { displayName = displayName.InnerText, email = passportName.InnerText, contactID = contactID.InnerText, onForward = true });
+                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = displayName, email = passportName.InnerText, contactID = contactID.InnerText, onForward = true };
+                            contact_list.Add(newContact);
+                            DatabaseAccess.AddContactToTable(userInfo.Email, newContact);
                         }
                         else
                         {
                             foreach (Contact contact_in_list in contactInList)
                             {
-                                contact_in_list.displayName = displayName.InnerText;
+                                contact_in_list.displayName = displayName;
                                 contact_in_list.contactID = contactID.InnerText;
                                 contact_in_list.onForward = true;
                             }
@@ -373,16 +259,16 @@ namespace UWPMessengerClient.MSNP
                         break;
                     case "MSNP15":
                         transactionID++;
-                        MakeAddContactSOAPRequest(newContactEmail, newContactDisplayName);
+                        SOAPRequests.MakeAddContactSOAPRequest(newContactEmail, newContactDisplayName);
                         string contact_payload = ReturnXMLNewContactPayload(newContactEmail);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
                         NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n");
                         NSSocket.SendCommand(contact_payload);
+                        Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = newContactDisplayName, email = newContactEmail };
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            //1 for forward list
-                            contact_list.Add(new Contact(1) { displayName = newContactDisplayName, email = newContactEmail });
-                            contacts_in_forward_list.Add(contact_list.Last());
+                            contact_list.Add(newContact);
+                            contacts_in_forward_list.Add(newContact);
                         });
                         break;
                     default:
@@ -393,7 +279,6 @@ namespace UWPMessengerClient.MSNP
 
         public async Task RemoveContact(Contact contactToRemove)
         {
-            
             await Task.Run(() =>
             {
                 switch (MSNPVersion)
@@ -404,7 +289,7 @@ namespace UWPMessengerClient.MSNP
                         break;
                     case "MSNP15":
                         transactionID++;
-                        MakeRemoveContactSOAPRequest(contactToRemove);
+                        SOAPRequests.MakeRemoveContactSOAPRequest(contactToRemove);
                         string contact_payload = ReturnXMLContactPayload(contactToRemove);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
                         NSSocket.SendCommand($"RML {transactionID} {payload_length}\r\n");
@@ -417,6 +302,79 @@ namespace UWPMessengerClient.MSNP
                 {
                     contacts_in_forward_list.Remove(contactToRemove);
                 });
+                DatabaseAccess.DeleteContactFromTable(userInfo.Email, contactToRemove);
+            });
+        }
+
+        public async Task BlockContact(Contact contactToBlock)
+        {
+            await Task.Run(() =>
+            {
+                switch (MSNPVersion)
+                {
+                    case "MSNP12":
+                        transactionID++;
+                        NSSocket.SendCommand($"ADC {transactionID} BL N={contactToBlock.email}\r\n");
+                        transactionID++;
+                        NSSocket.SendCommand($"REM {transactionID} AL {contactToBlock.GUID}\r\n");
+                        contactToBlock.onBlock = true;
+                        contactToBlock.onAllow = false;
+                        break;
+                    case "MSNP15":
+                        transactionID++;
+                        SOAPRequests.MakeBlockContactSOAPRequests(contactToBlock);
+                        contactToBlock.SetListsFromListbit((int)ListNumbers.Allow);
+                        string contact_payload = ReturnXMLContactPayload(contactToBlock);
+                        int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
+                        NSSocket.SendCommand($"RML {transactionID} {payload_length}\r\n");
+                        NSSocket.SendCommand(contact_payload);
+                        transactionID++;
+                        contactToBlock.SetListsFromListbit((int)ListNumbers.Block);
+                        contact_payload = ReturnXMLContactPayload(contactToBlock);
+                        payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
+                        NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n");
+                        NSSocket.SendCommand(contact_payload);
+                        break;
+                    default:
+                        throw new Exceptions.VersionNotSelectedException();
+                }
+                DatabaseAccess.UpdateContact(userInfo.Email, contactToBlock);
+            });
+        }
+
+        public async Task UnblockContact(Contact contactToUnblock)
+        {
+            await Task.Run(() =>
+            {
+                switch (MSNPVersion)
+                {
+                    case "MSNP12":
+                        transactionID++;
+                        NSSocket.SendCommand($"ADC {transactionID} AL N={contactToUnblock.email}\r\n");
+                        transactionID++;
+                        NSSocket.SendCommand($"REM {transactionID} BL {contactToUnblock.email}\r\n");
+                        contactToUnblock.onBlock = false;
+                        contactToUnblock.onAllow = true;
+                        break;
+                    case "MSNP15":
+                        transactionID++;
+                        SOAPRequests.MakeUnblockContactSOAPRequests(contactToUnblock);
+                        contactToUnblock.SetListsFromListbit((int)ListNumbers.Block);
+                        string contact_payload = ReturnXMLContactPayload(contactToUnblock);
+                        int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
+                        NSSocket.SendCommand($"RML {transactionID} {payload_length}\r\n");
+                        NSSocket.SendCommand(contact_payload);
+                        transactionID++;
+                        contactToUnblock.SetListsFromListbit((int)ListNumbers.Allow);
+                        contact_payload = ReturnXMLContactPayload(contactToUnblock);
+                        payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
+                        NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n");
+                        NSSocket.SendCommand(contact_payload);
+                        break;
+                    default:
+                        throw new Exceptions.VersionNotSelectedException();
+                }
+                DatabaseAccess.UpdateContact(userInfo.Email, contactToUnblock);
             });
         }
     }

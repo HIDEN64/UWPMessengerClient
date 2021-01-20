@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Data;
+using UWPMessengerClient.MSNP;
 
 namespace UWPMessengerClient
 {
@@ -15,25 +16,25 @@ namespace UWPMessengerClient
             string status = (string)value;
             switch (status)
             {
-                case "NLN":
+                case PresenceStatuses.Available:
                     fullStatus = "Available";
                     break;
-                case "BSY":
+                case PresenceStatuses.Busy:
                     fullStatus = "Busy";
                     break;
-                case "AWY":
+                case PresenceStatuses.Away:
                     fullStatus = "Away";
                     break;
-                case "IDL":
+                case PresenceStatuses.Idle:
                     fullStatus = "Idle";
                     break;
-                case "BRB":
+                case PresenceStatuses.BeRightBack:
                     fullStatus = "Be right back";
                     break;
-                case "PHN":
+                case PresenceStatuses.OnThePhone:
                     fullStatus = "On the phone";
                     break;
-                case "LUN":
+                case PresenceStatuses.OutToLunch:
                     fullStatus = "Out to lunch";
                     break;
                 case null:

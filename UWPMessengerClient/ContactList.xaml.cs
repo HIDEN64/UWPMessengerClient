@@ -14,13 +14,16 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Threading.Tasks;
 using Windows.Storage;
+using UWPMessengerClient.MSNP;
+using Windows.UI.Core;
 
 namespace UWPMessengerClient
 {
     public sealed partial class ContactList : Page
     {
-        private MSNP.NotificationServerConnection notificationServerConnection;
-        ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
+        private NotificationServerConnection notificationServerConnection;
+        private ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
+        private Contact ContactInContext;
 
         public ContactList()
         {
@@ -29,21 +32,22 @@ namespace UWPMessengerClient
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            notificationServerConnection = (MSNP.NotificationServerConnection)e.Parameter;
-            string status = notificationServerConnection.CurrentUserPresenceStatus;
+            notificationServerConnection = (NotificationServerConnection)e.Parameter;
+            notificationServerConnection.NotConnected += NotificationServerConnection_NotConnected;
+            string status = notificationServerConnection.UserPresenceStatus;
             string fullStatus = null;
             switch (status)
             {
-                case "NLN":
+                case PresenceStatuses.Available:
                     fullStatus = "Available";
                     break;
-                case "BSY":
+                case PresenceStatuses.Busy:
                     fullStatus = "Busy";
                     break;
-                case "AWY":
+                case PresenceStatuses.Away:
                     fullStatus = "Away";
                     break;
-                case "HDN":
+                case PresenceStatuses.Hidden:
                     fullStatus = "Invisible";
                     break;
             }
@@ -53,6 +57,22 @@ namespace UWPMessengerClient
                 _ = notificationServerConnection.SendUserPersonalMessage((string)roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"]);
             }
             base.OnNavigatedTo(e);
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            notificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
+            notificationServerConnection = null;
+            base.OnNavigatedFrom(e);
+        }
+
+        private async void NotificationServerConnection_NotConnected(object sender, EventArgs e)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                await ShowDialog("Error", "Connection to the server was lost: exiting...");
+                this.Frame.Navigate(typeof(LoginPage));
+            });
         }
 
         private async void Presence_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -93,13 +113,19 @@ namespace UWPMessengerClient
                 }
                 catch (Exception e)
                 {
-                    await ShowErrorDialog(e.Message);
+                    await ShowDialog("Error", $"There was an error, please try again. Error: {e.Message}");
                 }
             }
             else
             {
                 return;
             }
+        }
+
+        private void Exit()
+        {
+            notificationServerConnection.Exit();
+            this.Frame.Navigate(typeof(LoginPage));
         }
 
         private async void start_chat_button_Click(object sender, RoutedEventArgs e)
@@ -127,11 +153,6 @@ namespace UWPMessengerClient
             FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
         }
 
-        private async void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            await StartChat();
-        }
-
         private async void addContactButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -150,9 +171,7 @@ namespace UWPMessengerClient
 
         private void exitButton_Click(object sender, RoutedEventArgs e)
         {
-            notificationServerConnection.Exit();
-            notificationServerConnection = null;
-            this.Frame.Navigate(typeof(LoginPage));
+            Exit();
         }
 
         private void addContactAppBarButton_Click(object sender, RoutedEventArgs e)
@@ -209,15 +228,99 @@ namespace UWPMessengerClient
             FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
         }
 
-        public async Task ShowErrorDialog(string error)
+        public async Task ShowDialog(string title, string message)
         {
-            ContentDialog ErrorDialog = new ContentDialog
+            ContentDialog Dialog = new ContentDialog
             {
-                Title = "Error",
-                Content = "There was an error, please try again. Error: " + error,
+                Title = title,
+                Content = message,
                 CloseButtonText = "Close"
             };
-            ContentDialogResult ErrorResult = await ErrorDialog.ShowAsync();
+            ContentDialogResult DialogResult = await Dialog.ShowAsync();
+        }
+
+        private void contactListView_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            ListView contactListView = (ListView)sender;
+            ContactMenuFlyout.ShowAt(contactListView, e.GetPosition(contactListView));
+            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            if (ContactInContext != null)
+            {
+                if (ContactInContext.onBlock)
+                {
+                    UnblockItem.Visibility = Visibility.Visible;
+                    BlockItem.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    BlockItem.Visibility = Visibility.Visible;
+                    UnblockItem.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        private async void contactListView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            await StartChat();
+        }
+
+        private void contactListView_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            ListView contactListView = (ListView)sender;
+            ContactMenuFlyout.ShowAt(contactListView, e.GetPosition(contactListView));
+            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            if (ContactInContext != null)
+            {
+                if (ContactInContext.onBlock)
+                {
+                    UnblockItem.Visibility = Visibility.Visible;
+                    BlockItem.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    BlockItem.Visibility = Visibility.Visible;
+                    UnblockItem.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        private async void RemoveItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await notificationServerConnection.RemoveContact(ContactInContext);
+            }
+            catch (Exception ex)
+            {
+                await ShowDialog("Error", ex.Message);
+            }
+            ContactInContext = null;
+        }
+
+        private async void BlockItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await notificationServerConnection.BlockContact(ContactInContext);
+            }
+            catch (Exception ex)
+            {
+                await ShowDialog("Error", ex.Message);
+            }
+            ContactInContext = null;
+        }
+
+        private async void UnblockItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await notificationServerConnection.UnblockContact(ContactInContext);
+            }
+            catch (Exception ex)
+            {
+                await ShowDialog("Error", ex.Message);
+            }
+            ContactInContext = null;
         }
     }
 }

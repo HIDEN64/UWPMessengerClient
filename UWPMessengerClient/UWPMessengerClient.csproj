@@ -128,16 +128,20 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Contact.cs" />
-    <Compile Include="Exceptions\NotConnectedException.cs" />
-    <Compile Include="Exceptions\VersionNotSelectedException.cs" />
+    <Compile Include="ContactBlockedConverter.cs" />
+    <Compile Include="MessageHistoryConverter.cs" />
+    <Compile Include="MSNP\DatabaseAccess.cs" />
+    <Compile Include="MSNP\Contact.cs" />
+    <Compile Include="MSNP\Enums.cs" />
+    <Compile Include="MSNP\Exceptions\NotConnectedException.cs" />
+    <Compile Include="MSNP\Exceptions\VersionNotSelectedException.cs" />
     <Compile Include="LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Message.cs" />
+    <Compile Include="MSNP\Message.cs" />
     <Compile Include="MessageSenderConverter.cs" />
     <Compile Include="ChatPage.xaml.cs">
       <DependentUpon>ChatPage.xaml</DependentUpon>
@@ -158,20 +162,27 @@
     <Compile Include="MSNP\NotificationServerConnection.TWN.cs">
       <DependentUpon>NotificationServerConnection.cs</DependentUpon>
     </Compile>
+    <Compile Include="MSNP\SOAP\SOAPRequests.cs" />
+    <Compile Include="MSNP\SOAP\SOAPRequests.ABService.cs">
+      <DependentUpon>SOAPRequests.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MSNP\SOAP\SOAPRequests.SharingService.cs">
+      <DependentUpon>SOAPRequests.cs</DependentUpon>
+    </Compile>
     <Compile Include="MSNP\SwitchboardConnection.cs" />
     <Compile Include="MSNP\SwitchboardConnection.ReceivingCallback.cs">
       <DependentUpon>SwitchboardConnection.cs</DependentUpon>
     </Compile>
     <Compile Include="PersonalMessageConverter.cs" />
-    <Compile Include="PresenceStatuses.cs" />
+    <Compile Include="MSNP\PresenceStatuses.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SocketCommands.cs" />
+    <Compile Include="MSNP\SocketCommands.cs" />
     <Compile Include="StatusConverter.cs" />
     <Compile Include="UrlDecodingConverter.cs" />
-    <Compile Include="UserInfo.cs" />
+    <Compile Include="MSNP\UserInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -215,11 +226,20 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite.Core">
+      <Version>5.0.2</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>6.2.10</Version>
+      <Version>6.2.11</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications">
       <Version>6.1.1</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.3</Version>
+    </PackageReference>
+    <PackageReference Include="SQLitePCLRaw.bundle_winsqlite3">
+      <Version>2.0.4</Version>
     </PackageReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

@@ -22,7 +22,9 @@ namespace UWPMessengerClient.MSNP
             {
                 //sequence of commands to login to escargot
                 NSSocket.ConnectSocket();
-                NSSocket.SetReceiveTimeout(15000);
+                NSSocket.SetReceiveTimeout(25000);
+                userInfo.Email = email;
+                GetContactsFromDatabase();
                 //begin receiving from escargot
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
                 transactionID++;
@@ -32,17 +34,15 @@ namespace UWPMessengerClient.MSNP
                 transactionID++;
                 NSSocket.SendCommand($"USR {transactionID} TWN I {email}\r\n");//sends email to get a string for use in authentication
                 transactionID++;
-                userInfo.Email = email;
                 Task<string> token_task = GetNexusTokenAsync(httpClient);
                 token = token_task.Result;
                 NSSocket.SendCommand($"USR {transactionID} TWN S t={token}\r\n");//sending authentication token
                 transactionID++;
                 NSSocket.SendCommand($"SYN {transactionID} 0 0\r\n");//sync contact list
                 transactionID++;
-                NSSocket.SendCommand($"CHG {transactionID} NLN {clientCapabilities}\r\n");//set presence as available
+                NSSocket.SendCommand($"CHG {transactionID} {UserPresenceStatus} {clientCapabilities}\r\n");//set presence as available
             });
             await Task.Run(loginAction);
-            CurrentUserPresenceStatus = "NLN";
         }
 
         public async Task<string> GetNexusTokenAsync(HttpClient httpClient)
@@ -56,7 +56,7 @@ namespace UWPMessengerClient.MSNP
             string[] SplitHeadersString = headersString.Split("DALogin=");
             string DALogin = SplitHeadersString[1];
             DALogin = DALogin.Remove(DALogin.IndexOf("\r"));
-            if (_UsingLocalhost)
+            if (UsingLocalhost)
             {
                 DALogin = "http://localhost/login";
             }

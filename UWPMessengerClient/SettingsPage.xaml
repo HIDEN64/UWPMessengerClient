@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource SystemControlAcrylicWindowBrush}">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -28,7 +28,7 @@
         <TextBlock Text="Settings" Style="{ThemeResource HeaderTextBlockStyle}" TextWrapping="Wrap"
                    Grid.Column="2" Grid.Row="1" TextAlignment="Center"/>
         <Pivot x:Name="pivot" Grid.Row="2" Grid.ColumnSpan="3" Grid.Column="1">
-            <PivotItem Header="Login">
+            <PivotItem Header="General">
                 <StackPanel>
                     <ToggleSwitch x:Name="localhost_toggle" Header="Use localhost" Margin="5" Toggled="localhost_toggle_Toggled"/>
                     <ComboBox x:Name="version_box" Header="MSNP version"
@@ -38,6 +38,8 @@
                     </ComboBox>
                     <TextBlock Text="If you're already logged in log off and back in to apply these settings" Style="{ThemeResource BodyTextBlockStyle}"
                         Margin="5" TextWrapping="Wrap"/>
+                    <Border BorderThickness="10"/>
+                    <ToggleSwitch x:Name="MessagingHistorySwitch" Header="Keep a history of sent and received messages" Margin="5" Toggled="MessagingHistorySwitch_Toggled"/>
                 </StackPanel>
             </PivotItem>
             <PivotItem Header="Server connection">
