@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UWPMessengerClient.MSNP.SOAP
 {
-    public partial class SOAPRequests
+    partial class SOAPRequests
     {
         protected string abservice_url = "https://m1.escargot.log1p.xyz/abservice/abservice.asmx";
         //local address is http://localhost/abservice/abservice.asmx for abservice_url

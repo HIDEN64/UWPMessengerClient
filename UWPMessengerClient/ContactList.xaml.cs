@@ -183,7 +183,7 @@ namespace UWPMessengerClient
         {
             if (contactListView.SelectedIndex >= 0)
             {
-                await notificationServerConnection.RemoveContact(notificationServerConnection.contacts_in_forward_list[contactListView.SelectedIndex]);
+                await notificationServerConnection.RemoveContact(notificationServerConnection.ContactsInForwardList[contactListView.SelectedIndex]);
             }
         }
 

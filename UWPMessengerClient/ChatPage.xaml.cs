@@ -35,11 +35,21 @@ namespace UWPMessengerClient
         {
             notificationServerConnection = (NotificationServerConnection)e.Parameter;
             switchboardConnection = notificationServerConnection.SBConnection;
+            notificationServerConnection.NotConnected += NotificationServerConnection_NotConnected;
             Task task = GroupMessages();
             switchboardConnection.HistoryLoaded += SwitchboardConnection_HistoryLoaded;
             switchboardConnection.MessageReceived += SwitchboardConnection_MessageReceived;
             BackButton.IsEnabled = this.Frame.CanGoBack;
             base.OnNavigatedTo(e);
+        }
+
+        private async void NotificationServerConnection_NotConnected(object sender, EventArgs e)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                await ShowDialog("Error", "Connection to the server was lost: exiting...");
+                this.Frame.Navigate(typeof(LoginPage));
+            });
         }
 
         private async void SwitchboardConnection_MessageReceived(object sender, EventArgs e)
@@ -105,6 +115,17 @@ namespace UWPMessengerClient
         private async void nudgeButton_Click(object sender, RoutedEventArgs e)
         {
             await switchboardConnection.SendNudge();
+        }
+
+        public async Task ShowDialog(string title, string message)
+        {
+            ContentDialog Dialog = new ContentDialog
+            {
+                Title = title,
+                Content = message,
+                CloseButtonText = "Close"
+            };
+            ContentDialogResult DialogResult = await Dialog.ShowAsync();
         }
     }
 

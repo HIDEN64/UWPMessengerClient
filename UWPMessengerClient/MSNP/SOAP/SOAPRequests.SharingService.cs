@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UWPMessengerClient.MSNP.SOAP
 {
-    public partial class SOAPRequests
+    partial class SOAPRequests
     {
         protected string SharingService_url = "https://m1.escargot.log1p.xyz/abservice/SharingService.asmx";
         //local address is http://localhost/abservice/SharingService.asmx for SharingService_url

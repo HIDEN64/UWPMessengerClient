@@ -103,19 +103,26 @@ namespace UWPMessengerClient.MSNP
             }
             int.TryParse(LSTParams[4], out listbit);
             displayName = PlusCharactersRegex.Replace(displayName, "");
-            var contactInList = from contact_in_list in contact_list
+            var contactInList = from contact_in_list in ContactList
                                 where contact_in_list.email == email
                                 select contact_in_list;
             if (!contactInList.Any())
             {
                 Contact newContact = new Contact(listbit) { displayName = displayName, email = email, GUID = guid };
-                contact_list.Add(newContact);
+                ContactList.Add(newContact);
                 DatabaseAccess.AddContactToTable(userInfo.Email, newContact);
                 if (newContact.onForward)
                 {
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        contacts_in_forward_list.Add(newContact);
+                        ContactsInForwardList.Add(newContact);
+                    });
+                }
+                if (newContact.Pending)
+                {
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        PendingContacts.Add(newContact);
                     });
                 }
             }
@@ -130,7 +137,14 @@ namespace UWPMessengerClient.MSNP
                     {
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            contacts_in_forward_list.Add(contact_in_list);
+                            ContactsInForwardList.Add(contact_in_list);
+                        });
+                    }
+                    if (contact_in_list.Pending)
+                    {
+                        Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            PendingContacts.Add(contact_in_list);
                         });
                     }
                 }
@@ -148,8 +162,8 @@ namespace UWPMessengerClient.MSNP
             Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = displayName, email = email, GUID = guid };
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                contact_list.Add(newContact);
-                contacts_in_forward_list.Add(newContact);
+                ContactList.Add(newContact);
+                ContactsInForwardList.Add(newContact);
             });
         }
 
@@ -192,7 +206,7 @@ namespace UWPMessengerClient.MSNP
             displayName = PlusCharactersRegex.Replace(displayName, "");
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
-                var contactWithPresence = from contact in contact_list
+                var contactWithPresence = from contact in ContactList
                                           where contact.email == email
                                           select contact;
                 foreach (Contact contact in contactWithPresence)
@@ -225,7 +239,7 @@ namespace UWPMessengerClient.MSNP
             displayName = PlusCharactersRegex.Replace(displayName, "");
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
-                var contactWithPresence = from contact in contact_list
+                var contactWithPresence = from contact in ContactList
                                           where contact.email == email
                                           select contact;
                 foreach (Contact contact in contactWithPresence)
@@ -244,7 +258,7 @@ namespace UWPMessengerClient.MSNP
             string email = FLNParams[1];
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                var contactWithPresence = from contact in contact_list
+                var contactWithPresence = from contact in ContactList
                                             where contact.email == email
                                             select contact;
                 foreach (Contact contact in contactWithPresence)
@@ -288,7 +302,7 @@ namespace UWPMessengerClient.MSNP
             }
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                var contactWithPersonalMessage = from contact in contact_list
+                var contactWithPersonalMessage = from contact in ContactList
                                                  where contact.email == principal_email
                                                  select contact;
                 foreach (Contact contact in contactWithPersonalMessage)
@@ -321,7 +335,7 @@ namespace UWPMessengerClient.MSNP
             }
             SBConnection.SetAddressPortAndAuthString(sb_address, sb_port, auth_string);
             await SBConnection.LoginToNewSwitchboardAsync();
-            await SBConnection.InvitePrincipal(contacts_in_forward_list[ContactIndexToChat].email, contacts_in_forward_list[ContactIndexToChat].displayName);
+            await SBConnection.InvitePrincipal(ContactsInForwardList[ContactIndexToChat].email, ContactsInForwardList[ContactIndexToChat].displayName);
         }
 
         public void HandleRNG()

@@ -109,20 +109,6 @@ namespace UWPMessengerClient.MSNP
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public void FillForwardListCollection()
-        {
-            foreach (Contact contact in contact_list)
-            {
-                if (contact.onForward)
-                {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        contacts_in_forward_list.Add(contact);
-                    });
-                }
-            }
-        }
-
         public async Task ChangePresence(string status)
         {
             if (status == "") { throw new ArgumentNullException("Status is empty"); }

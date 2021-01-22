@@ -9,7 +9,7 @@ using System.Xml;
 
 namespace UWPMessengerClient.MSNP.SOAP
 {
-    public partial class SOAPRequests
+    partial class SOAPRequests
     {
         protected string RST_address = "https://m1.escargot.log1p.xyz/RST.srf";
         public string TicketToken { get; set; }

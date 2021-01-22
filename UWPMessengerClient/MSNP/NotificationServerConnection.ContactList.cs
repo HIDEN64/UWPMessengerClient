@@ -16,8 +16,9 @@ namespace UWPMessengerClient.MSNP
         private SOAPRequests SOAPRequests;
         private string MembershipLists;
         private string AddressBook;
-        public ObservableCollection<Contact> contact_list { get; set; } = new ObservableCollection<Contact>();
-        public ObservableCollection<Contact> contacts_in_forward_list { get; set; } = new ObservableCollection<Contact>();
+        public ObservableCollection<Contact> ContactList { get; set; } = new ObservableCollection<Contact>();
+        public ObservableCollection<Contact> ContactsInForwardList { get; set; } = new ObservableCollection<Contact>();
+        public ObservableCollection<Contact> PendingContacts { get; set; } = new ObservableCollection<Contact>();
 
         protected void GetContactsFromDatabase()
         {
@@ -25,7 +26,7 @@ namespace UWPMessengerClient.MSNP
             foreach (string JSONContact in JSONContactList)
             {
                 Contact contact = JsonConvert.DeserializeObject<Contact>(JSONContact);
-                contact_list.Add(contact);
+                ContactList.Add(contact);
             }
         }
 
@@ -53,7 +54,7 @@ namespace UWPMessengerClient.MSNP
                     XmlNode passport_name = member.SelectSingleNode(xPathString, NSmanager);
                     xPathString = "./ab:MembershipId";
                     XmlNode membership_id = member.SelectSingleNode(xPathString, NSmanager);
-                    var contactInList = from contact_in_list in contact_list
+                    var contactInList = from contact_in_list in ContactList
                                         where contact_in_list.email == passport_name.InnerText
                                         select contact_in_list;
                     if (!contactInList.Any())
@@ -77,7 +78,7 @@ namespace UWPMessengerClient.MSNP
                                 contact.Pending = true;
                                 break;
                         }
-                        contact_list.Add(contact);
+                        ContactList.Add(contact);
                         DatabaseAccess.AddContactToTable(userInfo.Email, contact);
                     }
                     else
@@ -144,13 +145,13 @@ namespace UWPMessengerClient.MSNP
                         xPath = "./ab:contactInfo/ab:displayName";
                         XmlNode displayNameNode = contact.SelectSingleNode(xPath, NSmanager);
                         string displayName = PlusCharactersRegex.Replace(displayNameNode.InnerText, "");
-                        var contactInList = from contact_in_list in contact_list
+                        var contactInList = from contact_in_list in ContactList
                                             where contact_in_list.email == passportName.InnerText
                                             select contact_in_list;
                         if (!contactInList.Any())
                         {
                             Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = displayName, email = passportName.InnerText, contactID = contactID.InnerText, onForward = true };
-                            contact_list.Add(newContact);
+                            ContactList.Add(newContact);
                             DatabaseAccess.AddContactToTable(userInfo.Email, newContact);
                         }
                         else
@@ -166,6 +167,7 @@ namespace UWPMessengerClient.MSNP
                 }
             }
             FillForwardListCollection();
+            FillPendingListCollection();
         }
 
         public static string ReturnXMLContactPayload(ObservableCollection<Contact> contacts)
@@ -232,7 +234,7 @@ namespace UWPMessengerClient.MSNP
 
         protected void SendInitialADL()
         {
-            string contact_payload = ReturnXMLContactPayload(contact_list);
+            string contact_payload = ReturnXMLContactPayload(ContactList);
             int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
             transactionID++;
             NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n");
@@ -267,8 +269,8 @@ namespace UWPMessengerClient.MSNP
                         Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = newContactDisplayName, email = newContactEmail };
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            contact_list.Add(newContact);
-                            contacts_in_forward_list.Add(newContact);
+                            ContactList.Add(newContact);
+                            ContactsInForwardList.Add(newContact);
                         });
                         break;
                     default:
@@ -300,7 +302,7 @@ namespace UWPMessengerClient.MSNP
                 }
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    contacts_in_forward_list.Remove(contactToRemove);
+                    ContactsInForwardList.Remove(contactToRemove);
                 });
                 DatabaseAccess.DeleteContactFromTable(userInfo.Email, contactToRemove);
             });
@@ -376,6 +378,34 @@ namespace UWPMessengerClient.MSNP
                 }
                 DatabaseAccess.UpdateContact(userInfo.Email, contactToUnblock);
             });
+        }
+
+        public void FillForwardListCollection()
+        {
+            foreach (Contact contact in ContactList)
+            {
+                if (contact.onForward)
+                {
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        ContactsInForwardList.Add(contact);
+                    });
+                }
+            }
+        }
+
+        public void FillPendingListCollection()
+        {
+            foreach (Contact contact in ContactList)
+            {
+                if (contact.Pending)
+                {
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        PendingContacts.Add(contact);
+                    });
+                }
+            }
         }
     }
 }
