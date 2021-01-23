@@ -58,6 +58,7 @@ namespace UWPMessengerClient.MSNP
             {
                 {"LST", () => HandleLST() },
                 {"ADC", () => HandleADC() },
+                {"ADL", () => HandleADL() },
                 {"PRP", () => HandlePRP() },
                 {"ILN", () => HandleILN() },
                 {"NLN", () => HandleNLN() },

@@ -155,5 +155,29 @@ namespace UWPMessengerClient
                 notificationServerConnection.KeepMessagingHistoryInSwitchboard = (bool)localSettings.Values["KeepHistory"];
             }
         }
+
+        private async void AcceptContactButton_Click(object sender, RoutedEventArgs e)
+        {
+            Contact contactToAccept = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            try
+            {
+                await notificationServerConnection.AcceptNewContact(contactToAccept);
+            }
+            catch (Exception ex)
+            {
+                await ShowDialog("Error", ex.Message);
+            }
+        }
+
+        public async Task ShowDialog(string title, string message)
+        {
+            ContentDialog Dialog = new ContentDialog
+            {
+                Title = title,
+                Content = message,
+                CloseButtonText = "Close"
+            };
+            ContentDialogResult DialogResult = await Dialog.ShowAsync();
+        }
     }
 }

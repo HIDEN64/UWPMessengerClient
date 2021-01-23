@@ -41,7 +41,7 @@ namespace UWPMessengerClient.MSNP.SOAP
             return MakeSOAPRequest(address_book_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABFindAll");
         }
 
-        public string MakeAddContactSOAPRequest(string newContactEmail, string newContactDisplayName = "")
+        public string MakeAddContactSOAPRequest(string newContactEmail)
         {
             string add_contact_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/""
@@ -65,12 +65,8 @@ namespace UWPMessengerClient.MSNP.SOAP
                         <contacts>
                             <Contact xmlns=""http://www.msn.com/webservices/AddressBook"">
                                 <contactInfo>
-                                    <contactType>LivePending</contactType>
-                                    <passportName>{newContactEmail}</passportName>
                                     <isMessengerUser>true</isMessengerUser>
-                                    <MessengerMemberInfo>
-                                        <DisplayName>{newContactDisplayName}</DisplayName>
-                                    </MessengerMemberInfo>
+                                    <passportName>{newContactEmail}</passportName>
                                 </contactInfo>
                             </Contact>
                         </contacts>

@@ -157,7 +157,7 @@ namespace UWPMessengerClient
         {
             try
             {
-                await notificationServerConnection.AddContact(contactEmailBox.Text, contactDisplayNameBox.Text);
+                await notificationServerConnection.AddNewContact(contactEmailBox.Text, contactDisplayNameBox.Text);
                 contactDisplayNameBox.Text = "";
                 contactEmailBox.Text = "";
                 AddContactErrors.Text = "";

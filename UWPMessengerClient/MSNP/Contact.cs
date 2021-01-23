@@ -17,7 +17,9 @@ namespace UWPMessengerClient.MSNP
         private string _contactID;
         private string _presenceStatus;
         private string _personalMessage;
-        public string MembershipID { get; set; }
+        public string AllowMembershipID { get; set; }
+        public string BlockMembershipID { get; set; }
+        public string PendingMembershipID { get; set; }
         public bool onForward { get; set; }
         public bool onAllow { get; set; }
         private bool _onBlock;
@@ -30,19 +32,28 @@ namespace UWPMessengerClient.MSNP
 
         public Contact(int listbit)
         {
-            SetListsFromListbit(listbit);
+            SetListsFromListnumber(listbit);
         }
 
-        public void SetListsFromListbit(int listbit)
+        public void SetListsFromListnumber(int listnumber)
         {
-            onForward = (listbit & (int)ListNumbers.Forward) == (int)ListNumbers.Forward;
-            onAllow = (listbit & (int)ListNumbers.Allow) == (int)ListNumbers.Allow;
-            onBlock = (listbit & (int)ListNumbers.Block) == (int)ListNumbers.Block;
-            onReverse = (listbit & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse;
-            Pending = (listbit & (int)ListNumbers.Pending) == (int)ListNumbers.Pending;
+            onForward = (listnumber & (int)ListNumbers.Forward) == (int)ListNumbers.Forward;
+            onAllow = (listnumber & (int)ListNumbers.Allow) == (int)ListNumbers.Allow;
+            onBlock = (listnumber & (int)ListNumbers.Block) == (int)ListNumbers.Block;
+            onReverse = (listnumber & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse;
+            Pending = (listnumber & (int)ListNumbers.Pending) == (int)ListNumbers.Pending;
         }
 
-        public int GetListbitFromForwardAllowBlock()
+        public void UpdateListsFromListnumber(int listnumber)
+        {
+            if ((listnumber & (int)ListNumbers.Forward) == (int)ListNumbers.Forward) { onForward = true; }
+            if ((listnumber & (int)ListNumbers.Allow) == (int)ListNumbers.Allow) { onAllow = true; }
+            if ((listnumber & (int)ListNumbers.Block) == (int)ListNumbers.Block) { onBlock = true; }
+            if ((listnumber & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse) { onReverse = true; }
+            if ((listnumber & (int)ListNumbers.Pending) == (int)ListNumbers.Pending) { Pending = true; }
+        }
+
+        public int GetListnumberFromForwardAllowBlock()
         {
             int onForwardInt = onForward ? (int)ListNumbers.Forward : 0;
             int onAllowInt = onAllow ? (int)ListNumbers.Allow : 0;
@@ -52,7 +63,7 @@ namespace UWPMessengerClient.MSNP
             return listbit;
         }
 
-        public int GetListbit()
+        public int GetListnumber()
         {
             int onForwardInt = onForward ? (int)ListNumbers.Forward : 0;
             int onAllowInt = onAllow ? (int)ListNumbers.Allow : 0;
@@ -72,7 +83,7 @@ namespace UWPMessengerClient.MSNP
             });
         }
 
-        public string email
+        public string Email
         {
             get => _email;
             set
