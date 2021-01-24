@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Xml;
 using Windows.UI.Core;
+using Microsoft.Toolkit.Uwp.Notifications;
+using Windows.UI.Notifications;
 
 namespace UWPMessengerClient.MSNP
 {
@@ -171,6 +173,7 @@ namespace UWPMessengerClient.MSNP
                     {
                         ContactsInPendingOrReverseList.Add(newContact);
                     });
+                    ShowNewContactToast(newContact.Email);
                 }
                 else
                 {
@@ -181,6 +184,7 @@ namespace UWPMessengerClient.MSNP
                         {
                             ContactsInPendingOrReverseList.Add(contact);
                         });
+                        ShowNewContactToast(contact.Email);
                     }
                 }
             }
@@ -218,6 +222,7 @@ namespace UWPMessengerClient.MSNP
                     {
                         ContactsInPendingOrReverseList.Add(newContact);
                     });
+                    ShowNewContactToast(newContact.Email);
                 }
             }
             else
@@ -231,6 +236,7 @@ namespace UWPMessengerClient.MSNP
                         {
                             ContactsInPendingOrReverseList.Add(contact);
                         });
+                        ShowNewContactToast(contact.Email);
                     }
                 }
             }
@@ -422,6 +428,24 @@ namespace UWPMessengerClient.MSNP
             SBConnection = switchboardConnection;
             SBConnection.KeepMessagingHistory = KeepMessagingHistoryInSwitchboard;
             _ = SBConnection.AnswerRNG();
+        }
+
+        private void ShowNewContactToast(string contact_email)
+        {
+            var content = new ToastContentBuilder()
+                .AddToastActivationInfo("NewContact", ToastActivationType.Foreground)
+                .AddText($"{contact_email}")
+                .AddText($"{contact_email} has added you to their contact list")
+                .GetToastContent();
+            try
+            {
+                var notif = new ToastNotification(content.GetXml())
+                {
+                    Group = "newContacts"
+                };
+                ToastNotificationManager.CreateToastNotifier().Show(notif);
+            }
+            catch (ArgumentException) { }
         }
     }
 }
