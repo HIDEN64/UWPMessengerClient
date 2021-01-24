@@ -43,6 +43,16 @@ namespace UWPMessengerClient
             base.OnNavigatedTo(e);
         }
 
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+            notificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
+            switchboardConnection.HistoryLoaded -= SwitchboardConnection_HistoryLoaded;
+            switchboardConnection.MessageReceived -= SwitchboardConnection_MessageReceived;
+            notificationServerConnection = null;
+            switchboardConnection = null;
+        }
+
         private async void NotificationServerConnection_NotConnected(object sender, EventArgs e)
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
