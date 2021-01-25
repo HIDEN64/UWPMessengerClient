@@ -8,6 +8,8 @@ using System.Xml;
 using Windows.UI.Core;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Windows.UI.Notifications;
+using Microsoft.QueryStringDotNET;
+using Newtonsoft.Json;
 
 namespace UWPMessengerClient.MSNP
 {
@@ -173,7 +175,7 @@ namespace UWPMessengerClient.MSNP
                     {
                         ContactsInPendingOrReverseList.Add(newContact);
                     });
-                    ShowNewContactToast(newContact.Email);
+                    ShowNewContactToast(newContact);
                 }
                 else
                 {
@@ -184,7 +186,7 @@ namespace UWPMessengerClient.MSNP
                         {
                             ContactsInPendingOrReverseList.Add(contact);
                         });
-                        ShowNewContactToast(contact.Email);
+                        ShowNewContactToast(contact);
                     }
                 }
             }
@@ -222,7 +224,7 @@ namespace UWPMessengerClient.MSNP
                     {
                         ContactsInPendingOrReverseList.Add(newContact);
                     });
-                    ShowNewContactToast(newContact.Email);
+                    ShowNewContactToast(newContact);
                 }
             }
             else
@@ -236,7 +238,7 @@ namespace UWPMessengerClient.MSNP
                         {
                             ContactsInPendingOrReverseList.Add(contact);
                         });
-                        ShowNewContactToast(contact.Email);
+                        ShowNewContactToast(contact);
                     }
                 }
             }
@@ -290,6 +292,14 @@ namespace UWPMessengerClient.MSNP
                     contact.displayName = displayName;
                     DatabaseAccess.UpdateContact(userInfo.Email, contact);
                 }
+                var contactWithPresenceInForward = from contact in ContactsInForwardList
+                                          where contact.Email == email
+                                          select contact;
+                foreach (Contact contact in contactWithPresenceInForward)
+                {
+                    contact.presenceStatus = status;
+                    contact.displayName = displayName;
+                }
             });
         }
 
@@ -323,6 +333,14 @@ namespace UWPMessengerClient.MSNP
                     contact.displayName = displayName;
                     DatabaseAccess.UpdateContact(userInfo.Email, contact);
                 }
+                var contactWithPresenceInForward = from contact in ContactsInForwardList
+                                                   where contact.Email == email
+                                                   select contact;
+                foreach (Contact contact in contactWithPresenceInForward)
+                {
+                    contact.presenceStatus = status;
+                    contact.displayName = displayName;
+                }
             });
         }
 
@@ -337,6 +355,13 @@ namespace UWPMessengerClient.MSNP
                                             where contact.Email == email
                                             select contact;
                 foreach (Contact contact in contactWithPresence)
+                {
+                    contact.presenceStatus = null;
+                }
+                var contactWithPresenceInForward = from contact in ContactsInForwardList
+                                                   where contact.Email == email
+                                                   select contact;
+                foreach (Contact contact in contactWithPresenceInForward)
                 {
                     contact.presenceStatus = null;
                 }
@@ -385,6 +410,13 @@ namespace UWPMessengerClient.MSNP
                     contact.personalMessage = personal_message;
                     DatabaseAccess.UpdateContact(userInfo.Email, contact);
                 }
+                var contactWithPersonalMessageInForward = from contact in ContactsInForwardList
+                                                 where contact.Email == principal_email
+                                                 select contact;
+                foreach (Contact contact in contactWithPersonalMessageInForward)
+                {
+                    contact.personalMessage = personal_message;
+                }
             });
             SeparateAndProcessCommandFromPayloadWithResponse(next_response, ubx_length);
         }
@@ -430,12 +462,22 @@ namespace UWPMessengerClient.MSNP
             _ = SBConnection.AnswerRNG();
         }
 
-        private void ShowNewContactToast(string contact_email)
+        private void ShowNewContactToast(Contact contact)
         {
+            string serialized_contact = JsonConvert.SerializeObject(contact);
             var content = new ToastContentBuilder()
                 .AddToastActivationInfo("NewContact", ToastActivationType.Foreground)
-                .AddText($"{contact_email}")
-                .AddText($"{contact_email} has added you to their contact list")
+                .AddText($"{contact.Email}")
+                .AddText($"{contact.Email} has added you to their contact list")
+                .AddButton("Add to your list", ToastActivationType.Background, new QueryString()
+                {
+                    {"action", "acceptContact" },
+                    {"contact", serialized_contact }
+                }.ToString())
+                .AddButton("Dismiss", ToastActivationType.Background, new QueryString() 
+                {
+                    {"action", "Dismiss" }
+                }.ToString())
                 .GetToastContent();
             try
             {

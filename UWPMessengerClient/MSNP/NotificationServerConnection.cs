@@ -52,6 +52,23 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
+        public NotificationServerConnection()
+        {
+            command_handlers = new Dictionary<string, Action>()
+            {
+                {"LST", () => HandleLST() },
+                {"ADC", () => HandleADC() },
+                {"ADL", () => HandleADL() },
+                {"PRP", () => HandlePRP() },
+                {"ILN", () => HandleILN() },
+                {"NLN", () => HandleNLN() },
+                {"FLN", () => HandleFLN() },
+                {"UBX", () => HandleUBX() },
+                {"XFR", async () => await HandleXFR() },
+                {"RNG", () => HandleRNG() }
+            };
+        }
+
         public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version, string initial_status = PresenceStatuses.Available)
         {
             command_handlers = new Dictionary<string, Action>()

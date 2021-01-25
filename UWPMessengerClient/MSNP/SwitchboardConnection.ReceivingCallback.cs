@@ -8,6 +8,7 @@ using Windows.UI.Notifications;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System.Web;
 using Windows.UI.Core;
+using Microsoft.QueryStringDotNET;
 
 namespace UWPMessengerClient.MSNP
 {
@@ -72,6 +73,10 @@ namespace UWPMessengerClient.MSNP
             {
                 connected = false;
             }
+            else
+            {
+                connected = true;
+            }
         }
 
         protected void HandleANS()
@@ -80,6 +85,10 @@ namespace UWPMessengerClient.MSNP
             if (ans_params[2] != "OK")
             {
                 connected = false;
+            }
+            else
+            {
+                connected = true;
             }
         }
 
@@ -115,40 +124,14 @@ namespace UWPMessengerClient.MSNP
 
         protected void AddMessage(string message_text, UserInfo sender, UserInfo receiver)
         {
-            var content = new ToastContentBuilder()
-                .AddToastActivationInfo("newMessages", ToastActivationType.Foreground)
-                .AddText(HttpUtility.UrlDecode(sender.displayName))
-                .AddText(message_text)
-                .GetToastContent();
-            try
-            {
-                var notif = new ToastNotification(content.GetXml())
-                {
-                    Group = "messages"
-                };
-                ToastNotificationManager.CreateToastNotifier().Show(notif);
-            }
-            catch (ArgumentException) { }
+            SendMessageToast(message_text, sender.displayName);
             Message newMessage = new Message() { message_text = message_text, sender = sender.displayName, receiver = receiver.displayName, sender_email = sender.Email, receiver_email = receiver.Email, IsHistory = false };
             AddToMessageList(newMessage);
         }
 
         protected void AddMessage(Message message)
         {
-            var content = new ToastContentBuilder()
-                .AddToastActivationInfo("newMessages", ToastActivationType.Foreground)
-                .AddText(HttpUtility.UrlDecode(message.sender))
-                .AddText(message.message_text)
-                .GetToastContent();
-            try
-            {
-                var notif = new ToastNotification(content.GetXml())
-                {
-                    Group = "messages"
-                };
-                ToastNotificationManager.CreateToastNotifier().Show(notif);
-            }
-            catch (ArgumentException) { }
+            SendMessageToast(message.message_text, message.sender);
             AddToMessageList(message);
         }
 
@@ -195,6 +178,33 @@ namespace UWPMessengerClient.MSNP
             string nudge_text = $"{HttpUtility.UrlDecode(PrincipalInfo.displayName)} sent you a nudge!";
             Message newMessage = new Message() { message_text = nudge_text, receiver = userInfo.displayName, sender_email = PrincipalInfo.Email, receiver_email = userInfo.Email, IsHistory = false };
             AddMessage(newMessage);
+        }
+
+        public void SendMessageToast(string message_text, string message_sender)
+        {
+            var content = new ToastContentBuilder()
+                .AddToastActivationInfo("newMessages", ToastActivationType.Foreground)
+                .AddText(HttpUtility.UrlDecode(message_sender))
+                .AddText(message_text)
+                .AddInputTextBox("ReplyBox", "Type your reply")
+                .AddButton("Reply", ToastActivationType.Background, new QueryString()
+                {
+                    {"action", "ReplyMessage" },
+                }.ToString())
+                .AddButton("Dismiss all", ToastActivationType.Background, new QueryString()
+                {
+                    {"action", "DismissMessages" }
+                }.ToString())
+                .GetToastContent();
+            try
+            {
+                var notif = new ToastNotification(content.GetXml())
+                {
+                    Group = "messages"
+                };
+                ToastNotificationManager.CreateToastNotifier().Show(notif);
+            }
+            catch (ArgumentException) { }
         }
     }
 }

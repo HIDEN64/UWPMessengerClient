@@ -18,6 +18,11 @@ using Windows.UI.Notifications;
 using Windows.ApplicationModel.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI;
+using UWPMessengerClient.MSNP;
+using Microsoft.QueryStringDotNET;
+using Windows.ApplicationModel.Background;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace UWPMessengerClient
 {
@@ -26,6 +31,9 @@ namespace UWPMessengerClient
     /// </summary>
     sealed partial class App : Application
     {
+        public NotificationServerConnection notificationServerConnection { get; set; }
+        public SwitchboardConnection switchboardConnection { get; set; }
+
         /// <summary>
         /// Inicializa o objeto singleton do aplicativo. Essa é a primeira linha do código criado
         /// executado e, por isso, é o equivalente lógico de main() ou WinMain().
@@ -42,8 +50,19 @@ namespace UWPMessengerClient
         /// serão usados, por exemplo, quando o aplicativo for iniciado para abrir um arquivo específico.
         /// </summary>
         /// <param name="e">Detalhes sobre a solicitação e o processo de inicialização.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
+            await OnLaunchedOrActived(e);
+        }
+
+        protected override async void OnActivated(IActivatedEventArgs args)
+        {
+            await OnLaunchedOrActived(args);
+        }
+
+        private async Task OnLaunchedOrActived(IActivatedEventArgs e)
+        {
+            await RegisterBackgroundTask();
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Não repita a inicialização do aplicativo quando a Janela já tiver conteúdo,
@@ -64,34 +83,92 @@ namespace UWPMessengerClient
                 Window.Current.Content = rootFrame;
             }
 
-            if (e.PrelaunchActivated == false)
+            if (e is LaunchActivatedEventArgs)
             {
+                var args = e as LaunchActivatedEventArgs;
+                if (args.PrelaunchActivated == false)
+                {
+                    if (rootFrame.Content == null)
+                    {
+                        // Quando a pilha de navegação não for restaurada, navegar para a primeira página,
+                        // configurando a nova página passando as informações necessárias como um parâmetro
+                        // de navegação
+                        rootFrame.Navigate(typeof(LoginPage), args.Arguments);
+                    }
+                    // Verifique se a janela atual está ativa
+                    Window.Current.Activate();
+                    ExtendAcrylicIntoTitleBar();
+                }
+            }
+            else if (e is ToastNotificationActivatedEventArgs)
+            {
+                var args = e as ToastNotificationActivatedEventArgs;
                 if (rootFrame.Content == null)
                 {
                     // Quando a pilha de navegação não for restaurada, navegar para a primeira página,
                     // configurando a nova página passando as informações necessárias como um parâmetro
                     // de navegação
-                    rootFrame.Navigate(typeof(LoginPage), e.Arguments);
+                    rootFrame.Navigate(typeof(LoginPage));
+                    // Verifique se a janela atual está ativa
+                    Window.Current.Activate();
+                    ExtendAcrylicIntoTitleBar();
                 }
-                // Verifique se a janela atual está ativa
-                Window.Current.Activate();
-                ExtendAcrylicIntoTitleBar();
-            }
-        }
-
-        protected override void OnActivated(IActivatedEventArgs args)
-        {
-            ToastNotificationHistory notificationHistory = ToastNotificationManager.History;
-            if (args is ToastNotificationActivatedEventArgs eventArgs)
-            {
-                switch (eventArgs.Argument)
+                
+                ToastNotificationHistory notificationHistory = ToastNotificationManager.History;
+                switch (args.Argument)
                 {
                     case "newMessages":
                         notificationHistory.RemoveGroup("messages");
                         break;
                 }
             }
-            base.OnActivated(args);
+        }
+
+        private async Task RegisterBackgroundTask()
+        {
+            const string taskName = "ToastBackgroundTask";
+            if (BackgroundTaskRegistration.AllTasks.Any(i => i.Value.Name.Equals(taskName)))
+                return;
+            BackgroundAccessStatus status = await BackgroundExecutionManager.RequestAccessAsync();
+            BackgroundTaskBuilder builder = new BackgroundTaskBuilder()
+            {
+                Name = taskName
+            };
+            builder.SetTrigger(new ToastNotificationActionTrigger());
+            BackgroundTaskRegistration registration = builder.Register();
+        }
+
+        protected override async void OnBackgroundActivated(BackgroundActivatedEventArgs args)
+        {
+            var deferral = args.TaskInstance.GetDeferral();
+            switch (args.TaskInstance.Task.Name)
+            {
+                case "ToastBackgroundTask":
+                    var details = args.TaskInstance.TriggerDetails as ToastNotificationActionTriggerDetail;
+                    if (details != null)
+                    {
+                        QueryString arguments = QueryString.Parse(details.Argument);
+                        var userInput = details.UserInput;
+                        ToastNotificationHistory notificationHistory = ToastNotificationManager.History;
+                        switch (arguments["action"])
+                        {
+                            case "DismissMessages":
+                                notificationHistory.RemoveGroup("messages");
+                                break;
+                            case "ReplyMessage":
+                                switchboardConnection = notificationServerConnection.SBConnection;
+                                string reply = (string)userInput["ReplyBox"];
+                                await switchboardConnection.SendMessage(reply);
+                                break;
+                            case "acceptContact":
+                                Contact contact = JsonConvert.DeserializeObject<Contact>(arguments["contact"]);
+                                await notificationServerConnection.AcceptNewContact(contact);
+                                break;
+                        }
+                    }
+                    break;
+            }
+            deferral.Complete();
         }
 
         /// <summary>

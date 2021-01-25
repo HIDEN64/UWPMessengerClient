@@ -31,7 +31,7 @@ namespace UWPMessengerClient
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            notificationServerConnection = null;
+            notificationServerConnection = null; 
             DisableProgressRingAndShowButtons();
             base.OnNavigatedTo(e);
         }
@@ -110,6 +110,13 @@ namespace UWPMessengerClient
                 return;
             }
             this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+            App app = Application.Current as App;
+            app.notificationServerConnection = notificationServerConnection;
         }
 
         private async void Login_Click(object sender, RoutedEventArgs e)
