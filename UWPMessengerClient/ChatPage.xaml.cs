@@ -18,6 +18,7 @@ using Windows.UI.Core;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Windows.Storage.Streams;
 
 namespace UWPMessengerClient
 {
@@ -29,6 +30,9 @@ namespace UWPMessengerClient
         public ChatPage()
         {
             this.InitializeComponent();
+            inkCanvas.InkPresenter.InputDeviceTypes =
+            Windows.UI.Core.CoreInputDeviceTypes.Mouse |
+            Windows.UI.Core.CoreInputDeviceTypes.Pen;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -87,7 +91,7 @@ namespace UWPMessengerClient
         {
             if (switchboardConnection != null && switchboardConnection.connected && messageBox.Text != "")
             {
-                await switchboardConnection.SendMessage(messageBox.Text);
+                await switchboardConnection.SendTextMessage(messageBox.Text);
                 messageBox.Text = "";
                 await GroupMessages();
             }
@@ -136,6 +140,20 @@ namespace UWPMessengerClient
                 CloseButtonText = "Close"
             };
             ContentDialogResult DialogResult = await Dialog.ShowAsync();
+        }
+
+        private async void SendInkButton_Click(object sender, RoutedEventArgs e)
+        {
+            using(MemoryStream memoryStream = new MemoryStream())
+            {
+                using(IRandomAccessStream stream = memoryStream.AsRandomAccessStream())
+                {
+                    await inkCanvas.InkPresenter.StrokeContainer.SaveAsync(stream);
+                }
+                byte[] ink_bytes = memoryStream.ToArray();
+                await switchboardConnection.SendInk(ink_bytes);
+            }
+            inkCanvas.InkPresenter.StrokeContainer.Clear();
         }
     }
 

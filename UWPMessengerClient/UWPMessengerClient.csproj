@@ -142,6 +142,7 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="MSNP\InkChunk.cs" />
     <Compile Include="MSNP\Message.cs" />
     <Compile Include="MessageSenderConverter.cs" />
     <Compile Include="ChatPage.xaml.cs">

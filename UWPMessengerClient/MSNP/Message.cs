@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace UWPMessengerClient.MSNP
 {
@@ -16,6 +17,12 @@ namespace UWPMessengerClient.MSNP
         private string _sender_email;
         private string _receiver_email;
         private bool _IsHistory;
+        private int NumberOfInkChunks;
+        private List<InkChunk> InkChunks = new List<InkChunk>();
+        private byte[] InkBytes;
+        private BitmapImage _InkImage;
+        public string InkMessageID { get; private set; }
+        public string Base64Ink { get; private set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -81,6 +88,57 @@ namespace UWPMessengerClient.MSNP
                 _IsHistory = value;
                 NotifyPropertyChanged();
             }
+        }
+
+        public BitmapImage InkImage
+        {
+            get => _InkImage;
+            set
+            {
+                _InkImage = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public void ReceiveSingleInk(string encoded_ink)
+        {
+            encoded_ink = encoded_ink.Replace("base64:", "");
+            Base64Ink = encoded_ink;
+            InkBytes = Convert.FromBase64String(encoded_ink);
+        }
+
+        public void ReceiveFirstInkChunk(int chunks, string message_id, string chunk)
+        {
+            NumberOfInkChunks = chunks;
+            InkMessageID = message_id;
+            chunk = chunk.Replace("base64:", "");
+            InkChunk inkChunk = new InkChunk() { ChunkNumber = 0, MessageID = InkMessageID, EncodedChunk = chunk };
+            InkChunks.Add(inkChunk);
+        }
+
+        public void ReceiveInkChunk(int chunk_number, string chunk)
+        {
+            if (chunk_number > NumberOfInkChunks)
+            {
+                throw new Exception();
+            }
+            InkChunk inkChunk = new InkChunk() { ChunkNumber = chunk_number, MessageID = InkMessageID, EncodedChunk = chunk };
+            InkChunks.Add(inkChunk);
+            if (chunk_number == (NumberOfInkChunks - 1))
+            {
+                JoinChunks();
+            }
+        }
+
+        public void JoinChunks()
+        {
+            string joined_chunks = "";
+            foreach (InkChunk inkChunk in InkChunks)
+            {
+                joined_chunks += inkChunk.EncodedChunk;
+            }
+            Base64Ink = joined_chunks;
+            InkBytes = Convert.FromBase64String(joined_chunks);
         }
     }
 }

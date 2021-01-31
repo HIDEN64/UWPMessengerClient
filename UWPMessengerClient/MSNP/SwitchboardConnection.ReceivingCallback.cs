@@ -52,7 +52,26 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected string SeparatePayloadFromResponseWithPayload(string response, int payload_size)
+        protected void SeparateAndProcessCommandFromResponse(string response, int payload_size)
+        {
+            if (response.Contains("\r\n"))
+            {
+                response = response.Split("\r\n", 2)[1];
+            }
+            byte[] response_bytes = Encoding.UTF8.GetBytes(response);
+            byte[] payload_bytes = new byte[payload_size];
+            Buffer.BlockCopy(response_bytes, 0, payload_bytes, 0, payload_size);
+            string payload = Encoding.UTF8.GetString(payload_bytes);
+            string new_command = response.Replace(payload, "");
+            if (new_command != "")
+            {
+                outputString = new_command;
+                string[] cmd_params = new_command.Split(" ");
+                command_handlers[cmd_params[0]]();
+            }
+        }
+
+        protected string SeparatePayloadFromResponse(string response, int payload_size)
         {
             string payload_response = response;
             if (response.Contains("\r\n"))
@@ -100,9 +119,10 @@ namespace UWPMessengerClient.MSNP
             string length_str = MSGParams[3];
             int msg_length;
             int.TryParse(length_str, out msg_length);
-            string msg_payload = SeparatePayloadFromResponseWithPayload(outputString, msg_length);
+            string msg_payload = SeparatePayloadFromResponse(outputString, msg_length);
             string[] MSGPayloadParams = msg_payload.Split("\r\n");
-            string[] ContentTypeParams = MSGPayloadParams[1].Split(" ");
+            string[] FirstHeaderParams = MSGPayloadParams[0].Split(" ");
+            string[] SecondHeaderParams = MSGPayloadParams[1].Split(" ");
             Action msmsgscontrolAction = new Action(() =>
             {
                 //first parameter of the third header in the payload
@@ -117,9 +137,22 @@ namespace UWPMessengerClient.MSNP
             {
                 {"text/plain;", () => AddMessage(MSGPayloadParams[4], PrincipalInfo, userInfo) },
                 {"text/x-msmsgscontrol", msmsgscontrolAction },
-                {"text/x-msnmsgr-datacast", () => HandleDatacast(msg_payload) }
+                {"text/x-msnmsgr-datacast", () => HandleDatacast(msg_payload) },
+                {"application/x-ms-ink", () => HandleInk(msg_payload) }
             };
-            ContentTypeDictionary[ContentTypeParams[1]]();
+            switch (FirstHeaderParams[0])
+            {
+                case "Message-ID:":
+                    HandleInkChunk(msg_payload);
+                    break;
+            }
+            switch (SecondHeaderParams[0])
+            {
+                case "Content-Type:":
+                    ContentTypeDictionary[SecondHeaderParams[1]]();
+                    break;
+            }
+            SeparateAndProcessCommandFromResponse(outputString, msg_length);
         }
 
         protected void AddMessage(string message_text, UserInfo sender, UserInfo receiver)
@@ -157,6 +190,43 @@ namespace UWPMessengerClient.MSNP
                 case "ID: 1":
                     ShowNudge();
                     break;
+            }
+        }
+
+        public void HandleInk(string msg_payload)
+        {
+            string[] MSGPayloadParams = msg_payload.Split("\r\n");
+            Message InkMessage = new Message() { sender = PrincipalInfo.displayName, sender_email = PrincipalInfo.Email, receiver = userInfo.displayName, receiver_email = userInfo.Email };
+            if (MSGPayloadParams.Length > 4)
+            {
+                string message_id = MSGPayloadParams[2].Split(" ")[1];
+                string chunks_str = MSGPayloadParams[3].Split(" ")[1];
+                int chunks = 1;
+                int.TryParse(chunks_str, out chunks);
+                string ink_chunk = MSGPayloadParams[5];
+                InkMessage.ReceiveFirstInkChunk(chunks, message_id, ink_chunk);
+            }
+            else
+            {
+                InkMessage.ReceiveSingleInk(MSGPayloadParams[3]);
+            }
+            AddToMessageList(InkMessage);
+        }
+
+        public void HandleInkChunk(string msg_payload)
+        {
+            string[] MSGPayloadParams = msg_payload.Split("\r\n");
+            string message_id = MSGPayloadParams[0].Split(" ")[1];
+            int chunk_number;
+            string chunk_str = MSGPayloadParams[1].Split(" ")[1];
+            int.TryParse(chunk_str, out chunk_number);
+            string encoded_chunk = MSGPayloadParams[3];
+            var ink_message_query = from ink_message in MessageList
+                                    where ink_message.InkMessageID == message_id
+                                    select ink_message;
+            foreach (Message ink_message in ink_message_query)
+            {
+                ink_message.ReceiveInkChunk(chunk_number, encoded_chunk);
             }
         }
 

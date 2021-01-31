@@ -26,7 +26,6 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
             <RowDefinition Height="15"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -65,13 +64,28 @@
         </ListView>
         <TextBlock Text="{x:Bind switchboardConnection.PrincipalInfo.typingUser, Mode=OneWay}" FontSize="14" 
                    Margin="5" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="2"/>
-        <TextBox x:Name="messageBox" Grid.Column="1" Grid.Row="7" Margin="5" Grid.ColumnSpan="2" KeyDown="messageBox_KeyDown"
-                 TextChanged="messageBox_TextChanged"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="8" Grid.ColumnSpan="2">
-            <Button x:Name="nudgeButton" Content="Nudge" Margin="5" Click="nudgeButton_Click"/>
-            <Button x:Name="sendButton" Content="Send message" Margin="5" Click="sendButton_Click"/>
-        </StackPanel>
+        <Pivot Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2">
+            <PivotItem Header="Text">
+                <StackPanel>
+                    <TextBox x:Name="messageBox" Margin="5" KeyDown="messageBox_KeyDown"
+                    TextChanged="messageBox_TextChanged"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <Button x:Name="nudgeButton" Content="Nudge" Margin="5" Click="nudgeButton_Click"/>
+                        <Button x:Name="sendButton" Content="Send message" Margin="5" Click="sendButton_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </PivotItem>
+            <PivotItem Header="Ink">
+                <StackPanel>
+                    <Grid Background="WhiteSmoke">
+                        <InkCanvas x:Name="inkCanvas" Height="120"/>
+                    </Grid>
+                    <InkToolbar TargetInkCanvas="{x:Bind inkCanvas}"/>
+                    <Button x:Name="SendInkButton" Content="Send" Click="SendInkButton_Click" Margin="5"/>
+                </StackPanel>
+            </PivotItem>
+        </Pivot>
         <TextBlock Text="{x:Bind switchboardConnection.userInfo.displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="24" FontWeight="Bold" TextWrapping="Wrap"
-                   Grid.ColumnSpan="2" Grid.Column="1" Grid.Row="9"/>
+                   Grid.ColumnSpan="2" Grid.Column="1" Grid.Row="8"/>
     </Grid>
 </Page>

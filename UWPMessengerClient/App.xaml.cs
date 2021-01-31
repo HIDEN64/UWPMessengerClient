@@ -158,7 +158,7 @@ namespace UWPMessengerClient
                             case "ReplyMessage":
                                 switchboardConnection = notificationServerConnection.SBConnection;
                                 string reply = (string)userInput["ReplyBox"];
-                                await switchboardConnection.SendMessage(reply);
+                                await switchboardConnection.SendTextMessage(reply);
                                 break;
                             case "acceptContact":
                                 Contact contact = JsonConvert.DeserializeObject<Contact>(arguments["contact"]);

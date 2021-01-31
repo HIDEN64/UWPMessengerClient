@@ -28,6 +28,8 @@ namespace UWPMessengerClient.MSNP
         public bool KeepMessagingHistory { get; set; } = true;
         protected bool waitingTyping = false;
         protected bool waitingNudge = false;
+        protected int MaximumInkSize = 1140;
+        private static Random random = new Random();
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler HistoryLoaded;
         Dictionary<string, Action> command_handlers;
@@ -185,7 +187,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public async Task SendMessage(string message_text)
+        public async Task SendTextMessage(string message_text)
         {
             if (connected && principalsConnected > 0)
             {
@@ -283,6 +285,120 @@ namespace UWPMessengerClient.MSNP
                     });
                 }
             }
+        }
+
+        public static string GenerateMessageID()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            List<string> sets = new List<string>();
+            sets.Add(new string(Enumerable.Repeat(chars, 8)
+              .Select(s => s[random.Next(s.Length)]).ToArray()));
+            sets.Add(new string(Enumerable.Repeat(chars, 4)
+              .Select(s => s[random.Next(s.Length)]).ToArray()));
+            sets.Add(new string(Enumerable.Repeat(chars, 4)
+              .Select(s => s[random.Next(s.Length)]).ToArray()));
+            sets.Add(new string(Enumerable.Repeat(chars, 4)
+              .Select(s => s[random.Next(s.Length)]).ToArray()));
+            sets.Add(new string(Enumerable.Repeat(chars, 12)
+              .Select(s => s[random.Next(s.Length)]).ToArray()));
+            StringBuilder stringBuilder = new StringBuilder(38);
+            stringBuilder.Append("{");
+            stringBuilder.Append(sets[0]);
+            for (int i = 1; i < sets.Count; i++)
+            {
+                stringBuilder.Append("-" + sets[i]);
+            }
+            stringBuilder.Append("}");
+            string message_id = stringBuilder.ToString();
+            return message_id;
+        }
+
+        public List<InkChunk> DivideInkIntoChunks(byte[] ink_bytes, string MessageId)
+        {
+            List<InkChunk> InkChunks = new List<InkChunk>();
+            double NumberOfChunksDouble = ink_bytes.Length / MaximumInkSize;
+            NumberOfChunksDouble = Math.Ceiling(NumberOfChunksDouble);
+            int NumberOfChunks = Convert.ToInt32(NumberOfChunksDouble);
+            int NumberOfFullChunks = NumberOfChunks;
+            if (NumberOfChunks % MaximumInkSize > 0)
+            {
+                NumberOfFullChunks--;
+            }
+            int ink_pos = 0;
+            byte[] ink_chunk = new byte[MaximumInkSize];
+            Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, MaximumInkSize);
+            InkChunks.Add(new InkChunk() { ChunkNumber = 0, MessageID = MessageId, EncodedChunk = "base64:" + Convert.ToBase64String(ink_chunk) });
+            ink_pos += MaximumInkSize;
+            for (int i = 1; i <= NumberOfFullChunks; i++)
+            {
+                Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, MaximumInkSize);
+                InkChunks.Add(new InkChunk() { ChunkNumber = i, MessageID = MessageId, EncodedChunk = Convert.ToBase64String(ink_chunk) });
+                ink_pos += MaximumInkSize;
+            }
+            int LastChunkLen = ink_bytes.Length - ink_pos;
+            ink_chunk = new byte[LastChunkLen];
+            Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, LastChunkLen);
+            InkChunks.Add(new InkChunk() { ChunkNumber = NumberOfChunks, MessageID = MessageId, EncodedChunk = Convert.ToBase64String(ink_chunk) });
+            ink_pos += LastChunkLen;
+            return InkChunks;
+        }
+
+        public async Task SendInk(byte[] ink_bytes)
+        {
+            if (ink_bytes.Length > MaximumInkSize)
+            {
+                string MessageId = GenerateMessageID();
+                List<InkChunk> InkChunks = DivideInkIntoChunks(ink_bytes, MessageId);
+                transactionID++;
+                string InkChunkMessagePayload = $"Mime-Version: 1.0\r\nContent-Type: application/x-ms-ink\r\nMessage-ID: {MessageId}\r\nChunks: {InkChunks.Count}\r\n\r\n{InkChunks[0].EncodedChunk}";
+                string InkChunkMessage = $"MSG {transactionID} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
+                try
+                {
+                    SBSocket.SendCommand(InkChunkMessage);
+                }
+                catch (Exception ex)
+                {
+                    await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
+                    });
+                }
+                for (int i = 1; i < InkChunks.Count; i++)
+                {
+                    transactionID++;
+                    InkChunkMessagePayload = $"Message-ID: {MessageId}\r\nChunk: {InkChunks[i].ChunkNumber}\r\n\r\n{InkChunks[i].EncodedChunk}";
+                    InkChunkMessage = $"MSG {transactionID} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
+                    try
+                    {
+                        SBSocket.SendCommand(InkChunkMessage);
+                    }
+                    catch (Exception ex)
+                    {
+                        await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
+                        });
+                    }
+                }
+            }
+            else
+            {
+                transactionID++;
+                string InkChunkMessagePayload = $"Mime-Version: 1.0\r\nContent-Type: application/x-ms-ink\r\n\r\n{"base64:" + Convert.ToBase64String(ink_bytes)}";
+                string InkChunkMessage = $"MSG {transactionID} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
+                try
+                {
+                    SBSocket.SendCommand(InkChunkMessage);
+                }
+                catch (Exception ex)
+                {
+                    await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
+                    });
+                }
+            }
+            //sends ink in ISF format
         }
 
         public async Task AnswerRNG()

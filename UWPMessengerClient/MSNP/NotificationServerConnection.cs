@@ -33,7 +33,7 @@ namespace UWPMessengerClient.MSNP
         public bool UsingLocalhost { get; protected set; } = false;
         public string MSNPVersion { get; protected set; } = "MSNP15";
         protected int transactionID = 0;
-        protected uint clientCapabilities = 0x84140420;
+        protected uint clientCapabilities = 0x84140428;
         public int ContactIndexToChat { get; set; }
         public string UserPresenceStatus { get; set; }
         public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;

@@ -55,7 +55,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected void SeparateAndProcessCommandFromPayloadWithResponse(string response, int payload_size)
+        protected void SeparateAndProcessCommandFromResponse(string response, int payload_size)
         {
             byte[] response_bytes = Encoding.UTF8.GetBytes(response);
             byte[] payload_bytes = new byte[payload_size];
@@ -67,7 +67,7 @@ namespace UWPMessengerClient.MSNP
             command_handlers[cmd_params[0]]();
         }
 
-        protected string SeparatePayloadFromPayloadWithResponse(string response, int payload_size)
+        protected string SeparatePayloadFromResponse(string response, int payload_size)
         {
             byte[] response_bytes = Encoding.UTF8.GetBytes(response);
             byte[] payload_bytes = new byte[payload_size];
@@ -198,7 +198,7 @@ namespace UWPMessengerClient.MSNP
             if (ADLParams[2] == "OK") { return; }
             int payload_length;
             int.TryParse(ADLParams[2], out payload_length);
-            string payload = SeparatePayloadFromPayloadWithResponse(next_response, payload_length);
+            string payload = SeparatePayloadFromResponse(next_response, payload_length);
             XmlDocument payload_xml = new XmlDocument();
             payload_xml.LoadXml(payload);
             XmlNode d_node = payload_xml.SelectSingleNode("//ml/d");
@@ -387,7 +387,7 @@ namespace UWPMessengerClient.MSNP
             }
             int ubx_length;
             int.TryParse(length_str, out ubx_length);
-            string payload = SeparatePayloadFromPayloadWithResponse(next_response, ubx_length);
+            string payload = SeparatePayloadFromResponse(next_response, ubx_length);
             XmlDocument personalMessagePayload = new XmlDocument();
             try
             {
@@ -418,7 +418,7 @@ namespace UWPMessengerClient.MSNP
                     contact.personalMessage = personal_message;
                 }
             });
-            SeparateAndProcessCommandFromPayloadWithResponse(next_response, ubx_length);
+            SeparateAndProcessCommandFromResponse(next_response, ubx_length);
         }
 
         public async Task HandleXFR()
