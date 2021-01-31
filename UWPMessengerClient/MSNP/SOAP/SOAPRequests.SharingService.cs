@@ -11,7 +11,7 @@ namespace UWPMessengerClient.MSNP.SOAP
         protected string SharingService_url = "https://m1.escargot.log1p.xyz/abservice/SharingService.asmx";
         //local address is http://localhost/abservice/SharingService.asmx for SharingService_url
 
-        public string MakeMembershipListsSOAPRequest()
+        public string FindMembership()
         {
             string membership_lists_xml = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
@@ -41,7 +41,7 @@ namespace UWPMessengerClient.MSNP.SOAP
             return MakeSOAPRequest(membership_lists_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/FindMembership");
         }
 
-        public string AddContactToMemberRoleSOAPRequest(string contactEmail, string memberRole)
+        public string AddMember(string contactEmail, string memberRole)
         {
             string member_role_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" 
@@ -84,7 +84,7 @@ namespace UWPMessengerClient.MSNP.SOAP
             return MakeSOAPRequest(member_role_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/AddMember");
         }
 
-        public string RemoveContactFromMemberRole(string membershipId, string member_role)
+        public string DeleteMember(string membershipId, string member_role)
         {
             string member_role_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" 
@@ -127,22 +127,22 @@ namespace UWPMessengerClient.MSNP.SOAP
             return MakeSOAPRequest(member_role_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/DeleteMember");
         }
 
-        public void MakeBlockContactSOAPRequests(Contact contact)
+        public void BlockContactRequests(Contact contact)
         {
             if (contact.AllowMembershipID != null)
             {
-                RemoveContactFromMemberRole(contact.AllowMembershipID, "Allow");
+                DeleteMember(contact.AllowMembershipID, "Allow");
             }
-            AddContactToMemberRoleSOAPRequest(contact.Email, "Block");
+            AddMember(contact.Email, "Block");
         }
 
-        public void MakeUnblockContactSOAPRequests(Contact contact)
+        public void UnblockContactRequests(Contact contact)
         {
             if (contact.BlockMembershipID != null)
             {
-                RemoveContactFromMemberRole(contact.BlockMembershipID, "Block");
+                DeleteMember(contact.BlockMembershipID, "Block");
             }
-            AddContactToMemberRoleSOAPRequest(contact.Email, "Allow");
+            AddMember(contact.Email, "Allow");
         }
     }
 }

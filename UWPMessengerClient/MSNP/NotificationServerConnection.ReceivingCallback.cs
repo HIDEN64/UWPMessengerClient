@@ -57,14 +57,21 @@ namespace UWPMessengerClient.MSNP
 
         protected void SeparateAndProcessCommandFromResponse(string response, int payload_size)
         {
+            if (response.Contains("\r\n"))
+            {
+                response = response.Split("\r\n", 2)[1];
+            }
             byte[] response_bytes = Encoding.UTF8.GetBytes(response);
             byte[] payload_bytes = new byte[payload_size];
             Buffer.BlockCopy(response_bytes, 0, payload_bytes, 0, payload_size);
             string payload = Encoding.UTF8.GetString(payload_bytes);
             string new_command = response.Replace(payload, "");
-            current_response = new_command;
-            string[] cmd_params = new_command.Split(" ");
-            command_handlers[cmd_params[0]]();
+            if (new_command != "")
+            {
+                current_response = new_command;
+                string[] cmd_params = new_command.Split(" ");
+                command_handlers[cmd_params[0]]();
+            }
         }
 
         protected string SeparatePayloadFromResponse(string response, int payload_size)

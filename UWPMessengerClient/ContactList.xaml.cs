@@ -62,7 +62,6 @@ namespace UWPMessengerClient
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             notificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
-            notificationServerConnection = null;
             base.OnNavigatedFrom(e);
         }
 
@@ -177,14 +176,6 @@ namespace UWPMessengerClient
         private void addContactAppBarButton_Click(object sender, RoutedEventArgs e)
         {
             addContactAppBarButton.Flyout.ShowAt((FrameworkElement)sender);
-        }
-
-        private async void removeContactAppBarButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (contactListView.SelectedIndex >= 0)
-            {
-                await notificationServerConnection.RemoveContact(notificationServerConnection.ContactsInForwardList[contactListView.SelectedIndex]);
-            }
         }
 
         private void settings_button_Click(object sender, RoutedEventArgs e)

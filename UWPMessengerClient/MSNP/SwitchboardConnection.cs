@@ -339,7 +339,6 @@ namespace UWPMessengerClient.MSNP
             ink_chunk = new byte[LastChunkLen];
             Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, LastChunkLen);
             InkChunks.Add(new InkChunk() { ChunkNumber = NumberOfChunks, MessageID = MessageId, EncodedChunk = Convert.ToBase64String(ink_chunk) });
-            ink_pos += LastChunkLen;
             return InkChunks;
         }
 

@@ -144,7 +144,7 @@ namespace UWPMessengerClient.MSNP
             if (newDisplayName == "") { throw new ArgumentNullException("Display name is empty"); }
             if (MSNPVersion == "MSNP15")
             {
-                SOAPRequests.MakeChangeUserDisplayNameSOAPRequest(newDisplayName);
+                SOAPRequests.ChangeUserDisplayNameRequest(newDisplayName);
             }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
             transactionID++;

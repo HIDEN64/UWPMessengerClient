@@ -31,8 +31,8 @@ namespace UWPMessengerClient
         {
             this.InitializeComponent();
             inkCanvas.InkPresenter.InputDeviceTypes =
-            Windows.UI.Core.CoreInputDeviceTypes.Mouse |
-            Windows.UI.Core.CoreInputDeviceTypes.Pen;
+            CoreInputDeviceTypes.Mouse |
+            CoreInputDeviceTypes.Pen;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -53,8 +53,6 @@ namespace UWPMessengerClient
             notificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
             switchboardConnection.HistoryLoaded -= SwitchboardConnection_HistoryLoaded;
             switchboardConnection.MessageReceived -= SwitchboardConnection_MessageReceived;
-            notificationServerConnection = null;
-            switchboardConnection = null;
         }
 
         private async void NotificationServerConnection_NotConnected(object sender, EventArgs e)
@@ -154,27 +152,6 @@ namespace UWPMessengerClient
                 await switchboardConnection.SendInk(ink_bytes);
             }
             inkCanvas.InkPresenter.StrokeContainer.Clear();
-        }
-    }
-
-    public class GroupInfoList : List<object>, INotifyPropertyChanged
-    {
-        public GroupInfoList(IEnumerable<object> items) : base(items) { }
-        public event PropertyChangedEventHandler PropertyChanged;
-        private object _Key;
-        public object Key
-        {
-            get => _Key;
-            set
-            {
-                _Key = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

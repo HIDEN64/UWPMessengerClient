@@ -56,7 +56,7 @@ namespace UWPMessengerClient.MSNP.SOAP
             }
         }
 
-        public string Perform_SSO_SOAP_Request(string email, string password, string MBIKeyOldNonce)
+        public string SSORequest(string email, string password, string MBIKeyOldNonce)
         {
             string SSO_XML = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
             <Envelope xmlns=""http://schemas.xmlsoap.org/soap/envelope/""

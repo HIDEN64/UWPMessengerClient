@@ -34,14 +34,14 @@ namespace UWPMessengerClient.MSNP
                 transactionID++;
                 userInfo.Email = email;
                 GetMBIKeyOldNonce();
-                SOAPResult = SOAPRequests.Perform_SSO_SOAP_Request(email, password, MBIKeyOldNonce);
+                SOAPResult = SOAPRequests.SSORequest(email, password, MBIKeyOldNonce);
                 GetContactsFromDatabase();
                 string response_struct = GetSSOReturnValue();
                 NSSocket.SendCommand($"USR {transactionID} SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
                 output_string = NSSocket.ReceiveMessage(received_bytes);//receive USR OK
                 NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
-                MembershipLists = SOAPRequests.MakeMembershipListsSOAPRequest();
-                AddressBook = SOAPRequests.MakeAddressBookSOAPRequest();
+                MembershipLists = SOAPRequests.FindMembership();
+                AddressBook = SOAPRequests.ABFindAll();
                 FillContactListFromSOAP();
                 FillContactsInForwardListFromSOAP();
                 SendBLP();

@@ -21,8 +21,8 @@ namespace UWPMessengerClient
 {
     public sealed partial class LoginPage : Page
     {
-        NotificationServerConnection notificationServerConnection;
-        ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+        private NotificationServerConnection notificationServerConnection;
+        private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
         public LoginPage()
         {
@@ -109,14 +109,9 @@ namespace UWPMessengerClient
                 DisableProgressRingAndShowButtons();
                 return;
             }
-            this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
-        }
-
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
-        {
-            base.OnNavigatedFrom(e);
             App app = Application.Current as App;
             app.notificationServerConnection = notificationServerConnection;
+            this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
         }
 
         private async void Login_Click(object sender, RoutedEventArgs e)

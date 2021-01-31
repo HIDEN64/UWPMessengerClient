@@ -130,6 +130,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="ContactBlockedConverter.cs" />
+    <Compile Include="GroupInfoList.cs" />
     <Compile Include="MessageHistoryConverter.cs" />
     <Compile Include="MSNP\DatabaseAccess.cs" />
     <Compile Include="MSNP\Contact.cs" />

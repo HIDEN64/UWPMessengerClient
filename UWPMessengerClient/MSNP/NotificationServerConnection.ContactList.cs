@@ -268,7 +268,7 @@ namespace UWPMessengerClient.MSNP
                         break;
                     case "MSNP15":
                         transactionID++;
-                        SOAPRequests.MakeAddContactSOAPRequest(newContactEmail);
+                        SOAPRequests.ABContactAdd(newContactEmail);
                         string contact_payload = ReturnXMLNewContactPayload(newContactEmail);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
                         NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n{contact_payload}");
@@ -305,7 +305,7 @@ namespace UWPMessengerClient.MSNP
                         break;
                     case "MSNP15":
                         transactionID++;
-                        SOAPRequests.MakeAddContactSOAPRequest(contactToAccept.Email);
+                        SOAPRequests.ABContactAdd(contactToAccept.Email);
                         string contact_payload = ReturnXMLNewContactPayload(contactToAccept.Email);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
                         NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n{contact_payload}");
@@ -339,7 +339,7 @@ namespace UWPMessengerClient.MSNP
                         break;
                     case "MSNP15":
                         transactionID++;
-                        SOAPRequests.MakeRemoveContactSOAPRequest(contactToRemove);
+                        SOAPRequests.ABContactDelete(contactToRemove);
                         string contact_payload = ReturnXMLContactPayload(contactToRemove);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
                         NSSocket.SendCommand($"RML {transactionID} {payload_length}\r\n{contact_payload}");
@@ -372,7 +372,7 @@ namespace UWPMessengerClient.MSNP
                         break;
                     case "MSNP15":
                         transactionID++;
-                        SOAPRequests.MakeBlockContactSOAPRequests(contactToBlock);
+                        SOAPRequests.BlockContactRequests(contactToBlock);
                         contactToBlock.SetListsFromListnumber((int)ListNumbers.Allow);
                         string contact_payload = ReturnXMLContactPayload(contactToBlock);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
@@ -406,7 +406,7 @@ namespace UWPMessengerClient.MSNP
                         break;
                     case "MSNP15":
                         transactionID++;
-                        SOAPRequests.MakeUnblockContactSOAPRequests(contactToUnblock);
+                        SOAPRequests.UnblockContactRequests(contactToUnblock);
                         contactToUnblock.SetListsFromListnumber((int)ListNumbers.Block);
                         string contact_payload = ReturnXMLContactPayload(contactToUnblock);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
