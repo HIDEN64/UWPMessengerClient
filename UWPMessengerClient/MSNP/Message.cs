@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Windows.UI.Xaml.Media.Imaging;
+using System.IO;
+using Windows.Storage.Streams;
+using Windows.UI.Core;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace UWPMessengerClient.MSNP
 {
@@ -19,7 +23,7 @@ namespace UWPMessengerClient.MSNP
         private bool _IsHistory;
         private int NumberOfInkChunks;
         private List<InkChunk> InkChunks = new List<InkChunk>();
-        private byte[] InkBytes;
+        public byte[] InkBytes { get; private set; }
         private BitmapImage _InkImage;
         public string InkMessageID { get; private set; }
         public string Base64Ink { get; private set; }

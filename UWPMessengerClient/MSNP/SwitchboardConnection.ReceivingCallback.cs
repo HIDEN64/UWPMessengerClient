@@ -159,16 +159,16 @@ namespace UWPMessengerClient.MSNP
         {
             SendMessageToast(message_text, sender.displayName);
             Message newMessage = new Message() { message_text = message_text, sender = sender.displayName, receiver = receiver.displayName, sender_email = sender.Email, receiver_email = receiver.Email, IsHistory = false };
-            AddToMessageList(newMessage);
+            AddToMessageListAndDatabase(newMessage);
         }
 
         protected void AddMessage(Message message)
         {
             SendMessageToast(message.message_text, message.sender);
-            AddToMessageList(message);
+            AddToMessageListAndDatabase(message);
         }
 
-        protected void AddToMessageList(Message message)
+        protected void AddToMessageListAndDatabase(Message message)
         {
             var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
@@ -178,6 +178,16 @@ namespace UWPMessengerClient.MSNP
                 {
                     DatabaseAccess.AddMessageToTable(userInfo.Email, PrincipalInfo.Email, message);
                 }
+                MessageReceived?.Invoke(this, new EventArgs());
+            });
+        }
+
+        protected void AddToMessageList(Message message)
+        {
+            var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PrincipalInfo.typingUser = null;
+                MessageList.Add(message);
                 MessageReceived?.Invoke(this, new EventArgs());
             });
         }
@@ -196,7 +206,7 @@ namespace UWPMessengerClient.MSNP
         public void HandleInk(string msg_payload)
         {
             string[] MSGPayloadParams = msg_payload.Split("\r\n");
-            Message InkMessage = new Message() { sender = PrincipalInfo.displayName, sender_email = PrincipalInfo.Email, receiver = userInfo.displayName, receiver_email = userInfo.Email };
+            Message InkMessage = new Message() { message_text = $"{PrincipalInfo.displayName} sent you ink", sender_email = PrincipalInfo.Email, receiver = userInfo.displayName, receiver_email = userInfo.Email };
             if (MSGPayloadParams.Length > 4)
             {
                 string message_id = MSGPayloadParams[2].Split(" ")[1];
@@ -210,6 +220,7 @@ namespace UWPMessengerClient.MSNP
             {
                 InkMessage.ReceiveSingleInk(MSGPayloadParams[3]);
             }
+            SendMessageToast(InkMessage.message_text, InkMessage.sender);
             AddToMessageList(InkMessage);
         }
 

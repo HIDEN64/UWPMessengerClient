@@ -184,6 +184,7 @@
     </Compile>
     <Compile Include="MSNP\SocketCommands.cs" />
     <Compile Include="StatusConverter.cs" />
+    <Compile Include="StringVisibilityConverter.cs" />
     <Compile Include="UrlDecodingConverter.cs" />
     <Compile Include="MSNP\UserInfo.cs" />
   </ItemGroup>

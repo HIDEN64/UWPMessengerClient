@@ -263,7 +263,7 @@ namespace UWPMessengerClient.MSNP
                         });
                         string nudge_text = $"You sent {PrincipalInfo.displayName} a nudge";
                         Message newMessage = new Message() { message_text = nudge_text, receiver = PrincipalInfo.displayName, sender_email = userInfo.Email, receiver_email = PrincipalInfo.Email, IsHistory = false };
-                        AddToMessageList(newMessage);
+                        AddToMessageListAndDatabase(newMessage);
                     }
                     catch (Exception ex)
                     {
@@ -377,6 +377,7 @@ namespace UWPMessengerClient.MSNP
                         {
                             MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
                         });
+                        return;
                     }
                 }
             }
@@ -395,8 +396,11 @@ namespace UWPMessengerClient.MSNP
                     {
                         MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
                     });
+                    return;
                 }
             }
+            Message InkMessage = new Message() { message_text = $"You sent {PrincipalInfo.displayName} ink", sender_email = userInfo.Email, receiver = PrincipalInfo.displayName, receiver_email = PrincipalInfo.Email };
+            AddToMessageList(InkMessage);
             //sends ink in ISF format
         }
 

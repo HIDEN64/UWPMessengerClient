@@ -26,6 +26,7 @@ namespace UWPMessengerClient
     {
         private NotificationServerConnection notificationServerConnection;
         private SwitchboardConnection switchboardConnection;
+        private Message MessageInContext;
 
         public ChatPage()
         {
@@ -152,6 +153,33 @@ namespace UWPMessengerClient
                 await switchboardConnection.SendInk(ink_bytes);
             }
             inkCanvas.InkPresenter.StrokeContainer.Clear();
+        }
+
+        private async Task LoadReceivedInk()
+        {
+            if (MessageInContext.InkBytes != null)
+            {
+                using (MemoryStream memoryStream = new MemoryStream(MessageInContext.InkBytes))
+                {
+                    using (IRandomAccessStream stream = memoryStream.AsRandomAccessStream())
+                    {
+                        await ReceivedInkCanvas.InkPresenter.StrokeContainer.LoadAsync(stream);
+                    }
+                }
+                MessagePivot.SelectedIndex = 2;//received ink index
+            }
+        }
+
+        private async void messageList_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            MessageInContext = (Message)((FrameworkElement)e.OriginalSource).DataContext;
+            await LoadReceivedInk();
+        }
+
+        private async void messageList_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            MessageInContext = (Message)((FrameworkElement)e.OriginalSource).DataContext;
+            await LoadReceivedInk();
         }
     }
 }
