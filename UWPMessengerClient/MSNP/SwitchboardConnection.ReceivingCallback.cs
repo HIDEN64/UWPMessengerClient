@@ -18,6 +18,7 @@ namespace UWPMessengerClient.MSNP
         private string next_response;
         public ObservableCollection<Message> MessageList { get; set; } = new ObservableCollection<Message>();
         public event EventHandler MessageReceived;
+        public event EventHandler PrincipalInvited;
 
         public void ReceivingCallback(IAsyncResult asyncResult)
         {
@@ -109,6 +110,13 @@ namespace UWPMessengerClient.MSNP
             {
                 connected = true;
             }
+        }
+
+        protected void HandleCAL()
+        {
+            string[] cal_params = current_response.Split(" ");
+            SessionID = cal_params[3];
+            PrincipalInvited?.Invoke(this, new EventArgs());
         }
 
         protected void HandleMSG()

@@ -27,6 +27,7 @@ namespace UWPMessengerClient
         private NotificationServerConnection notificationServerConnection;
         private SwitchboardConnection switchboardConnection;
         private Message MessageInContext;
+        public string SessionID { get; private set; }
 
         public ChatPage()
         {
@@ -36,12 +37,14 @@ namespace UWPMessengerClient
             CoreInputDeviceTypes.Pen;
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             notificationServerConnection = (NotificationServerConnection)e.Parameter;
             switchboardConnection = notificationServerConnection.SBConnection;
+            SessionID = switchboardConnection.SessionID;
             notificationServerConnection.NotConnected += NotificationServerConnection_NotConnected;
-            Task task = GroupMessages();
+            await GroupMessages();
+            switchboardConnection.PrincipalInvited += SwitchboardConnection_PrincipalInvited;
             switchboardConnection.HistoryLoaded += SwitchboardConnection_HistoryLoaded;
             switchboardConnection.MessageReceived += SwitchboardConnection_MessageReceived;
             BackButton.IsEnabled = this.Frame.CanGoBack;
@@ -52,6 +55,7 @@ namespace UWPMessengerClient
         {
             base.OnNavigatedFrom(e);
             notificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
+            switchboardConnection.PrincipalInvited -= SwitchboardConnection_PrincipalInvited;
             switchboardConnection.HistoryLoaded -= SwitchboardConnection_HistoryLoaded;
             switchboardConnection.MessageReceived -= SwitchboardConnection_MessageReceived;
         }
@@ -63,6 +67,11 @@ namespace UWPMessengerClient
                 await ShowDialog("Error", "Connection to the server was lost: exiting...");
                 this.Frame.Navigate(typeof(LoginPage));
             });
+        }
+
+        private void SwitchboardConnection_PrincipalInvited(object sender, EventArgs e)
+        {
+            SessionID = switchboardConnection.SessionID;
         }
 
         private async void SwitchboardConnection_MessageReceived(object sender, EventArgs e)

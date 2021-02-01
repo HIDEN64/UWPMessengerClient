@@ -16,9 +16,9 @@ namespace UWPMessengerClient.MSNP
         protected SocketCommands SBSocket;
         protected string SBAddress;
         protected int SBPort = 0;
-        protected string AuthString;
-        protected string SessionID;
         protected int transactionID = 0;
+        protected string AuthString;
+        public string SessionID { get; protected set; }
         public UserInfo PrincipalInfo { get; set; } = new UserInfo();
         public UserInfo userInfo { get; set; } = new UserInfo();
         public bool connected { get; set; }
@@ -50,6 +50,7 @@ namespace UWPMessengerClient.MSNP
             {
                 {"USR", () => HandleUSR() },
                 {"ANS", () => HandleANS() },
+                {"CAL", () => HandleCAL() },
                 {"JOI", () => principalsConnected++ },
                 {"IRO", () => principalsConnected++ },
                 {"MSG", () => HandleMSG() }
@@ -64,6 +65,7 @@ namespace UWPMessengerClient.MSNP
             {
                 {"USR", () => HandleUSR() },
                 {"ANS", () => HandleANS() },
+                {"CAL", () => HandleCAL() },
                 {"JOI", () => principalsConnected++ },
                 {"IRO", () => principalsConnected++ },
                 {"MSG", () => HandleMSG() }
@@ -81,6 +83,7 @@ namespace UWPMessengerClient.MSNP
             {
                 {"USR", () => HandleUSR() },
                 {"ANS", () => HandleANS() },
+                {"CAL", () => HandleCAL() },
                 {"JOI", () => principalsConnected++ },
                 {"IRO", () => principalsConnected++ },
                 {"MSG", () => HandleMSG() }

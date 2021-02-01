@@ -113,13 +113,20 @@ namespace UWPMessengerClient
                     Window.Current.Activate();
                     ExtendAcrylicIntoTitleBar();
                 }
-                
-                ToastNotificationHistory notificationHistory = ToastNotificationManager.History;
-                switch (args.Argument)
+                else
                 {
-                    case "newMessages":
-                        notificationHistory.RemoveGroup("messages");
-                        break;
+                    ToastNotificationHistory notificationHistory = ToastNotificationManager.History;
+                    switch (args.Argument)
+                    {
+                        case "newMessages":
+                            notificationHistory.RemoveGroup("messages");
+                            if (rootFrame.Content is ChatPage && (rootFrame.Content as ChatPage).SessionID.Equals(notificationServerConnection.SBConnection.SessionID))
+                            {
+                                break;
+                            }
+                            rootFrame.Navigate(typeof(ChatPage), notificationServerConnection);
+                            break;
+                    }
                 }
             }
         }
