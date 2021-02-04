@@ -42,7 +42,7 @@ namespace UWPMessengerClient
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
-            System.Threading.Tasks.Task task = MSNP.DatabaseAccess.InitializeDatabase();
+            Task task = DatabaseAccess.InitializeDatabase();
         }
 
         /// <summary>
@@ -116,15 +116,16 @@ namespace UWPMessengerClient
                 else
                 {
                     ToastNotificationHistory notificationHistory = ToastNotificationManager.History;
-                    switch (args.Argument)
+                    QueryString arguments = QueryString.Parse(args.Argument);
+                    switch (arguments["action"])
                     {
-                        case "newMessages":
+                        case "newMessage":
                             notificationHistory.RemoveGroup("messages");
-                            if (rootFrame.Content is ChatPage && (rootFrame.Content as ChatPage).SessionID.Equals(notificationServerConnection.SBConnection.SessionID))
+                            if (rootFrame.Content is ChatPage && (rootFrame.Content as ChatPage).SessionID.Equals(arguments["sessionID"]))
                             {
                                 break;
                             }
-                            rootFrame.Navigate(typeof(ChatPage), notificationServerConnection);
+                            rootFrame.Navigate(typeof(ChatPage), new ChatPageNavigationParams() { notificationServerConnection = notificationServerConnection, SessionID = arguments["sessionID"], ExistingSwitchboard = true });
                             break;
                     }
                 }
@@ -163,7 +164,7 @@ namespace UWPMessengerClient
                                 notificationHistory.RemoveGroup("messages");
                                 break;
                             case "ReplyMessage":
-                                switchboardConnection = notificationServerConnection.SBConnection;
+                                switchboardConnection = notificationServerConnection.ReturnSwitchboardFromSessionID(arguments["sessionID"]);
                                 string reply = (string)userInput["ReplyBox"];
                                 await switchboardConnection.SendTextMessage(reply);
                                 break;

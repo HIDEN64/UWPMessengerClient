@@ -129,12 +129,14 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ChatPageNavigationParams.cs" />
     <Compile Include="Converters\ContactBlockedConverter.cs" />
     <Compile Include="GroupInfoList.cs" />
     <Compile Include="Converters\MessageHistoryConverter.cs" />
     <Compile Include="MSNP\DatabaseAccess.cs" />
     <Compile Include="MSNP\Contact.cs" />
     <Compile Include="MSNP\Enums.cs" />
+    <Compile Include="MSNP\EventArgsClasses.cs" />
     <Compile Include="MSNP\Exceptions\NotConnectedException.cs" />
     <Compile Include="MSNP\Exceptions\VersionNotSelectedException.cs" />
     <Compile Include="LoginPage.xaml.cs">

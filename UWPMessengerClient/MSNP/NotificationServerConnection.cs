@@ -20,7 +20,7 @@ namespace UWPMessengerClient.MSNP
     public partial class NotificationServerConnection : INotifyPropertyChanged
     {
         protected SocketCommands NSSocket;
-        public SwitchboardConnection SBConnection { get; set; }
+        public List<SwitchboardConnection> SBConnections { get; set; } = new List<SwitchboardConnection>();
         //notification server(escargot) address and address for SSO auth
         protected string NSaddress = "m1.escargot.log1p.xyz";
         protected string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
@@ -34,15 +34,15 @@ namespace UWPMessengerClient.MSNP
         public string MSNPVersion { get; protected set; } = "MSNP15";
         protected int transactionID = 0;
         protected uint clientCapabilities = 0x84140428;
-        public int ContactIndexToChat { get; set; }
+        public Contact ContactToChat { get; set; }
         public string UserPresenceStatus { get; set; }
         public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;
         public UserInfo userInfo { get; set; } = new UserInfo();
         public event PropertyChangedEventHandler PropertyChanged;
-        public event EventHandler<EventArgs> NotConnected;
+        public event EventHandler NotConnected;
         protected Dictionary<string, Action> command_handlers;
         private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
-        public ObservableCollection<string> errorLog
+        public ObservableCollection<string> ErrorLog
         {
             get => _errorLog;
             set
@@ -102,7 +102,7 @@ namespace UWPMessengerClient.MSNP
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                errorLog.Add(error);
+                ErrorLog.Add(error);
             });
         }
 
@@ -168,6 +168,12 @@ namespace UWPMessengerClient.MSNP
             await Task.Run(psm_action);
         }
 
+        public async Task StartChat(Contact contactToChat)
+        {
+            ContactToChat = contactToChat;
+            await InitiateSB();
+        }
+
         public async Task Ping()
         {
             bool IsConnected;
@@ -198,13 +204,16 @@ namespace UWPMessengerClient.MSNP
             while (IsConnected);
         }
 
-        public async Task InitiateSB()
+        protected async Task InitiateSB()
         {
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
-            SBConnection = switchboardConnection;
-            SBConnection.KeepMessagingHistory = KeepMessagingHistoryInSwitchboard;
             transactionID++;
             await Task.Run(() => NSSocket.SendCommand($"XFR {transactionID} SB\r\n"));
+        }
+
+        public SwitchboardConnection ReturnSwitchboardFromSessionID(string session_id)
+        {
+            var sb_item = SBConnections.FirstOrDefault(sb => sb.SessionID == session_id);
+            return sb_item;
         }
 
         public void Exit()

@@ -55,7 +55,7 @@ namespace UWPMessengerClient
             if (e.Parameter != null)
             {
                 notificationServerConnection = (NotificationServerConnection)e.Parameter;
-                errors = notificationServerConnection.errorLog;
+                errors = notificationServerConnection.ErrorLog;
                 notificationServerConnection.KeepMessagingHistoryInSwitchboard = (bool)localSettings.Values["KeepHistory"];
             }
             var task = TestServer();

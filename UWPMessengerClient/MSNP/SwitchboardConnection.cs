@@ -34,7 +34,7 @@ namespace UWPMessengerClient.MSNP
         public event EventHandler HistoryLoaded;
         Dictionary<string, Action> command_handlers;
         private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
-        public ObservableCollection<string> errorLog
+        public ObservableCollection<string> ErrorLog
         {
             get => _errorLog;
             set
@@ -42,21 +42,6 @@ namespace UWPMessengerClient.MSNP
                 _errorLog = value;
                 NotifyPropertyChanged();
             }
-        }
-
-        public SwitchboardConnection(string email, string userDisplayName)
-        {
-            command_handlers = new Dictionary<string, Action>()
-            {
-                {"USR", () => HandleUSR() },
-                {"ANS", () => HandleANS() },
-                {"CAL", () => HandleCAL() },
-                {"JOI", () => principalsConnected++ },
-                {"IRO", () => principalsConnected++ },
-                {"MSG", () => HandleMSG() }
-            };
-            userInfo.Email = email;
-            userInfo.displayName = userDisplayName;
         }
 
         public SwitchboardConnection(string address, int port, string email, string authString, string userDisplayName)
@@ -98,13 +83,6 @@ namespace UWPMessengerClient.MSNP
             PrincipalInfo.Email = principalEmail;
         }
 
-        public void SetAddressPortAndAuthString(string address, int port, string AuthString)
-        {
-            SBAddress = address;
-            SBPort = port;
-            this.AuthString = AuthString;
-        }
-
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -114,7 +92,7 @@ namespace UWPMessengerClient.MSNP
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                errorLog.Add(error);
+                ErrorLog.Add(error);
             });
         }
 
@@ -203,8 +181,7 @@ namespace UWPMessengerClient.MSNP
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         Message newMessage = new Message() { message_text = message_text, sender = userInfo.displayName, receiver = PrincipalInfo.displayName, sender_email = userInfo.Email, receiver_email = PrincipalInfo.Email, IsHistory = false };
-                        MessageList.Add(newMessage);
-                        DatabaseAccess.AddMessageToTable(userInfo.Email, PrincipalInfo.Email, newMessage);
+                        AddToMessageListAndDatabase(newMessage);
                     });
                 });
                 try

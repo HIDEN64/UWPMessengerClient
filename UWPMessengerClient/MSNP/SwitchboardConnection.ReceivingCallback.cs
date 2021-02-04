@@ -17,7 +17,7 @@ namespace UWPMessengerClient.MSNP
         private string current_response;
         private string next_response;
         public ObservableCollection<Message> MessageList { get; set; } = new ObservableCollection<Message>();
-        public event EventHandler MessageReceived;
+        public event EventHandler NewMessage;
         public event EventHandler PrincipalInvited;
 
         public void ReceivingCallback(IAsyncResult asyncResult)
@@ -110,6 +110,7 @@ namespace UWPMessengerClient.MSNP
             {
                 connected = true;
             }
+            FillMessageHistory();
         }
 
         protected void HandleCAL()
@@ -167,12 +168,14 @@ namespace UWPMessengerClient.MSNP
         {
             SendMessageToast(message_text, sender.displayName);
             Message newMessage = new Message() { message_text = message_text, sender = sender.displayName, receiver = receiver.displayName, sender_email = sender.Email, receiver_email = receiver.Email, IsHistory = false };
+            NullTypingUser();
             AddToMessageListAndDatabase(newMessage);
         }
 
         protected void AddMessage(Message message)
         {
             SendMessageToast(message.message_text, message.sender);
+            NullTypingUser();
             AddToMessageListAndDatabase(message);
         }
 
@@ -180,13 +183,13 @@ namespace UWPMessengerClient.MSNP
         {
             var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                PrincipalInfo.typingUser = null;
+                NullTypingUser();
                 MessageList.Add(message);
                 if (KeepMessagingHistory)
                 {
                     DatabaseAccess.AddMessageToTable(userInfo.Email, PrincipalInfo.Email, message);
                 }
-                MessageReceived?.Invoke(this, new EventArgs());
+                NewMessage?.Invoke(this, new EventArgs());
             });
         }
 
@@ -194,9 +197,8 @@ namespace UWPMessengerClient.MSNP
         {
             var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                PrincipalInfo.typingUser = null;
                 MessageList.Add(message);
-                MessageReceived?.Invoke(this, new EventArgs());
+                NewMessage?.Invoke(this, new EventArgs());
             });
         }
 
@@ -219,8 +221,7 @@ namespace UWPMessengerClient.MSNP
             {
                 string message_id = MSGPayloadParams[2].Split(" ")[1];
                 string chunks_str = MSGPayloadParams[3].Split(" ")[1];
-                int chunks = 1;
-                int.TryParse(chunks_str, out chunks);
+                int.TryParse(chunks_str, out int chunks);
                 string ink_chunk = MSGPayloadParams[5];
                 InkMessage.ReceiveFirstInkChunk(chunks, message_id, ink_chunk);
             }
@@ -229,6 +230,7 @@ namespace UWPMessengerClient.MSNP
                 InkMessage.ReceiveSingleInk(MSGPayloadParams[3]);
             }
             SendMessageToast(InkMessage.message_text, InkMessage.sender);
+            NullTypingUser();
             AddToMessageList(InkMessage);
         }
 
@@ -262,23 +264,37 @@ namespace UWPMessengerClient.MSNP
             });
         }
 
+        public void NullTypingUser()
+        {
+            var Null_Task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PrincipalInfo.typingUser = null;
+            });
+        }
+
         public void ShowNudge()
         {
             string nudge_text = $"{HttpUtility.UrlDecode(PrincipalInfo.displayName)} sent you a nudge!";
             Message newMessage = new Message() { message_text = nudge_text, receiver = userInfo.displayName, sender_email = PrincipalInfo.Email, receiver_email = userInfo.Email, IsHistory = false };
+            NullTypingUser();
             AddMessage(newMessage);
         }
 
         public void SendMessageToast(string message_text, string message_sender)
         {
             var content = new ToastContentBuilder()
-                .AddToastActivationInfo("newMessages", ToastActivationType.Foreground)
+                .AddToastActivationInfo(new QueryString()
+                {
+                    {"action", "newMessage" },
+                    {"sessionID", SessionID }
+                }.ToString(), ToastActivationType.Foreground)
                 .AddText(HttpUtility.UrlDecode(message_sender))
                 .AddText(message_text)
                 .AddInputTextBox("ReplyBox", "Type your reply")
                 .AddButton("Reply", ToastActivationType.Background, new QueryString()
                 {
                     {"action", "ReplyMessage" },
+                    {"sessionID", SessionID }
                 }.ToString())
                 .AddButton("Dismiss all", ToastActivationType.Background, new QueryString()
                 {

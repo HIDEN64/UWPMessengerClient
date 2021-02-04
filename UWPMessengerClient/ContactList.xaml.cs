@@ -16,14 +16,27 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using UWPMessengerClient.MSNP;
 using Windows.UI.Core;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace UWPMessengerClient
 {
-    public sealed partial class ContactList : Page
+    public sealed partial class ContactList : Page, INotifyPropertyChanged
     {
-        private NotificationServerConnection notificationServerConnection;
+        private NotificationServerConnection _notificationServerConnection;
         private ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
         private Contact ContactInContext;
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private NotificationServerConnection notificationServerConnection
+        {
+            get => _notificationServerConnection;
+            set
+            {
+                _notificationServerConnection = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         public ContactList()
         {
@@ -65,6 +78,14 @@ namespace UWPMessengerClient
             base.OnNavigatedFrom(e);
         }
 
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            });
+        }
+
         private async void NotificationServerConnection_NotConnected(object sender, EventArgs e)
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
@@ -103,12 +124,8 @@ namespace UWPMessengerClient
             {
                 try
                 {
-                    if (notificationServerConnection.ContactIndexToChat != contactListView.SelectedIndex || notificationServerConnection.SBConnection == null)
-                    {
-                        notificationServerConnection.ContactIndexToChat = contactListView.SelectedIndex;
-                        await notificationServerConnection.InitiateSB();
-                    }
-                    this.Frame.Navigate(typeof(ChatPage), notificationServerConnection);
+                    await notificationServerConnection.StartChat(ContactInContext);
+                    this.Frame.Navigate(typeof(ChatPage), new ChatPageNavigationParams() { notificationServerConnection = notificationServerConnection });
                 }
                 catch (Exception e)
                 {
@@ -129,6 +146,7 @@ namespace UWPMessengerClient
 
         private async void start_chat_button_Click(object sender, RoutedEventArgs e)
         {
+            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
             await StartChat();
         }
 
@@ -252,6 +270,7 @@ namespace UWPMessengerClient
 
         private async void contactListView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
+            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
             await StartChat();
         }
 

@@ -21,6 +21,8 @@ namespace UWPMessengerClient.MSNP
         private string output_string;
         private string current_response;
         private string next_response;
+        public event EventHandler<SwitchboardCreatedEventArgs> SwitchboardCreated;
+        public event EventHandler<RNGReceivedEventArgs> RNGReceived;
 
         public void ReceivingCallback(IAsyncResult asyncResult)
         {
@@ -447,9 +449,12 @@ namespace UWPMessengerClient.MSNP
                 default:
                     throw new Exceptions.VersionNotSelectedException();
             }
-            SBConnection.SetAddressPortAndAuthString(sb_address, sb_port, auth_string);
-            await SBConnection.LoginToNewSwitchboardAsync();
-            await SBConnection.InvitePrincipal(ContactsInForwardList[ContactIndexToChat].Email, ContactsInForwardList[ContactIndexToChat].displayName);
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, auth_string, userInfo.displayName);
+            switchboardConnection.KeepMessagingHistory = KeepMessagingHistoryInSwitchboard;
+            await switchboardConnection.LoginToNewSwitchboardAsync();
+            await switchboardConnection.InvitePrincipal(ContactToChat.Email, ContactToChat.displayName);
+            SBConnections.Add(switchboardConnection);
+            SwitchboardCreated?.Invoke(this, new SwitchboardCreatedEventArgs() { switchboard = switchboardConnection});
         }
 
         public void HandleRNG()
@@ -464,9 +469,10 @@ namespace UWPMessengerClient.MSNP
             string principalEmail = RNGParams[5];
             string principalName = RNGParams[6];
             SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, authString, userInfo.displayName, principalName, principalEmail, sessionID);
-            SBConnection = switchboardConnection;
-            SBConnection.KeepMessagingHistory = KeepMessagingHistoryInSwitchboard;
-            _ = SBConnection.AnswerRNG();
+            switchboardConnection.KeepMessagingHistory = KeepMessagingHistoryInSwitchboard;
+            _ = switchboardConnection.AnswerRNG();
+            SBConnections.Add(switchboardConnection);
+            RNGReceived?.Invoke(this, new RNGReceivedEventArgs() { switchboard = switchboardConnection });
         }
 
         private void ShowNewContactToast(Contact contact)
