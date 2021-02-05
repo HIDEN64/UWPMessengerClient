@@ -10,7 +10,6 @@ namespace UWPMessengerClient
     class ChatPageNavigationParams
     {
         public NotificationServerConnection notificationServerConnection;
-        public string SessionID;
-        public bool ExistingSwitchboard;
+        public string SBConversationID;
     }
 }

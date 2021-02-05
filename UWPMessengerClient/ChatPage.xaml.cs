@@ -25,25 +25,25 @@ namespace UWPMessengerClient
     public sealed partial class ChatPage : Page, INotifyPropertyChanged
     {
         private NotificationServerConnection _notificationServerConnection;
-        private SwitchboardConnection _switchboardConnection;
+        private SBConversation _conversation;
         private Message MessageInContext;
+        public string ConversationID { get; private set; }
         public event PropertyChangedEventHandler PropertyChanged;
-        public string SessionID { get; private set; }
-        private SwitchboardConnection switchboardConnection
-        {
-            get => _switchboardConnection;
-            set
-            {
-                _switchboardConnection = value;
-                NotifyPropertyChanged();
-            }
-        }
         private NotificationServerConnection notificationServerConnection
         {
             get => _notificationServerConnection;
             set
             {
                 _notificationServerConnection = value;
+                NotifyPropertyChanged();
+            }
+        }
+        private SBConversation conversation
+        {
+            get => _conversation;
+            set
+            {
+                _conversation = value;
                 NotifyPropertyChanged();
             }
         }
@@ -60,26 +60,19 @@ namespace UWPMessengerClient
         {
             ChatPageNavigationParams navigationParams = (ChatPageNavigationParams)e.Parameter;
             notificationServerConnection = navigationParams.notificationServerConnection;
-            SessionID = navigationParams.SessionID;
-            if (navigationParams.ExistingSwitchboard)
-            {
-                await AssignSwitchboard(notificationServerConnection.ReturnSwitchboardFromSessionID(SessionID));
-            }
+            ConversationID = navigationParams.SBConversationID;
+            conversation = notificationServerConnection.ReturnConversationFromConversationID(ConversationID);
             notificationServerConnection.NotConnected += NotificationServerConnection_NotConnected;
-            notificationServerConnection.SwitchboardCreated += NotificationServerConnection_SwitchboardCreated;
-            notificationServerConnection.RNGReceived += NotificationServerConnection_RNGReceived;
-            BackButton.IsEnabled = this.Frame.CanGoBack;
+            conversation.MessageListUpdated += Conversation_MessageListUpdated;
+            BackButton.IsEnabled = Frame.CanGoBack;
+            await GroupMessages();
             base.OnNavigatedTo(e);
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             notificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
-            notificationServerConnection.SwitchboardCreated -= NotificationServerConnection_SwitchboardCreated;
-            if (switchboardConnection != null)
-            {
-                ExitFromCurrentSwitchboard();
-            }
+            conversation.MessageListUpdated -= Conversation_MessageListUpdated;
             base.OnNavigatedFrom(e);
         }
 
@@ -91,27 +84,6 @@ namespace UWPMessengerClient
             });
         }
 
-        private async void NotificationServerConnection_RNGReceived(object sender, RNGReceivedEventArgs e)
-        {
-            if (switchboardConnection is null)
-            {
-                await AssignSwitchboard(e.switchboard);
-            }
-            else
-            {
-                if (switchboardConnection.PrincipalInfo.Email == e.switchboard.PrincipalInfo.Email)
-                {
-                    ExitFromCurrentSwitchboard();
-                    await AssignSwitchboard(e.switchboard);
-                }
-            }
-        }
-
-        private async void NotificationServerConnection_SwitchboardCreated(object sender, SwitchboardCreatedEventArgs e)
-        {
-            await AssignSwitchboard(e.switchboard);
-        }
-
         private async void NotificationServerConnection_NotConnected(object sender, EventArgs e)
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
@@ -121,24 +93,15 @@ namespace UWPMessengerClient
             });
         }
 
-        private void SwitchboardConnection_PrincipalInvited(object sender, EventArgs e)
-        {
-            SessionID = switchboardConnection.SessionID;
-        }
-
-        private async void SwitchboardConnection_MessageReceived(object sender, EventArgs e)
-        {
-            await GroupMessages();
-        }
-
-        private async void SwitchboardConnection_HistoryLoaded(object sender, EventArgs e)
+        private async void Conversation_MessageListUpdated(object sender, EventArgs e)
         {
             await GroupMessages();
         }
 
         private async Task GroupMessages()
         {
-            var groups = from message in switchboardConnection.MessageList
+            if (conversation.Messages is null) { return; }
+            var groups = from message in conversation.Messages
                          group message by message.IsHistory into message_group
                          select new GroupInfoList(message_group) { Key = message_group.Key };
             await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -147,29 +110,11 @@ namespace UWPMessengerClient
             });
         }
 
-        private async Task AssignSwitchboard(SwitchboardConnection switchboard)
-        {
-            switchboardConnection = switchboard;
-            switchboardConnection.PrincipalInvited += SwitchboardConnection_PrincipalInvited;
-            switchboardConnection.HistoryLoaded += SwitchboardConnection_HistoryLoaded;
-            switchboardConnection.NewMessage += SwitchboardConnection_MessageReceived;
-            SessionID = switchboardConnection.SessionID;
-            await GroupMessages();
-        }
-
-        private void ExitFromCurrentSwitchboard()
-        {
-            switchboardConnection.PrincipalInvited -= SwitchboardConnection_PrincipalInvited;
-            switchboardConnection.HistoryLoaded -= SwitchboardConnection_HistoryLoaded;
-            switchboardConnection.NewMessage -= SwitchboardConnection_MessageReceived;
-            switchboardConnection.Exit();
-        }
-
         private async Task SendMessage()
         {
             if (messageBox.Text != "")
             {
-                await switchboardConnection.SendTextMessage(messageBox.Text);
+                await conversation.SendTextMessage(messageBox.Text);
                 messageBox.Text = "";
                 await GroupMessages();
             }
@@ -200,13 +145,13 @@ namespace UWPMessengerClient
         {
             if (messageBox.Text != "")
             {
-                await switchboardConnection.SendTypingUser();
+                await conversation.SendTypingUser();
             }
         }
 
         private async void nudgeButton_Click(object sender, RoutedEventArgs e)
         {
-            await switchboardConnection.SendNudge();
+            await conversation.SendNudge();
         }
 
         public async Task ShowDialog(string title, string message)
@@ -229,7 +174,7 @@ namespace UWPMessengerClient
                     await inkCanvas.InkPresenter.StrokeContainer.SaveAsync(stream);
                 }
                 byte[] ink_bytes = memoryStream.ToArray();
-                await switchboardConnection.SendInk(ink_bytes);
+                await conversation.SendInk(ink_bytes);
             }
             inkCanvas.InkPresenter.StrokeContainer.Clear();
         }

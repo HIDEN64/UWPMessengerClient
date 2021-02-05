@@ -110,7 +110,7 @@ namespace UWPMessengerClient
                 return;
             }
             App app = Application.Current as App;
-            app.notificationServerConnection = notificationServerConnection;
+            app.NotificationServerConnection = notificationServerConnection;
             this.Frame.Navigate(typeof(ContactList), notificationServerConnection);
         }
 

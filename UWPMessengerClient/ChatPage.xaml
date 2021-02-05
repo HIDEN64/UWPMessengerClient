@@ -36,7 +36,7 @@
             <ColumnDefinition Width="15"/>
         </Grid.ColumnDefinitions>
         <Button x:Name="BackButton" Style="{ThemeResource NavigationBackButtonNormalStyle}" Click="BackButton_Click" Grid.Column="1" Grid.Row="1"/>
-        <TextBlock Text="{x:Bind switchboardConnection.PrincipalInfo.displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontWeight="Bold" TextWrapping="Wrap"
+        <TextBlock Text="{x:Bind conversation.ContactInfo.displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontWeight="Bold" TextWrapping="Wrap"
                    Grid.Column="2" Grid.Row="1" FontSize="24"/>
         <ListView x:Name="messageList" Grid.Column="1" Grid.Row="4" ItemsSource="{x:Bind MessageCVS.View, Mode=OneWay}"
                 Grid.ColumnSpan="2" VerticalAlignment="Top" HorizontalAlignment="Stretch" DoubleTapped="messageList_DoubleTapped"
@@ -66,9 +66,9 @@
                 </GroupStyle>
             </ListView.GroupStyle>
         </ListView>
-        <TextBlock Text="{x:Bind switchboardConnection.PrincipalInfo.typingUser, Mode=OneWay}" FontSize="14" 
+        <TextBlock Text="{x:Bind conversation.ContactInfo.typingUser, Mode=OneWay}" FontSize="14" 
                    Margin="5" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="2" 
-                   Visibility="{x:Bind switchboardConnection.PrincipalInfo.typingUser, Converter={StaticResource StringVisibiltyConverter}, Mode=OneWay}"/>
+                   Visibility="{x:Bind conversation.ContactInfo.typingUser, Converter={StaticResource StringVisibiltyConverter}, Mode=OneWay}"/>
         <Pivot x:Name="MessagePivot" Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2">
             <PivotItem Header="Text">
                 <StackPanel>
@@ -95,7 +95,7 @@
                 </Grid>
             </PivotItem>
         </Pivot>
-        <TextBlock Text="{x:Bind switchboardConnection.userInfo.displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="24" FontWeight="Bold" TextWrapping="Wrap"
+        <TextBlock Text="{x:Bind conversation.UserInfo.displayName, Converter={StaticResource UrlDecodingConverter}, Mode=OneWay}" FontSize="24" FontWeight="Bold" TextWrapping="Wrap"
                    Grid.ColumnSpan="2" Grid.Column="1" Grid.Row="8"/>
     </Grid>
 </Page>

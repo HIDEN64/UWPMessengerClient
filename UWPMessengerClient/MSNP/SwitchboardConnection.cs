@@ -37,7 +37,7 @@ namespace UWPMessengerClient.MSNP
         public ObservableCollection<string> ErrorLog
         {
             get => _errorLog;
-            set
+            private set
             {
                 _errorLog = value;
                 NotifyPropertyChanged();
@@ -137,7 +137,6 @@ namespace UWPMessengerClient.MSNP
                 await Task.Run(() =>
                 {
                     SBSocket.SendCommand($"CAL {transactionID} {principal_email}\r\n");
-                    FillMessageHistory();
                 });
             }
             else
@@ -159,7 +158,6 @@ namespace UWPMessengerClient.MSNP
                     {
                         PrincipalInfo.displayName = principal_display_name;
                     });
-                    FillMessageHistory();
                 });
             }
             else
@@ -180,7 +178,15 @@ namespace UWPMessengerClient.MSNP
                     SBSocket.SendCommand($"MSG {transactionID} N {byte_message.Length}\r\n{message}");
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        Message newMessage = new Message() { message_text = message_text, sender = userInfo.displayName, receiver = PrincipalInfo.displayName, sender_email = userInfo.Email, receiver_email = PrincipalInfo.Email, IsHistory = false };
+                        Message newMessage = new Message()
+                        {
+                            message_text = message_text,
+                            sender = userInfo.displayName,
+                            receiver = PrincipalInfo.displayName,
+                            sender_email = userInfo.Email,
+                            receiver_email = PrincipalInfo.Email,
+                            IsHistory = false
+                        };
                         AddToMessageListAndDatabase(newMessage);
                     });
                 });
@@ -194,7 +200,12 @@ namespace UWPMessengerClient.MSNP
                     {
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ie.Message, sender = "Error", IsHistory = false });
+                            MessageList.Add(new Message()
+                            {
+                                message_text = "There was an error sending this message: " + ie.Message,
+                                sender = "Error",
+                                IsHistory = false
+                            });
                         });
                     }
                 }
@@ -202,7 +213,12 @@ namespace UWPMessengerClient.MSNP
                 {
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
+                        MessageList.Add(new Message()
+                        {
+                            message_text = "There was an error sending this message: " + ex.Message,
+                            sender = "Error",
+                            IsHistory = false
+                        });
                     });
                 }
             }
@@ -242,14 +258,26 @@ namespace UWPMessengerClient.MSNP
                             SBSocket.SendCommand($"MSG {transactionID} A {byte_message.Length}\r\n{nudge_message}");
                         });
                         string nudge_text = $"You sent {PrincipalInfo.displayName} a nudge";
-                        Message newMessage = new Message() { message_text = nudge_text, receiver = PrincipalInfo.displayName, sender_email = userInfo.Email, receiver_email = PrincipalInfo.Email, IsHistory = false };
+                        Message newMessage = new Message()
+                        {
+                            message_text = nudge_text,
+                            receiver = PrincipalInfo.displayName,
+                            sender_email = userInfo.Email,
+                            receiver_email = PrincipalInfo.Email,
+                            IsHistory = false
+                        };
                         AddToMessageListAndDatabase(newMessage);
                     }
                     catch (Exception ex)
                     {
                         await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
+                            MessageList.Add(new Message()
+                            {
+                                message_text = "There was an error sending this message: " + ex.Message,
+                                sender = "Error",
+                                IsHistory = false
+                            });
                         });
                     }
                     waitingNudge = true;
@@ -261,7 +289,12 @@ namespace UWPMessengerClient.MSNP
                 {
                     await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        MessageList.Add(new Message() { message_text = "Wait before sending nudge again", sender = "", IsHistory = false });
+                        MessageList.Add(new Message()
+                        {
+                            message_text = "Wait before sending nudge again",
+                            sender = "",
+                            IsHistory = false
+                        });
                     });
                 }
             }
@@ -293,7 +326,7 @@ namespace UWPMessengerClient.MSNP
             return message_id;
         }
 
-        public List<InkChunk> DivideInkIntoChunks(byte[] ink_bytes, string MessageId)
+        private List<InkChunk> DivideInkIntoChunks(byte[] ink_bytes, string MessageId)
         {
             List<InkChunk> InkChunks = new List<InkChunk>();
             double NumberOfChunksDouble = ink_bytes.Length / MaximumInkSize;
@@ -307,18 +340,33 @@ namespace UWPMessengerClient.MSNP
             int ink_pos = 0;
             byte[] ink_chunk = new byte[MaximumInkSize];
             Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, MaximumInkSize);
-            InkChunks.Add(new InkChunk() { ChunkNumber = 0, MessageID = MessageId, EncodedChunk = "base64:" + Convert.ToBase64String(ink_chunk) });
+            InkChunks.Add(new InkChunk()
+            {
+                ChunkNumber = 0,
+                MessageID = MessageId,
+                EncodedChunk = "base64:" + Convert.ToBase64String(ink_chunk)
+            });
             ink_pos += MaximumInkSize;
             for (int i = 1; i <= NumberOfFullChunks; i++)
             {
                 Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, MaximumInkSize);
-                InkChunks.Add(new InkChunk() { ChunkNumber = i, MessageID = MessageId, EncodedChunk = Convert.ToBase64String(ink_chunk) });
+                InkChunks.Add(new InkChunk()
+                {
+                    ChunkNumber = i,
+                    MessageID = MessageId,
+                    EncodedChunk = Convert.ToBase64String(ink_chunk)
+                });
                 ink_pos += MaximumInkSize;
             }
             int LastChunkLen = ink_bytes.Length - ink_pos;
             ink_chunk = new byte[LastChunkLen];
             Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, LastChunkLen);
-            InkChunks.Add(new InkChunk() { ChunkNumber = NumberOfChunks, MessageID = MessageId, EncodedChunk = Convert.ToBase64String(ink_chunk) });
+            InkChunks.Add(new InkChunk()
+            {
+                ChunkNumber = NumberOfChunks,
+                MessageID = MessageId,
+                EncodedChunk = Convert.ToBase64String(ink_chunk)
+            });
             return InkChunks;
         }
 
@@ -339,7 +387,12 @@ namespace UWPMessengerClient.MSNP
                 {
                     await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
+                        MessageList.Add(new Message()
+                        {
+                            message_text = "There was an error sending this message: " + ex.Message,
+                            sender = "Error",
+                            IsHistory = false
+                        });
                     });
                 }
                 for (int i = 1; i < InkChunks.Count; i++)
@@ -355,7 +408,12 @@ namespace UWPMessengerClient.MSNP
                     {
                         await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
+                            MessageList.Add(new Message()
+                            {
+                                message_text = "There was an error sending this message: " + ex.Message,
+                                sender = "Error",
+                                IsHistory = false
+                            });
                         });
                         return;
                     }
@@ -374,12 +432,23 @@ namespace UWPMessengerClient.MSNP
                 {
                     await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        MessageList.Add(new Message() { message_text = "There was an error sending this message: " + ex.Message, sender = "Error", IsHistory = false });
+                        MessageList.Add(new Message()
+                        {
+                            message_text = "There was an error sending this message: " + ex.Message,
+                            sender = "Error",
+                            IsHistory = false
+                        });
                     });
                     return;
                 }
             }
-            Message InkMessage = new Message() { message_text = $"You sent {PrincipalInfo.displayName} ink", sender_email = userInfo.Email, receiver = PrincipalInfo.displayName, receiver_email = PrincipalInfo.Email };
+            Message InkMessage = new Message()
+            {
+                message_text = $"You sent {PrincipalInfo.displayName} ink",
+                sender_email = userInfo.Email,
+                receiver = PrincipalInfo.displayName,
+                receiver_email = PrincipalInfo.Email
+            };
             AddToMessageList(InkMessage);
             //sends ink in ISF format
         }

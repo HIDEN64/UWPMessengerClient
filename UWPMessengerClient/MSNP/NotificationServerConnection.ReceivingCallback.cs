@@ -21,8 +21,7 @@ namespace UWPMessengerClient.MSNP
         private string output_string;
         private string current_response;
         private string next_response;
-        public event EventHandler<SwitchboardCreatedEventArgs> SwitchboardCreated;
-        public event EventHandler<RNGReceivedEventArgs> RNGReceived;
+        public event EventHandler<SwitchboardEventArgs> SwitchboardCreated;
 
         public void ReceivingCallback(IAsyncResult asyncResult)
         {
@@ -121,7 +120,12 @@ namespace UWPMessengerClient.MSNP
                                 select contact_in_list;
             if (!contactInList.Any())
             {
-                Contact newContact = new Contact(listnumber) { displayName = displayName, Email = email, GUID = guid };
+                Contact newContact = new Contact(listnumber)
+                {
+                    displayName = displayName,
+                    Email = email,
+                    GUID = guid
+                };
                 ContactList.Add(newContact);
                 DatabaseAccess.AddContactToTable(userInfo.Email, newContact);
                 if (newContact.onForward)
@@ -178,7 +182,11 @@ namespace UWPMessengerClient.MSNP
                                     select contact_in_list;
                 if (!contactInList.Any())
                 {
-                    Contact newContact = new Contact((int)ListNumbers.Reverse) { Email = email, displayName = displayName };
+                    Contact newContact = new Contact((int)ListNumbers.Reverse)
+                    {
+                        Email = email,
+                        displayName = displayName
+                    };
                     ContactList.Add(newContact);
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
@@ -225,7 +233,11 @@ namespace UWPMessengerClient.MSNP
                                 select contact_in_list;
             if (!contactInList.Any())
             {
-                Contact newContact = new Contact(listnumber) { Email = email, displayName = displayName };
+                Contact newContact = new Contact(listnumber)
+                {
+                    Email = email,
+                    displayName = displayName
+                };
                 ContactList.Add(newContact);
                 if ((newContact.onReverse || newContact.Pending) && !newContact.onForward)
                 {
@@ -449,12 +461,14 @@ namespace UWPMessengerClient.MSNP
                 default:
                     throw new Exceptions.VersionNotSelectedException();
             }
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, auth_string, userInfo.displayName);
-            switchboardConnection.KeepMessagingHistory = KeepMessagingHistoryInSwitchboard;
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, auth_string, userInfo.displayName)
+            {
+                KeepMessagingHistory = KeepMessagingHistoryInSwitchboard
+            };
             await switchboardConnection.LoginToNewSwitchboardAsync();
             await switchboardConnection.InvitePrincipal(ContactToChat.Email, ContactToChat.displayName);
-            SBConnections.Add(switchboardConnection);
-            SwitchboardCreated?.Invoke(this, new SwitchboardCreatedEventArgs() { switchboard = switchboardConnection});
+            SwitchboardCreated?.Invoke(this, new SwitchboardEventArgs() { switchboard = switchboardConnection});
+            switchboardConnection.FillMessageHistory();
         }
 
         public void HandleRNG()
@@ -468,11 +482,16 @@ namespace UWPMessengerClient.MSNP
             string authString = RNGParams[4];
             string principalEmail = RNGParams[5];
             string principalName = RNGParams[6];
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, authString, userInfo.displayName, principalName, principalEmail, sessionID);
-            switchboardConnection.KeepMessagingHistory = KeepMessagingHistoryInSwitchboard;
+            int conv_id = random.Next(1000, 9999);
+            SBConversation conversation = new SBConversation(this, Convert.ToString(conv_id));
+            SBConversations.Add(conversation);
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, authString, userInfo.displayName, principalName, principalEmail, sessionID)
+            {
+                KeepMessagingHistory = KeepMessagingHistoryInSwitchboard
+            };
             _ = switchboardConnection.AnswerRNG();
-            SBConnections.Add(switchboardConnection);
-            RNGReceived?.Invoke(this, new RNGReceivedEventArgs() { switchboard = switchboardConnection });
+            SwitchboardCreated?.Invoke(this, new SwitchboardEventArgs() { switchboard = switchboardConnection });
+            switchboardConnection.FillMessageHistory();
         }
 
         private void ShowNewContactToast(Contact contact)

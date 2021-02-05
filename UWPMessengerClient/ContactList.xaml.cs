@@ -124,8 +124,12 @@ namespace UWPMessengerClient
             {
                 try
                 {
-                    await notificationServerConnection.StartChat(ContactInContext);
-                    this.Frame.Navigate(typeof(ChatPage), new ChatPageNavigationParams() { notificationServerConnection = notificationServerConnection });
+                    string conversationID = await notificationServerConnection.StartChat(ContactInContext);
+                    Frame.Navigate(typeof(ChatPage), new ChatPageNavigationParams()
+                    {
+                        notificationServerConnection = notificationServerConnection,
+                        SBConversationID = conversationID
+                    });
                 }
                 catch (Exception e)
                 {

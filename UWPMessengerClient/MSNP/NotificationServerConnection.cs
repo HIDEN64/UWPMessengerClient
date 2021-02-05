@@ -20,7 +20,7 @@ namespace UWPMessengerClient.MSNP
     public partial class NotificationServerConnection : INotifyPropertyChanged
     {
         protected SocketCommands NSSocket;
-        public List<SwitchboardConnection> SBConnections { get; set; } = new List<SwitchboardConnection>();
+        public List<SBConversation> SBConversations { get; set; } = new List<SBConversation>();
         //notification server(escargot) address and address for SSO auth
         protected string NSaddress = "m1.escargot.log1p.xyz";
         protected string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
@@ -38,6 +38,7 @@ namespace UWPMessengerClient.MSNP
         public string UserPresenceStatus { get; set; }
         public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;
         public UserInfo userInfo { get; set; } = new UserInfo();
+        private static Random random = new Random();
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler NotConnected;
         protected Dictionary<string, Action> command_handlers;
@@ -45,7 +46,7 @@ namespace UWPMessengerClient.MSNP
         public ObservableCollection<string> ErrorLog
         {
             get => _errorLog;
-            set
+            private set
             {
                 _errorLog = value;
                 NotifyPropertyChanged();
@@ -168,10 +169,14 @@ namespace UWPMessengerClient.MSNP
             await Task.Run(psm_action);
         }
 
-        public async Task StartChat(Contact contactToChat)
+        public async Task<string> StartChat(Contact contactToChat)
         {
             ContactToChat = contactToChat;
             await InitiateSB();
+            int conv_id = random.Next(1000, 9999);
+            SBConversation conversation = new SBConversation(this, Convert.ToString(conv_id));
+            SBConversations.Add(conversation);
+            return conversation.ConversationID;
         }
 
         public async Task Ping()
@@ -210,10 +215,10 @@ namespace UWPMessengerClient.MSNP
             await Task.Run(() => NSSocket.SendCommand($"XFR {transactionID} SB\r\n"));
         }
 
-        public SwitchboardConnection ReturnSwitchboardFromSessionID(string session_id)
+        public SBConversation ReturnConversationFromConversationID(string conversation_id)
         {
-            var sb_item = SBConnections.FirstOrDefault(sb => sb.SessionID == session_id);
-            return sb_item;
+            var conv_item = SBConversations.FirstOrDefault(sb => sb.ConversationID == conversation_id);
+            return conv_item;
         }
 
         public void Exit()

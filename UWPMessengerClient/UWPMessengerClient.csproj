@@ -167,6 +167,7 @@
     <Compile Include="MSNP\NotificationServerConnection.TWN.cs">
       <DependentUpon>NotificationServerConnection.cs</DependentUpon>
     </Compile>
+    <Compile Include="MSNP\SBConversation.cs" />
     <Compile Include="MSNP\SOAP\SOAPRequests.cs" />
     <Compile Include="MSNP\SOAP\SOAPRequests.ABService.cs">
       <DependentUpon>SOAPRequests.cs</DependentUpon>

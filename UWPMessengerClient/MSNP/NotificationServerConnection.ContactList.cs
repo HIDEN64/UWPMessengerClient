@@ -152,7 +152,13 @@ namespace UWPMessengerClient.MSNP
                                             select contact_in_list;
                         if (!contactInList.Any())
                         {
-                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = displayName, Email = passportName.InnerText, contactID = contactID.InnerText, onForward = true };
+                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow)
+                            {
+                                displayName = displayName,
+                                Email = passportName.InnerText,
+                                contactID = contactID.InnerText,
+                                onForward = true
+                            };
                             ContactList.Add(newContact);
                             DatabaseAccess.AddContactToTable(userInfo.Email, newContact);
                         }
@@ -261,7 +267,11 @@ namespace UWPMessengerClient.MSNP
                         NSSocket.SendCommand($"ADC {transactionID} FL N={newContactEmail} F={newContactDisplayName}\r\n");
                         Windows.Foundation.IAsyncAction adc_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = newContactDisplayName, Email = newContactEmail };
+                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow)
+                            {
+                                displayName = newContactDisplayName,
+                                Email = newContactEmail
+                            };
                             ContactList.Add(newContact);
                             ContactsInForwardList.Add(newContact);
                         });
@@ -274,7 +284,11 @@ namespace UWPMessengerClient.MSNP
                         NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n{contact_payload}");
                         Windows.Foundation.IAsyncAction adl_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = newContactDisplayName, Email = newContactEmail };
+                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow)
+                            {
+                                displayName = newContactDisplayName,
+                                Email = newContactEmail
+                            };
                             ContactList.Add(newContact);
                             ContactsInForwardList.Add(newContact);
                         });

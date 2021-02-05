@@ -116,7 +116,12 @@ namespace UWPMessengerClient.MSNP
             NumberOfInkChunks = chunks;
             InkMessageID = message_id;
             chunk = chunk.Replace("base64:", "");
-            InkChunk inkChunk = new InkChunk() { ChunkNumber = 0, MessageID = InkMessageID, EncodedChunk = chunk };
+            InkChunk inkChunk = new InkChunk()
+            {
+                ChunkNumber = 0,
+                MessageID = InkMessageID,
+                EncodedChunk = chunk
+            };
             InkChunks.Add(inkChunk);
         }
 
@@ -126,7 +131,12 @@ namespace UWPMessengerClient.MSNP
             {
                 throw new Exception();
             }
-            InkChunk inkChunk = new InkChunk() { ChunkNumber = chunk_number, MessageID = InkMessageID, EncodedChunk = chunk };
+            InkChunk inkChunk = new InkChunk()
+            {
+                ChunkNumber = chunk_number,
+                MessageID = InkMessageID,
+                EncodedChunk = chunk
+            };
             InkChunks.Add(inkChunk);
             if (chunk_number == (NumberOfInkChunks - 1))
             {

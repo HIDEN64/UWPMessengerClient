@@ -1,12 +1,12 @@
 ﻿namespace UWPMessengerClient.MSNP
 {
-    public class SwitchboardCreatedEventArgs
+    public class SwitchboardEventArgs
     {
         public SwitchboardConnection switchboard;
     }
 
-    public class RNGReceivedEventArgs
+    public class MessageEventArgs
     {
-        public SwitchboardConnection switchboard;
+        public Message message;
     }
 }

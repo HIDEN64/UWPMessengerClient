@@ -4,20 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
-using Windows.UI.Notifications;
-using Microsoft.Toolkit.Uwp.Notifications;
 using System.Web;
 using Windows.UI.Core;
-using Microsoft.QueryStringDotNET;
 
 namespace UWPMessengerClient.MSNP
 {
     public partial class SwitchboardConnection
     {
         private string current_response;
-        private string next_response;
         public ObservableCollection<Message> MessageList { get; set; } = new ObservableCollection<Message>();
         public event EventHandler NewMessage;
+        public event EventHandler<MessageEventArgs> MessageReceived;
         public event EventHandler PrincipalInvited;
 
         public void ReceivingCallback(IAsyncResult asyncResult)
@@ -30,10 +27,6 @@ namespace UWPMessengerClient.MSNP
             {
                 string[] res_params = responses[i].Split(" ");
                 switchboardConnection.current_response = responses[i];
-                if (i != responses.Length - 1)
-                {
-                    switchboardConnection.next_response = responses[i + 1];
-                }
                 try
                 {
                     switchboardConnection.command_handlers[res_params[0]]();
@@ -110,7 +103,6 @@ namespace UWPMessengerClient.MSNP
             {
                 connected = true;
             }
-            FillMessageHistory();
         }
 
         protected void HandleCAL()
@@ -166,17 +158,25 @@ namespace UWPMessengerClient.MSNP
 
         protected void AddMessage(string message_text, UserInfo sender, UserInfo receiver)
         {
-            SendMessageToast(message_text, sender.displayName);
-            Message newMessage = new Message() { message_text = message_text, sender = sender.displayName, receiver = receiver.displayName, sender_email = sender.Email, receiver_email = receiver.Email, IsHistory = false };
+            Message newMessage = new Message()
+            {
+                message_text = message_text,
+                sender = sender.displayName,
+                receiver = receiver.displayName,
+                sender_email = sender.Email,
+                receiver_email = receiver.Email,
+                IsHistory = false
+            };
             NullTypingUser();
             AddToMessageListAndDatabase(newMessage);
+            MessageReceived?.Invoke(this, new MessageEventArgs() { message = newMessage });
         }
 
         protected void AddMessage(Message message)
         {
-            SendMessageToast(message.message_text, message.sender);
             NullTypingUser();
             AddToMessageListAndDatabase(message);
+            MessageReceived?.Invoke(this, new MessageEventArgs() { message = message });
         }
 
         protected void AddToMessageListAndDatabase(Message message)
@@ -216,7 +216,13 @@ namespace UWPMessengerClient.MSNP
         public void HandleInk(string msg_payload)
         {
             string[] MSGPayloadParams = msg_payload.Split("\r\n");
-            Message InkMessage = new Message() { message_text = $"{PrincipalInfo.displayName} sent you ink", sender_email = PrincipalInfo.Email, receiver = userInfo.displayName, receiver_email = userInfo.Email };
+            Message InkMessage = new Message()
+            {
+                message_text = $"{PrincipalInfo.displayName} sent you ink",
+                sender_email = PrincipalInfo.Email,
+                receiver = userInfo.displayName,
+                receiver_email = userInfo.Email
+            };
             if (MSGPayloadParams.Length > 4)
             {
                 string message_id = MSGPayloadParams[2].Split(" ")[1];
@@ -229,7 +235,6 @@ namespace UWPMessengerClient.MSNP
             {
                 InkMessage.ReceiveSingleInk(MSGPayloadParams[3]);
             }
-            SendMessageToast(InkMessage.message_text, InkMessage.sender);
             NullTypingUser();
             AddToMessageList(InkMessage);
         }
@@ -275,41 +280,16 @@ namespace UWPMessengerClient.MSNP
         public void ShowNudge()
         {
             string nudge_text = $"{HttpUtility.UrlDecode(PrincipalInfo.displayName)} sent you a nudge!";
-            Message newMessage = new Message() { message_text = nudge_text, receiver = userInfo.displayName, sender_email = PrincipalInfo.Email, receiver_email = userInfo.Email, IsHistory = false };
+            Message newMessage = new Message()
+            {
+                message_text = nudge_text,
+                receiver = userInfo.displayName,
+                sender_email = PrincipalInfo.Email,
+                receiver_email = userInfo.Email,
+                IsHistory = false
+            };
             NullTypingUser();
             AddMessage(newMessage);
-        }
-
-        public void SendMessageToast(string message_text, string message_sender)
-        {
-            var content = new ToastContentBuilder()
-                .AddToastActivationInfo(new QueryString()
-                {
-                    {"action", "newMessage" },
-                    {"sessionID", SessionID }
-                }.ToString(), ToastActivationType.Foreground)
-                .AddText(HttpUtility.UrlDecode(message_sender))
-                .AddText(message_text)
-                .AddInputTextBox("ReplyBox", "Type your reply")
-                .AddButton("Reply", ToastActivationType.Background, new QueryString()
-                {
-                    {"action", "ReplyMessage" },
-                    {"sessionID", SessionID }
-                }.ToString())
-                .AddButton("Dismiss all", ToastActivationType.Background, new QueryString()
-                {
-                    {"action", "DismissMessages" }
-                }.ToString())
-                .GetToastContent();
-            try
-            {
-                var notif = new ToastNotification(content.GetXml())
-                {
-                    Group = "messages"
-                };
-                ToastNotificationManager.CreateToastNotifier().Show(notif);
-            }
-            catch (ArgumentException) { }
         }
     }
 }

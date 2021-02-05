@@ -31,8 +31,7 @@ namespace UWPMessengerClient
     /// </summary>
     sealed partial class App : Application
     {
-        public NotificationServerConnection notificationServerConnection { get; set; }
-        public SwitchboardConnection switchboardConnection { get; set; }
+        public NotificationServerConnection NotificationServerConnection { get; set; }
 
         /// <summary>
         /// Inicializa o objeto singleton do aplicativo. Essa é a primeira linha do código criado
@@ -121,11 +120,15 @@ namespace UWPMessengerClient
                     {
                         case "newMessage":
                             notificationHistory.RemoveGroup("messages");
-                            if (rootFrame.Content is ChatPage && (rootFrame.Content as ChatPage).SessionID.Equals(arguments["sessionID"]))
+                            if (rootFrame.Content is ChatPage && (rootFrame.Content as ChatPage).ConversationID.Equals(arguments["conversationID"]))
                             {
                                 break;
                             }
-                            rootFrame.Navigate(typeof(ChatPage), new ChatPageNavigationParams() { notificationServerConnection = notificationServerConnection, SessionID = arguments["sessionID"], ExistingSwitchboard = true });
+                            _ = rootFrame.Navigate(typeof(ChatPage), new ChatPageNavigationParams()
+                            {
+                                notificationServerConnection = NotificationServerConnection,
+                                SBConversationID = arguments["conversationID"]
+                            });
                             break;
                     }
                 }
@@ -164,13 +167,13 @@ namespace UWPMessengerClient
                                 notificationHistory.RemoveGroup("messages");
                                 break;
                             case "ReplyMessage":
-                                switchboardConnection = notificationServerConnection.ReturnSwitchboardFromSessionID(arguments["sessionID"]);
+                                SBConversation conversation = NotificationServerConnection.ReturnConversationFromConversationID(arguments["conversationID"]);
                                 string reply = (string)userInput["ReplyBox"];
-                                await switchboardConnection.SendTextMessage(reply);
+                                await conversation.SendTextMessage(reply);
                                 break;
                             case "acceptContact":
                                 Contact contact = JsonConvert.DeserializeObject<Contact>(arguments["contact"]);
-                                await notificationServerConnection.AcceptNewContact(contact);
+                                await NotificationServerConnection.AcceptNewContact(contact);
                                 break;
                         }
                     }
