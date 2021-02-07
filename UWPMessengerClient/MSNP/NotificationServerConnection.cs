@@ -20,44 +20,45 @@ namespace UWPMessengerClient.MSNP
     public partial class NotificationServerConnection : INotifyPropertyChanged
     {
         protected SocketCommands NSSocket;
-        public SwitchboardConnection SBConnection { get; set; }
+        public List<SBConversation> SBConversations { get; set; } = new List<SBConversation>();
         //notification server(escargot) address and address for SSO auth
         protected string NSaddress = "m1.escargot.log1p.xyz";
-        protected string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
-        //local addresses are 127.0.0.1 for NSaddress, http://localhost/RST.srf for RST_address
-        //and http://localhost/nexus-mock for nexus_address
-        protected readonly int port = 1863;
-        private string email;
-        private string password;
+        protected string NexusAddress = "https://m1.escargot.log1p.xyz/nexus-mock";
+        //local addresses are 127.0.0.1 for NSaddress and http://localhost/nexus-mock for nexus_address
+        protected readonly int Port = 1863;
+        private string Email;
+        private string Password;
         protected Regex PlusCharactersRegex = new Regex("\\[(.*?)\\]");
         public bool UsingLocalhost { get; protected set; } = false;
         public string MSNPVersion { get; protected set; } = "MSNP15";
-        protected int transactionID = 0;
-        protected uint clientCapabilities = 0x84140420;
-        public int ContactIndexToChat { get; set; }
+        protected int TransactionID = 0;
+        protected uint ClientCapabilities = 0x84140428;
+        public Contact ContactToChat { get; set; }
         public string UserPresenceStatus { get; set; }
         public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;
         public UserInfo userInfo { get; set; } = new UserInfo();
+        private static Random random = new Random();
         public event PropertyChangedEventHandler PropertyChanged;
-        public event EventHandler<EventArgs> NotConnected;
-        protected Dictionary<string, Action> command_handlers;
+        public event EventHandler NotConnected;
+        protected Dictionary<string, Action> CommandHandlers;
         private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
-        public ObservableCollection<string> errorLog
+        public ObservableCollection<string> ErrorLog
         {
             get => _errorLog;
-            set
+            private set
             {
                 _errorLog = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version, string initial_status = PresenceStatuses.Available)
+        public NotificationServerConnection()
         {
-            command_handlers = new Dictionary<string, Action>()
+            CommandHandlers = new Dictionary<string, Action>()
             {
                 {"LST", () => HandleLST() },
                 {"ADC", () => HandleADC() },
+                {"ADL", () => HandleADL() },
                 {"PRP", () => HandlePRP() },
                 {"ILN", () => HandleILN() },
                 {"NLN", () => HandleNLN() },
@@ -66,15 +67,32 @@ namespace UWPMessengerClient.MSNP
                 {"XFR", async () => await HandleXFR() },
                 {"RNG", () => HandleRNG() }
             };
-            email = messenger_email;
-            password = messenger_password;
+        }
+
+        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version, string initial_status = PresenceStatuses.Available)
+        {
+            CommandHandlers = new Dictionary<string, Action>()
+            {
+                {"LST", () => HandleLST() },
+                {"ADC", () => HandleADC() },
+                {"ADL", () => HandleADL() },
+                {"PRP", () => HandlePRP() },
+                {"ILN", () => HandleILN() },
+                {"NLN", () => HandleNLN() },
+                {"FLN", () => HandleFLN() },
+                {"UBX", () => HandleUBX() },
+                {"XFR", async () => await HandleXFR() },
+                {"RNG", () => HandleRNG() }
+            };
+            Email = messenger_email;
+            Password = messenger_password;
             UsingLocalhost = use_localhost;
             MSNPVersion = msnp_version;
             UserPresenceStatus = initial_status;
             if (UsingLocalhost)
             {
                 NSaddress = "127.0.0.1";
-                nexus_address = "http://localhost/nexus-mock";
+                NexusAddress = "http://localhost/nexus-mock";
                 //setting local addresses
             }
             SOAPRequests = new SOAPRequests(UsingLocalhost);
@@ -84,7 +102,7 @@ namespace UWPMessengerClient.MSNP
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                errorLog.Add(error);
+                ErrorLog.Add(error);
             });
         }
 
@@ -109,27 +127,13 @@ namespace UWPMessengerClient.MSNP
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public void FillForwardListCollection()
-        {
-            foreach (Contact contact in contact_list)
-            {
-                if (contact.onForward)
-                {
-                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        contacts_in_forward_list.Add(contact);
-                    });
-                }
-            }
-        }
-
         public async Task ChangePresence(string status)
         {
             if (status == "") { throw new ArgumentNullException("Status is empty"); }
             Action changePresence = new Action(() =>
             {
-                transactionID++;
-                NSSocket.SendCommand($"CHG {transactionID} {status} {clientCapabilities}\r\n");
+                TransactionID++;
+                NSSocket.SendCommand($"CHG {TransactionID} {status} {ClientCapabilities}\r\n");
             });
             UserPresenceStatus = status;
             await Task.Run(changePresence);
@@ -140,11 +144,11 @@ namespace UWPMessengerClient.MSNP
             if (newDisplayName == "") { throw new ArgumentNullException("Display name is empty"); }
             if (MSNPVersion == "MSNP15")
             {
-                SOAPRequests.MakeChangeUserDisplayNameSOAPRequest(newDisplayName);
+                SOAPRequests.ChangeUserDisplayNameRequest(newDisplayName);
             }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
-            transactionID++;
-            await Task.Run(() => NSSocket.SendCommand($"PRP {transactionID} MFN {urlEncodedNewDisplayName}\r\n"));
+            TransactionID++;
+            await Task.Run(() => NSSocket.SendCommand($"PRP {TransactionID} MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
         public async Task SendUserPersonalMessage(string newPersonalMessage)
@@ -154,14 +158,24 @@ namespace UWPMessengerClient.MSNP
                 string encodedPersonalMessage = newPersonalMessage.Replace("&", "&amp;");
                 string psm_payload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
                 int payload_length = Encoding.UTF8.GetBytes(psm_payload).Length;
-                transactionID++;
-                NSSocket.SendCommand($"UUX {transactionID} {payload_length}\r\n" + psm_payload);
+                TransactionID++;
+                NSSocket.SendCommand($"UUX {TransactionID} {payload_length}\r\n" + psm_payload);
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     userInfo.personalMessage = newPersonalMessage;
                 });
             });
             await Task.Run(psm_action);
+        }
+
+        public async Task<string> StartChat(Contact contactToChat)
+        {
+            ContactToChat = contactToChat;
+            await InitiateSB();
+            int conv_id = random.Next(1000, 9999);
+            SBConversation conversation = new SBConversation(this, Convert.ToString(conv_id));
+            SBConversations.Add(conversation);
+            return conversation.ConversationID;
         }
 
         public async Task Ping()
@@ -194,13 +208,16 @@ namespace UWPMessengerClient.MSNP
             while (IsConnected);
         }
 
-        public async Task InitiateSB()
+        protected async Task InitiateSB()
         {
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(email, userInfo.displayName);
-            SBConnection = switchboardConnection;
-            SBConnection.KeepMessagingHistory = KeepMessagingHistoryInSwitchboard;
-            transactionID++;
-            await Task.Run(() => NSSocket.SendCommand($"XFR {transactionID} SB\r\n"));
+            TransactionID++;
+            await Task.Run(() => NSSocket.SendCommand($"XFR {TransactionID} SB\r\n"));
+        }
+
+        public SBConversation ReturnConversationFromConversationID(string conversation_id)
+        {
+            var conv_item = SBConversations.FirstOrDefault(sb => sb.ConversationID == conversation_id);
+            return conv_item;
         }
 
         public void Exit()

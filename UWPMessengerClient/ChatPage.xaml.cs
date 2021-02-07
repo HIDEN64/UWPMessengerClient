@@ -18,43 +18,90 @@ using Windows.UI.Core;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Windows.Storage.Streams;
 
 namespace UWPMessengerClient
 {
-    public sealed partial class ChatPage : Page
+    public sealed partial class ChatPage : Page, INotifyPropertyChanged
     {
-        private NotificationServerConnection notificationServerConnection;
-        private SwitchboardConnection switchboardConnection;
+        private NotificationServerConnection _notificationServerConnection;
+        private SBConversation _conversation;
+        private Message MessageInContext;
+        public string ConversationID { get; private set; }
+        public event PropertyChangedEventHandler PropertyChanged;
+        private NotificationServerConnection notificationServerConnection
+        {
+            get => _notificationServerConnection;
+            set
+            {
+                _notificationServerConnection = value;
+                NotifyPropertyChanged();
+            }
+        }
+        private SBConversation conversation
+        {
+            get => _conversation;
+            set
+            {
+                _conversation = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         public ChatPage()
         {
             this.InitializeComponent();
+            inkCanvas.InkPresenter.InputDeviceTypes =
+            CoreInputDeviceTypes.Mouse |
+            CoreInputDeviceTypes.Pen;
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            notificationServerConnection = (NotificationServerConnection)e.Parameter;
-            switchboardConnection = notificationServerConnection.SBConnection;
-            Task task = GroupMessages();
-            switchboardConnection.HistoryLoaded += SwitchboardConnection_HistoryLoaded;
-            switchboardConnection.MessageReceived += SwitchboardConnection_MessageReceived;
-            BackButton.IsEnabled = this.Frame.CanGoBack;
+            ChatPageNavigationParams navigationParams = (ChatPageNavigationParams)e.Parameter;
+            notificationServerConnection = navigationParams.notificationServerConnection;
+            ConversationID = navigationParams.SBConversationID;
+            conversation = notificationServerConnection.ReturnConversationFromConversationID(ConversationID);
+            notificationServerConnection.NotConnected += NotificationServerConnection_NotConnected;
+            conversation.MessageListUpdated += Conversation_MessageListUpdated;
+            BackButton.IsEnabled = Frame.CanGoBack;
+            await GroupMessages();
             base.OnNavigatedTo(e);
         }
 
-        private async void SwitchboardConnection_MessageReceived(object sender, EventArgs e)
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            await GroupMessages();
+            notificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
+            conversation.MessageListUpdated -= Conversation_MessageListUpdated;
+            base.OnNavigatedFrom(e);
         }
 
-        private async void SwitchboardConnection_HistoryLoaded(object sender, EventArgs e)
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            });
+        }
+
+        private async void NotificationServerConnection_NotConnected(object sender, EventArgs e)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                await ShowDialog("Error", "Connection to the server was lost: exiting...");
+                this.Frame.Navigate(typeof(LoginPage));
+            });
+        }
+
+        private async void Conversation_MessageListUpdated(object sender, EventArgs e)
         {
             await GroupMessages();
         }
 
         private async Task GroupMessages()
         {
-            var groups = from message in switchboardConnection.MessageList
+            if (conversation.Messages is null) { return; }
+            var groups = from message in conversation.Messages
                          group message by message.IsHistory into message_group
                          select new GroupInfoList(message_group) { Key = message_group.Key };
             await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -65,9 +112,9 @@ namespace UWPMessengerClient
 
         private async Task SendMessage()
         {
-            if (switchboardConnection != null && switchboardConnection.connected && messageBox.Text != "")
+            if (messageBox.Text != "")
             {
-                await switchboardConnection.SendMessage(messageBox.Text);
+                await conversation.SendTextMessage(messageBox.Text);
                 messageBox.Text = "";
                 await GroupMessages();
             }
@@ -98,34 +145,65 @@ namespace UWPMessengerClient
         {
             if (messageBox.Text != "")
             {
-                await switchboardConnection.SendTypingUser();
+                await conversation.SendTypingUser();
             }
         }
 
         private async void nudgeButton_Click(object sender, RoutedEventArgs e)
         {
-            await switchboardConnection.SendNudge();
+            await conversation.SendNudge();
         }
-    }
 
-    public class GroupInfoList : List<object>, INotifyPropertyChanged
-    {
-        public GroupInfoList(IEnumerable<object> items) : base(items) { }
-        public event PropertyChangedEventHandler PropertyChanged;
-        private object _Key;
-        public object Key
+        public async Task ShowDialog(string title, string message)
         {
-            get => _Key;
-            set
+            ContentDialog Dialog = new ContentDialog
             {
-                _Key = value;
-                NotifyPropertyChanged();
+                Title = title,
+                Content = message,
+                CloseButtonText = "Close"
+            };
+            ContentDialogResult DialogResult = await Dialog.ShowAsync();
+        }
+
+        private async void SendInkButton_Click(object sender, RoutedEventArgs e)
+        {
+            using(MemoryStream memoryStream = new MemoryStream())
+            {
+                using(IRandomAccessStream stream = memoryStream.AsRandomAccessStream())
+                {
+                    await inkCanvas.InkPresenter.StrokeContainer.SaveAsync(stream);
+                }
+                byte[] ink_bytes = memoryStream.ToArray();
+                await conversation.SendInk(ink_bytes);
+            }
+            inkCanvas.InkPresenter.StrokeContainer.Clear();
+        }
+
+        private async Task LoadReceivedInk()
+        {
+            if (MessageInContext.InkBytes != null)
+            {
+                using (MemoryStream memoryStream = new MemoryStream(MessageInContext.InkBytes))
+                {
+                    using (IRandomAccessStream stream = memoryStream.AsRandomAccessStream())
+                    {
+                        await ReceivedInkCanvas.InkPresenter.StrokeContainer.LoadAsync(stream);
+                    }
+                }
+                MessagePivot.SelectedIndex = 2;//received ink index
             }
         }
 
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        private async void messageList_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            MessageInContext = (Message)((FrameworkElement)e.OriginalSource).DataContext;
+            await LoadReceivedInk();
+        }
+
+        private async void messageList_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            MessageInContext = (Message)((FrameworkElement)e.OriginalSource).DataContext;
+            await LoadReceivedInk();
         }
     }
 }

@@ -16,8 +16,9 @@ namespace UWPMessengerClient.MSNP
         private SOAPRequests SOAPRequests;
         private string MembershipLists;
         private string AddressBook;
-        public ObservableCollection<Contact> contact_list { get; set; } = new ObservableCollection<Contact>();
-        public ObservableCollection<Contact> contacts_in_forward_list { get; set; } = new ObservableCollection<Contact>();
+        public ObservableCollection<Contact> ContactList { get; set; } = new ObservableCollection<Contact>();
+        public ObservableCollection<Contact> ContactsInForwardList { get; set; } = new ObservableCollection<Contact>();
+        public ObservableCollection<Contact> ContactsInPendingOrReverseList { get; set; } = new ObservableCollection<Contact>();
 
         protected void GetContactsFromDatabase()
         {
@@ -25,7 +26,7 @@ namespace UWPMessengerClient.MSNP
             foreach (string JSONContact in JSONContactList)
             {
                 Contact contact = JsonConvert.DeserializeObject<Contact>(JSONContact);
-                contact_list.Add(contact);
+                ContactList.Add(contact);
             }
         }
 
@@ -53,31 +54,32 @@ namespace UWPMessengerClient.MSNP
                     XmlNode passport_name = member.SelectSingleNode(xPathString, NSmanager);
                     xPathString = "./ab:MembershipId";
                     XmlNode membership_id = member.SelectSingleNode(xPathString, NSmanager);
-                    var contactInList = from contact_in_list in contact_list
-                                        where contact_in_list.email == passport_name.InnerText
+                    var contactInList = from contact_in_list in ContactList
+                                        where contact_in_list.Email == passport_name.InnerText
                                         select contact_in_list;
                     if (!contactInList.Any())
                     {
                         Contact contact = new Contact();
-                        contact.email = passport_name.InnerText;
+                        contact.Email = passport_name.InnerText;
                         switch (member_role.InnerText)
                         {
                             case "Allow":
                                 contact.onAllow = true;
-                                contact.MembershipID = membership_id.InnerText;
+                                contact.AllowMembershipID = membership_id.InnerText;
                                 break;
                             case "Block":
                                 contact.onBlock = true;
-                                contact.MembershipID = membership_id.InnerText;
+                                contact.BlockMembershipID = membership_id.InnerText;
                                 break;
                             case "Reverse":
                                 contact.onReverse = true;
                                 break;
                             case "Pending":
                                 contact.Pending = true;
+                                contact.PendingMembershipID = membership_id.InnerText;
                                 break;
                         }
-                        contact_list.Add(contact);
+                        ContactList.Add(contact);
                         DatabaseAccess.AddContactToTable(userInfo.Email, contact);
                     }
                     else
@@ -88,17 +90,18 @@ namespace UWPMessengerClient.MSNP
                             {
                                 case "Allow":
                                     list_contact.onAllow = true;
-                                    list_contact.MembershipID = membership_id.InnerText;
+                                    list_contact.AllowMembershipID = membership_id.InnerText;
                                     break;
                                 case "Block":
                                     list_contact.onBlock = true;
-                                    list_contact.MembershipID = membership_id.InnerText;
+                                    list_contact.BlockMembershipID = membership_id.InnerText;
                                     break;
                                 case "Reverse":
                                     list_contact.onReverse = true;
                                     break;
                                 case "Pending":
                                     list_contact.Pending = true;
+                                    list_contact.PendingMembershipID = membership_id.InnerText;
                                     break;
                             }
                         }
@@ -144,13 +147,19 @@ namespace UWPMessengerClient.MSNP
                         xPath = "./ab:contactInfo/ab:displayName";
                         XmlNode displayNameNode = contact.SelectSingleNode(xPath, NSmanager);
                         string displayName = PlusCharactersRegex.Replace(displayNameNode.InnerText, "");
-                        var contactInList = from contact_in_list in contact_list
-                                            where contact_in_list.email == passportName.InnerText
+                        var contactInList = from contact_in_list in ContactList
+                                            where contact_in_list.Email == passportName.InnerText
                                             select contact_in_list;
                         if (!contactInList.Any())
                         {
-                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = displayName, email = passportName.InnerText, contactID = contactID.InnerText, onForward = true };
-                            contact_list.Add(newContact);
+                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow)
+                            {
+                                displayName = displayName,
+                                Email = passportName.InnerText,
+                                contactID = contactID.InnerText,
+                                onForward = true
+                            };
+                            ContactList.Add(newContact);
                             DatabaseAccess.AddContactToTable(userInfo.Email, newContact);
                         }
                         else
@@ -166,20 +175,21 @@ namespace UWPMessengerClient.MSNP
                 }
             }
             FillForwardListCollection();
+            FillReverseListCollection();
         }
 
         public static string ReturnXMLContactPayload(ObservableCollection<Contact> contacts)
         {
-            string contact_payload = @"<ml l=""1"">";
+            string contact_payload = @"<ml>";
             foreach (Contact contact in contacts)
             {
-                int lisbit = contact.GetListbitFromForwardAllowBlock();
+                int lisbit = contact.GetListnumberFromForwardAllowBlock();
                 if (lisbit > 0)
                 {
-                    string[] email = contact.email.Split("@");
+                    string[] email = contact.Email.Split("@");
                     string name = email[0];
                     string domain = email[1];
-                    contact_payload += $@"<d n=""{domain}""><c n=""{name}"" l=""{lisbit}"" t=""1"" /></d>";
+                    contact_payload += $@"<d n=""{domain}""><c n=""{name}"" l=""{lisbit}"" t=""1""/></d>";
                 }
             }
             contact_payload += @"</ml>";
@@ -188,27 +198,27 @@ namespace UWPMessengerClient.MSNP
 
         public static string ReturnXMLContactPayload(Contact contact)
         {
-            string contact_payload = @"<ml l=""1"">";
-            int lisbit = contact.GetListbitFromForwardAllowBlock();
+            string contact_payload = @"<ml>";
+            int lisbit = contact.GetListnumberFromForwardAllowBlock();
             if (lisbit > 0)
             {
-                string[] email = contact.email.Split("@");
+                string[] email = contact.Email.Split("@");
                 string name = email[0];
                 string domain = email[1];
-                contact_payload += $@"<d n=""{domain}""><c n=""{name}"" l=""{lisbit}"" t=""1"" /></d>";
+                contact_payload += $@"<d n=""{domain}""><c n=""{name}"" l=""{lisbit}"" t=""1""/></d>";
             }
             contact_payload += @"</ml>";
             return contact_payload;
         }
 
-        public static string ReturnXMLNewContactPayload(string newContactEmail)
+        public static string ReturnXMLNewContactPayload(string newContactEmail, int listnumber = 1)
         {
             if (newContactEmail == "") { throw new ArgumentNullException("Contact email is empty"); }
-            string contact_payload = @"<ml l=""1"">";
+            string contact_payload = @"<ml>";
             string[] email = newContactEmail.Split("@");
             string name = email[0];
             string domain = email[1];
-            contact_payload += $@"<d n=""{domain}""><c n=""{name}"" l=""1"" t=""1"" /></d>";
+            contact_payload += $@"<d n=""{domain}""><c n=""{name}"" l=""{listnumber}"" t=""1""/></d>";
             contact_payload += @"</ml>";
             return contact_payload;
         }
@@ -226,26 +236,25 @@ namespace UWPMessengerClient.MSNP
                     break;
                 //apparently 0 just means null, 1 means AL and 2 means BL
             }
-            transactionID++;
-            NSSocket.SendCommand($"BLP {transactionID} {setting}\r\n");
+            TransactionID++;
+            NSSocket.SendCommand($"BLP {TransactionID} {setting}\r\n");
         }
 
         protected void SendInitialADL()
         {
-            string contact_payload = ReturnXMLContactPayload(contact_list);
+            string contact_payload = ReturnXMLContactPayload(ContactList);
             int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-            transactionID++;
-            NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n");
-            NSSocket.SendCommand(contact_payload);
+            TransactionID++;
+            NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
         }
 
         protected void SendUserDisplayName()
         {
-            transactionID++;
-            NSSocket.SendCommand($"PRP {transactionID} MFN {userInfo.displayName}\r\n");
+            TransactionID++;
+            NSSocket.SendCommand($"PRP {TransactionID} MFN {userInfo.displayName}\r\n");
         }
 
-        public async Task AddContact(string newContactEmail, string newContactDisplayName = "")
+        public async Task AddNewContact(string newContactEmail, string newContactDisplayName = "")
         {
             if (newContactEmail == "") { throw new ArgumentNullException("Contact email is empty"); }
             if (newContactDisplayName == "") { newContactDisplayName = newContactEmail; }
@@ -254,21 +263,76 @@ namespace UWPMessengerClient.MSNP
                 switch (MSNPVersion)
                 {
                     case "MSNP12":
-                        transactionID++;
-                        NSSocket.SendCommand($"ADC {transactionID} FL N={newContactEmail} F={newContactDisplayName}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"ADC {TransactionID} FL N={newContactEmail} F={newContactDisplayName}\r\n");
+                        Windows.Foundation.IAsyncAction adc_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow)
+                            {
+                                displayName = newContactDisplayName,
+                                Email = newContactEmail
+                            };
+                            ContactList.Add(newContact);
+                            ContactsInForwardList.Add(newContact);
+                        });
                         break;
                     case "MSNP15":
-                        transactionID++;
-                        SOAPRequests.MakeAddContactSOAPRequest(newContactEmail, newContactDisplayName);
+                        TransactionID++;
+                        SOAPRequests.ABContactAdd(newContactEmail);
                         string contact_payload = ReturnXMLNewContactPayload(newContactEmail);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n");
-                        NSSocket.SendCommand(contact_payload);
-                        Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow) { displayName = newContactDisplayName, email = newContactEmail };
-                        Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
+                        Windows.Foundation.IAsyncAction adl_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            contact_list.Add(newContact);
-                            contacts_in_forward_list.Add(newContact);
+                            Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow)
+                            {
+                                displayName = newContactDisplayName,
+                                Email = newContactEmail
+                            };
+                            ContactList.Add(newContact);
+                            ContactsInForwardList.Add(newContact);
+                        });
+                        break;
+                    default:
+                        throw new Exceptions.VersionNotSelectedException();
+                }
+            });
+        }
+
+        public async Task AcceptNewContact(Contact contactToAccept)
+        {
+            if (contactToAccept == null) { throw new ArgumentNullException("Contact is null"); }
+            if (contactToAccept.onForward) { return; }
+            await Task.Run(() =>
+            {
+                switch (MSNPVersion)
+                {
+                    case "MSNP12":
+                        TransactionID++;
+                        NSSocket.SendCommand($"ADC {TransactionID} FL N={contactToAccept.Email} F={contactToAccept.displayName}\r\n");
+                        contactToAccept.onForward = true;
+                        Windows.Foundation.IAsyncAction adc_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            ContactsInForwardList.Add(contactToAccept);
+                            ContactsInPendingOrReverseList.Remove(contactToAccept);
+                        });
+                        break;
+                    case "MSNP15":
+                        TransactionID++;
+                        SOAPRequests.ABContactAdd(contactToAccept.Email);
+                        string contact_payload = ReturnXMLNewContactPayload(contactToAccept.Email);
+                        int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
+                        NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
+                        TransactionID++;
+                        contact_payload = ReturnXMLNewContactPayload(contactToAccept.Email, 2);
+                        payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
+                        NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
+                        contactToAccept.onForward = true;
+                        Windows.Foundation.IAsyncAction adl_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            contactToAccept.displayName = contactToAccept.Email;
+                            ContactsInForwardList.Add(contactToAccept);
+                            ContactsInPendingOrReverseList.Remove(contactToAccept);
                         });
                         break;
                     default:
@@ -284,23 +348,23 @@ namespace UWPMessengerClient.MSNP
                 switch (MSNPVersion)
                 {
                     case "MSNP12":
-                        transactionID++;
-                        NSSocket.SendCommand($"REM {transactionID} FL {contactToRemove.GUID}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"REM {TransactionID} FL {contactToRemove.GUID}\r\n");
                         break;
                     case "MSNP15":
-                        transactionID++;
-                        SOAPRequests.MakeRemoveContactSOAPRequest(contactToRemove);
+                        TransactionID++;
+                        SOAPRequests.ABContactDelete(contactToRemove);
                         string contact_payload = ReturnXMLContactPayload(contactToRemove);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"RML {transactionID} {payload_length}\r\n");
-                        NSSocket.SendCommand(contact_payload);
+                        NSSocket.SendCommand($"RML {TransactionID} {payload_length}\r\n{contact_payload}");
                         break;
                     default:
                         throw new Exceptions.VersionNotSelectedException();
                 }
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    contacts_in_forward_list.Remove(contactToRemove);
+                    ContactsInForwardList.Remove(contactToRemove);
+                    ContactsInPendingOrReverseList.Remove(contactToRemove);
                 });
                 DatabaseAccess.DeleteContactFromTable(userInfo.Email, contactToRemove);
             });
@@ -313,27 +377,25 @@ namespace UWPMessengerClient.MSNP
                 switch (MSNPVersion)
                 {
                     case "MSNP12":
-                        transactionID++;
-                        NSSocket.SendCommand($"ADC {transactionID} BL N={contactToBlock.email}\r\n");
-                        transactionID++;
-                        NSSocket.SendCommand($"REM {transactionID} AL {contactToBlock.GUID}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"ADC {TransactionID} BL N={contactToBlock.Email}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"REM {TransactionID} AL {contactToBlock.GUID}\r\n");
                         contactToBlock.onBlock = true;
                         contactToBlock.onAllow = false;
                         break;
                     case "MSNP15":
-                        transactionID++;
-                        SOAPRequests.MakeBlockContactSOAPRequests(contactToBlock);
-                        contactToBlock.SetListsFromListbit((int)ListNumbers.Allow);
+                        TransactionID++;
+                        SOAPRequests.BlockContactRequests(contactToBlock);
+                        contactToBlock.SetListsFromListnumber((int)ListNumbers.Allow);
                         string contact_payload = ReturnXMLContactPayload(contactToBlock);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"RML {transactionID} {payload_length}\r\n");
-                        NSSocket.SendCommand(contact_payload);
-                        transactionID++;
-                        contactToBlock.SetListsFromListbit((int)ListNumbers.Block);
+                        NSSocket.SendCommand($"RML {TransactionID} {payload_length}\r\n{contact_payload}");
+                        TransactionID++;
+                        contactToBlock.SetListsFromListnumber((int)ListNumbers.Block);
                         contact_payload = ReturnXMLContactPayload(contactToBlock);
                         payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n");
-                        NSSocket.SendCommand(contact_payload);
+                        NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
                         break;
                     default:
                         throw new Exceptions.VersionNotSelectedException();
@@ -349,33 +411,59 @@ namespace UWPMessengerClient.MSNP
                 switch (MSNPVersion)
                 {
                     case "MSNP12":
-                        transactionID++;
-                        NSSocket.SendCommand($"ADC {transactionID} AL N={contactToUnblock.email}\r\n");
-                        transactionID++;
-                        NSSocket.SendCommand($"REM {transactionID} BL {contactToUnblock.email}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"ADC {TransactionID} AL N={contactToUnblock.Email}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"REM {TransactionID} BL {contactToUnblock.Email}\r\n");
                         contactToUnblock.onBlock = false;
                         contactToUnblock.onAllow = true;
                         break;
                     case "MSNP15":
-                        transactionID++;
-                        SOAPRequests.MakeUnblockContactSOAPRequests(contactToUnblock);
-                        contactToUnblock.SetListsFromListbit((int)ListNumbers.Block);
+                        TransactionID++;
+                        SOAPRequests.UnblockContactRequests(contactToUnblock);
+                        contactToUnblock.SetListsFromListnumber((int)ListNumbers.Block);
                         string contact_payload = ReturnXMLContactPayload(contactToUnblock);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"RML {transactionID} {payload_length}\r\n");
-                        NSSocket.SendCommand(contact_payload);
-                        transactionID++;
-                        contactToUnblock.SetListsFromListbit((int)ListNumbers.Allow);
+                        NSSocket.SendCommand($"RML {TransactionID} {payload_length}\r\n{contact_payload}");
+                        TransactionID++;
+                        contactToUnblock.SetListsFromListnumber((int)ListNumbers.Allow);
                         contact_payload = ReturnXMLContactPayload(contactToUnblock);
                         payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n");
-                        NSSocket.SendCommand(contact_payload);
+                        NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
                         break;
                     default:
                         throw new Exceptions.VersionNotSelectedException();
                 }
                 DatabaseAccess.UpdateContact(userInfo.Email, contactToUnblock);
             });
+        }
+
+        public void FillForwardListCollection()
+        {
+            foreach (Contact contact in ContactList)
+            {
+                if (contact.onForward)
+                {
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        ContactsInForwardList.Add(contact);
+                    });
+                }
+            }
+        }
+
+        public void FillReverseListCollection()
+        {
+            foreach (Contact contact in ContactList)
+            {
+                if ((contact.onReverse || contact.Pending) && !contact.onForward)
+                {
+                    Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                    {
+                        ContactsInPendingOrReverseList.Add(contact);
+                    });
+                }
+            }
         }
     }
 }

@@ -11,13 +11,13 @@ namespace UWPMessengerClient.MSNP
     public class SocketCommands
     {
         private Socket socket;
-        private string server_address = "";
-        private int server_port = 0;
+        private string ServerAddress = "";
+        private int ServerPort = 0;
 
         public SocketCommands(string address, int port)
         {
-            server_address = address;
-            server_port = port;
+            ServerAddress = address;
+            ServerPort = port;
         }
 
         public void SetReceiveTimeout(int timeout)
@@ -29,9 +29,9 @@ namespace UWPMessengerClient.MSNP
         {
             //creates a tcp socket then connects it to the server
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            IPHostEntry iPHostEntry = Dns.GetHostEntry(server_address);
+            IPHostEntry iPHostEntry = Dns.GetHostEntry(ServerAddress);
             IPAddress iPAddress = iPHostEntry.AddressList[0];
-            IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, server_port);
+            IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, ServerPort);
             socket.Connect(iPEndPoint);
         }
 

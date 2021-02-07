@@ -58,7 +58,7 @@ namespace UWPMessengerClient.MSNP
                 jsonContact = JsonConvert.SerializeObject(contact_to_add);
                 updateCommand.CommandText = "UPDATE Contacts SET JSONContact = @json_contact WHERE Email = @email AND " +
                     "UserAccount = @account";
-                updateCommand.Parameters.AddWithValue("@email", contact_to_add.email);
+                updateCommand.Parameters.AddWithValue("@email", contact_to_add.Email);
                 updateCommand.Parameters.AddWithValue("@account", userEmail);
                 updateCommand.Parameters.AddWithValue("@json_contact", jsonContact);
                 updateCommand.ExecuteReader();
@@ -83,7 +83,7 @@ namespace UWPMessengerClient.MSNP
                 // Use parameterized query to prevent SQL injection attacks
                 insertCommand.CommandText = "INSERT INTO Contacts VALUES (NULL, @account, @email, @json_contact)";
                 insertCommand.Parameters.AddWithValue("@account", userEmail);
-                insertCommand.Parameters.AddWithValue("@email", contact.email);
+                insertCommand.Parameters.AddWithValue("@email", contact.Email);
                 insertCommand.Parameters.AddWithValue("@json_contact", jsonContact);
                 insertCommand.ExecuteReader();
 
@@ -105,7 +105,7 @@ namespace UWPMessengerClient.MSNP
                 };
                 deleteCommand.CommandText = "DELETE FROM Contacts WHERE UserAccount = @account AND Email = @contact_email";
                 deleteCommand.Parameters.AddWithValue("@account", userEmail);
-                deleteCommand.Parameters.AddWithValue("@contact_email", contact.email);
+                deleteCommand.Parameters.AddWithValue("@contact_email", contact.Email);
                 deleteCommand.ExecuteReader();
 
                 db.Close();

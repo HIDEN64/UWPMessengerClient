@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace UWPMessengerClient.MSNP.SOAP
 {
-    public partial class SOAPRequests
+    partial class SOAPRequests
     {
         protected string SharingService_url = "https://m1.escargot.log1p.xyz/abservice/SharingService.asmx";
         //local address is http://localhost/abservice/SharingService.asmx for SharingService_url
 
-        public string MakeMembershipListsSOAPRequest()
+        public string FindMembership()
         {
             string membership_lists_xml = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
@@ -41,51 +41,9 @@ namespace UWPMessengerClient.MSNP.SOAP
             return MakeSOAPRequest(membership_lists_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/FindMembership");
         }
 
-        public string MakeBlockContactSOAPRequests(Contact contact)
+        public string AddMember(string contactEmail, string memberRole)
         {
-            string block_contact_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-            <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" 
-                           xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" 
-                           xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" 
-                           xmlns:soapenc=""http://schemas.xmlsoap.org/soap/encoding/"">
-                <soap:Header>
-                    <ABApplicationHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <ApplicationId>996CDE1B-AA53-4477-B943-2BB802EA6166</ApplicationId>
-                        <IsMigration>false</IsMigration>
-                        <PartnerScenario>BlockUnblock</PartnerScenario>
-                    </ABApplicationHeader>
-                    <ABAuthHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <ManagedGroupRequest>false</ManagedGroupRequest>
-                        <TicketToken>{TicketToken}</TicketToken>
-                    </ABAuthHeader>
-                </soap:Header>
-                <soap:Body>
-                    <DeleteMember xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <serviceHandle>
-                            <Id>0</Id>
-                            <Type>Messenger</Type>
-                            <ForeignId></ForeignId>
-                        </serviceHandle>
-                        <memberships>
-                            <Membership>
-                                <MemberRole>Allow</MemberRole>
-                                <Members>
-                                    <Member xsi:type=""PassportMember"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
-                                        <Type>Passport</Type>
-                                        <MembershipId>{contact.MembershipID}</MembershipId>
-                                        <State>Accepted</State>
-                                    </Member>
-                                </Members>
-                            </Membership>
-                        </memberships>
-                    </DeleteMember>
-                </soap:Body>
-            </soap:Envelope>";
-            if (contact.MembershipID != null)
-            {
-                MakeSOAPRequest(block_contact_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/DeleteMember");
-            }
-            block_contact_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            string member_role_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" 
                            xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" 
                            xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" 
@@ -110,12 +68,12 @@ namespace UWPMessengerClient.MSNP.SOAP
                         </serviceHandle>
                         <memberships>
                             <Membership>
-                                <MemberRole>Block</MemberRole>
+                                <MemberRole>{memberRole}</MemberRole>
                                 <Members>
                                     <Member xsi:type=""PassportMember"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
                                         <Type>Passport</Type>
                                         <State>Accepted</State>
-                                        <PassportName>{contact.email}</PassportName>
+                                        <PassportName>{contactEmail}</PassportName>
                                     </Member>
                                 </Members>
                             </Membership>
@@ -123,12 +81,12 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </AddMember>
                 </soap:Body>
             </soap:Envelope>";
-            return MakeSOAPRequest(block_contact_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/AddMember");
+            return MakeSOAPRequest(member_role_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/AddMember");
         }
 
-        public string MakeUnblockContactSOAPRequests(Contact contact)
+        public string DeleteMember(string membershipId, string member_role)
         {
-            string unblock_contact_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            string member_role_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" 
                            xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" 
                            xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" 
@@ -153,11 +111,11 @@ namespace UWPMessengerClient.MSNP.SOAP
                         </serviceHandle>
                         <memberships>
                             <Membership>
-                                <MemberRole>Block</MemberRole>
+                                <MemberRole>{member_role}</MemberRole>
                                 <Members>
                                     <Member xsi:type=""PassportMember"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
                                         <Type>Passport</Type>
-                                        <MembershipId>{contact.MembershipID}</MembershipId>
+                                        <MembershipId>{membershipId}</MembershipId>
                                         <State>Accepted</State>
                                     </Member>
                                 </Members>
@@ -166,49 +124,25 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </DeleteMember>
                 </soap:Body>
             </soap:Envelope>";
-            if (contact.MembershipID != null)
+            return MakeSOAPRequest(member_role_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/DeleteMember");
+        }
+
+        public void BlockContactRequests(Contact contact)
+        {
+            if (contact.AllowMembershipID != null)
             {
-                MakeSOAPRequest(unblock_contact_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/DeleteMember");
+                DeleteMember(contact.AllowMembershipID, "Allow");
             }
-            unblock_contact_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-            <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" 
-                           xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" 
-                           xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" 
-                           xmlns:soapenc=""http://schemas.xmlsoap.org/soap/encoding/"">
-                <soap:Header>
-                    <ABApplicationHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <ApplicationId>996CDE1B-AA53-4477-B943-2BB802EA6166</ApplicationId>
-                        <IsMigration>false</IsMigration>
-                        <PartnerScenario>BlockUnblock</PartnerScenario>
-                    </ABApplicationHeader>
-                    <ABAuthHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <ManagedGroupRequest>false</ManagedGroupRequest>
-                        <TicketToken>{TicketToken}</TicketToken>
-                    </ABAuthHeader>
-                </soap:Header>
-                <soap:Body>
-                    <AddMember xmlns=""http://www.msn.com/webservices/AddressBook"">
-                        <serviceHandle>
-                            <Id>0</Id>
-                            <Type>Messenger</Type>
-                            <ForeignId></ForeignId>
-                        </serviceHandle>
-                        <memberships>
-                            <Membership>
-                                <MemberRole>Allow</MemberRole>
-                                <Members>
-                                    <Member xsi:type=""PassportMember"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
-                                        <Type>Passport</Type>
-                                        <State>Accepted</State>
-                                        <PassportName>{contact.email}</PassportName>
-                                    </Member>
-                                </Members>
-                            </Membership>
-                        </memberships>
-                    </AddMember>
-                </soap:Body>
-            </soap:Envelope>";
-            return MakeSOAPRequest(unblock_contact_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/AddMember");
+            AddMember(contact.Email, "Block");
+        }
+
+        public void UnblockContactRequests(Contact contact)
+        {
+            if (contact.BlockMembershipID != null)
+            {
+                DeleteMember(contact.BlockMembershipID, "Block");
+            }
+            AddMember(contact.Email, "Allow");
         }
     }
 }
