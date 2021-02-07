@@ -236,22 +236,22 @@ namespace UWPMessengerClient.MSNP
                     break;
                 //apparently 0 just means null, 1 means AL and 2 means BL
             }
-            transactionID++;
-            NSSocket.SendCommand($"BLP {transactionID} {setting}\r\n");
+            TransactionID++;
+            NSSocket.SendCommand($"BLP {TransactionID} {setting}\r\n");
         }
 
         protected void SendInitialADL()
         {
             string contact_payload = ReturnXMLContactPayload(ContactList);
             int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-            transactionID++;
-            NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n{contact_payload}");
+            TransactionID++;
+            NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
         }
 
         protected void SendUserDisplayName()
         {
-            transactionID++;
-            NSSocket.SendCommand($"PRP {transactionID} MFN {userInfo.displayName}\r\n");
+            TransactionID++;
+            NSSocket.SendCommand($"PRP {TransactionID} MFN {userInfo.displayName}\r\n");
         }
 
         public async Task AddNewContact(string newContactEmail, string newContactDisplayName = "")
@@ -263,8 +263,8 @@ namespace UWPMessengerClient.MSNP
                 switch (MSNPVersion)
                 {
                     case "MSNP12":
-                        transactionID++;
-                        NSSocket.SendCommand($"ADC {transactionID} FL N={newContactEmail} F={newContactDisplayName}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"ADC {TransactionID} FL N={newContactEmail} F={newContactDisplayName}\r\n");
                         Windows.Foundation.IAsyncAction adc_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
                             Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow)
@@ -277,11 +277,11 @@ namespace UWPMessengerClient.MSNP
                         });
                         break;
                     case "MSNP15":
-                        transactionID++;
+                        TransactionID++;
                         SOAPRequests.ABContactAdd(newContactEmail);
                         string contact_payload = ReturnXMLNewContactPayload(newContactEmail);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n{contact_payload}");
+                        NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
                         Windows.Foundation.IAsyncAction adl_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
                             Contact newContact = new Contact((int)ListNumbers.Forward + (int)ListNumbers.Allow)
@@ -308,8 +308,8 @@ namespace UWPMessengerClient.MSNP
                 switch (MSNPVersion)
                 {
                     case "MSNP12":
-                        transactionID++;
-                        NSSocket.SendCommand($"ADC {transactionID} FL N={contactToAccept.Email} F={contactToAccept.displayName}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"ADC {TransactionID} FL N={contactToAccept.Email} F={contactToAccept.displayName}\r\n");
                         contactToAccept.onForward = true;
                         Windows.Foundation.IAsyncAction adc_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
@@ -318,15 +318,15 @@ namespace UWPMessengerClient.MSNP
                         });
                         break;
                     case "MSNP15":
-                        transactionID++;
+                        TransactionID++;
                         SOAPRequests.ABContactAdd(contactToAccept.Email);
                         string contact_payload = ReturnXMLNewContactPayload(contactToAccept.Email);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n{contact_payload}");
-                        transactionID++;
+                        NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
+                        TransactionID++;
                         contact_payload = ReturnXMLNewContactPayload(contactToAccept.Email, 2);
                         payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n{contact_payload}");
+                        NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
                         contactToAccept.onForward = true;
                         Windows.Foundation.IAsyncAction adl_task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
@@ -348,15 +348,15 @@ namespace UWPMessengerClient.MSNP
                 switch (MSNPVersion)
                 {
                     case "MSNP12":
-                        transactionID++;
-                        NSSocket.SendCommand($"REM {transactionID} FL {contactToRemove.GUID}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"REM {TransactionID} FL {contactToRemove.GUID}\r\n");
                         break;
                     case "MSNP15":
-                        transactionID++;
+                        TransactionID++;
                         SOAPRequests.ABContactDelete(contactToRemove);
                         string contact_payload = ReturnXMLContactPayload(contactToRemove);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"RML {transactionID} {payload_length}\r\n{contact_payload}");
+                        NSSocket.SendCommand($"RML {TransactionID} {payload_length}\r\n{contact_payload}");
                         break;
                     default:
                         throw new Exceptions.VersionNotSelectedException();
@@ -377,25 +377,25 @@ namespace UWPMessengerClient.MSNP
                 switch (MSNPVersion)
                 {
                     case "MSNP12":
-                        transactionID++;
-                        NSSocket.SendCommand($"ADC {transactionID} BL N={contactToBlock.Email}\r\n");
-                        transactionID++;
-                        NSSocket.SendCommand($"REM {transactionID} AL {contactToBlock.GUID}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"ADC {TransactionID} BL N={contactToBlock.Email}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"REM {TransactionID} AL {contactToBlock.GUID}\r\n");
                         contactToBlock.onBlock = true;
                         contactToBlock.onAllow = false;
                         break;
                     case "MSNP15":
-                        transactionID++;
+                        TransactionID++;
                         SOAPRequests.BlockContactRequests(contactToBlock);
                         contactToBlock.SetListsFromListnumber((int)ListNumbers.Allow);
                         string contact_payload = ReturnXMLContactPayload(contactToBlock);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"RML {transactionID} {payload_length}\r\n{contact_payload}");
-                        transactionID++;
+                        NSSocket.SendCommand($"RML {TransactionID} {payload_length}\r\n{contact_payload}");
+                        TransactionID++;
                         contactToBlock.SetListsFromListnumber((int)ListNumbers.Block);
                         contact_payload = ReturnXMLContactPayload(contactToBlock);
                         payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n{contact_payload}");
+                        NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
                         break;
                     default:
                         throw new Exceptions.VersionNotSelectedException();
@@ -411,25 +411,25 @@ namespace UWPMessengerClient.MSNP
                 switch (MSNPVersion)
                 {
                     case "MSNP12":
-                        transactionID++;
-                        NSSocket.SendCommand($"ADC {transactionID} AL N={contactToUnblock.Email}\r\n");
-                        transactionID++;
-                        NSSocket.SendCommand($"REM {transactionID} BL {contactToUnblock.Email}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"ADC {TransactionID} AL N={contactToUnblock.Email}\r\n");
+                        TransactionID++;
+                        NSSocket.SendCommand($"REM {TransactionID} BL {contactToUnblock.Email}\r\n");
                         contactToUnblock.onBlock = false;
                         contactToUnblock.onAllow = true;
                         break;
                     case "MSNP15":
-                        transactionID++;
+                        TransactionID++;
                         SOAPRequests.UnblockContactRequests(contactToUnblock);
                         contactToUnblock.SetListsFromListnumber((int)ListNumbers.Block);
                         string contact_payload = ReturnXMLContactPayload(contactToUnblock);
                         int payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"RML {transactionID} {payload_length}\r\n{contact_payload}");
-                        transactionID++;
+                        NSSocket.SendCommand($"RML {TransactionID} {payload_length}\r\n{contact_payload}");
+                        TransactionID++;
                         contactToUnblock.SetListsFromListnumber((int)ListNumbers.Allow);
                         contact_payload = ReturnXMLContactPayload(contactToUnblock);
                         payload_length = Encoding.UTF8.GetBytes(contact_payload).Length;
-                        NSSocket.SendCommand($"ADL {transactionID} {payload_length}\r\n{contact_payload}");
+                        NSSocket.SendCommand($"ADL {TransactionID} {payload_length}\r\n{contact_payload}");
                         break;
                     default:
                         throw new Exceptions.VersionNotSelectedException();

@@ -17,29 +17,29 @@ namespace UWPMessengerClient.MSNP
     {
         private string SOAPResult;
         private string SSO_Ticket;
-        private byte[] received_bytes = new byte[4096];
-        private string output_string;
-        private string current_response;
-        private string next_response;
+        private byte[] ReceivedBytes = new byte[4096];
+        private string OutputString;
+        private string CurrentResponse;
+        private string NextResponse;
         public event EventHandler<SwitchboardEventArgs> SwitchboardCreated;
 
         public void ReceivingCallback(IAsyncResult asyncResult)
         {
             NotificationServerConnection notificationServerConnection = (NotificationServerConnection)asyncResult.AsyncState;
             int bytes_read = notificationServerConnection.NSSocket.StopReceiving(asyncResult);
-            notificationServerConnection.output_string = Encoding.UTF8.GetString(notificationServerConnection.received_bytes, 0, bytes_read);
-            string[] responses = notificationServerConnection.output_string.Split("\r\n");
+            notificationServerConnection.OutputString = Encoding.UTF8.GetString(notificationServerConnection.ReceivedBytes, 0, bytes_read);
+            string[] responses = notificationServerConnection.OutputString.Split("\r\n");
             for (var i = 0; i < responses.Length; i++)
             {
                 string[] res_params = responses[i].Split(" ");
-                notificationServerConnection.current_response = responses[i];
+                notificationServerConnection.CurrentResponse = responses[i];
                 if (i != responses.Length - 1)
                 {
-                    notificationServerConnection.next_response = responses[i + 1];
+                    notificationServerConnection.NextResponse = responses[i + 1];
                 }
                 try
                 {
-                    notificationServerConnection.command_handlers[res_params[0]]();
+                    notificationServerConnection.CommandHandlers[res_params[0]]();
                 }
                 catch (KeyNotFoundException)
                 {
@@ -52,7 +52,7 @@ namespace UWPMessengerClient.MSNP
             }
             if (bytes_read > 0)
             {
-                notificationServerConnection.NSSocket.BeginReceiving(notificationServerConnection.received_bytes, new AsyncCallback(ReceivingCallback), notificationServerConnection);
+                notificationServerConnection.NSSocket.BeginReceiving(notificationServerConnection.ReceivedBytes, new AsyncCallback(ReceivingCallback), notificationServerConnection);
             }
         }
 
@@ -69,9 +69,9 @@ namespace UWPMessengerClient.MSNP
             string new_command = response.Replace(payload, "");
             if (new_command != "")
             {
-                current_response = new_command;
+                CurrentResponse = new_command;
                 string[] cmd_params = new_command.Split(" ");
-                command_handlers[cmd_params[0]]();
+                CommandHandlers[cmd_params[0]]();
             }
         }
 
@@ -86,7 +86,7 @@ namespace UWPMessengerClient.MSNP
 
         protected void GetMBIKeyOldNonce()
         {
-            string[] USRResponse = output_string.Split("USR ", 2);
+            string[] USRResponse = OutputString.Split("USR ", 2);
             //ensuring the last element of the USRReponse array is just the USR response
             int rnIndex = USRResponse.Last().IndexOf("\r\n");
             if (rnIndex != USRResponse.Last().Length && rnIndex >= 0)
@@ -100,7 +100,7 @@ namespace UWPMessengerClient.MSNP
 
         public void HandleLST()
         {
-            string[] LSTParams = current_response.Split(" ");
+            string[] LSTParams = CurrentResponse.Split(" ");
             string email, displayName, guid;
             int listnumber = 0;
             email = LSTParams[1].Replace("N=","");
@@ -170,7 +170,7 @@ namespace UWPMessengerClient.MSNP
 
         public void HandleADC()
         {
-            string[] ADCParams = current_response.Split(" ");
+            string[] ADCParams = CurrentResponse.Split(" ");
             string email, displayName;
             email = ADCParams[3].Replace("N=", "");
             displayName = ADCParams[4].Replace("F=", "");
@@ -211,11 +211,11 @@ namespace UWPMessengerClient.MSNP
 
         public void HandleADL()
         {
-            string[] ADLParams = current_response.Split(" ");
+            string[] ADLParams = CurrentResponse.Split(" ");
             if (ADLParams[2] == "OK") { return; }
             int payload_length;
             int.TryParse(ADLParams[2], out payload_length);
-            string payload = SeparatePayloadFromResponse(next_response, payload_length);
+            string payload = SeparatePayloadFromResponse(NextResponse, payload_length);
             XmlDocument payload_xml = new XmlDocument();
             payload_xml.LoadXml(payload);
             XmlNode d_node = payload_xml.SelectSingleNode("//ml/d");
@@ -267,7 +267,7 @@ namespace UWPMessengerClient.MSNP
 
         public void HandlePRP()
         {
-            string[] PRPParams = current_response.Split(" ");
+            string[] PRPParams = CurrentResponse.Split(" ");
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 if (PRPParams[1] == "MFN")
@@ -286,7 +286,7 @@ namespace UWPMessengerClient.MSNP
         public void HandleILN()
         {
             //gets the parameters, does a LINQ query in the contact list and sets the contact's status
-            string[] ILNParams = current_response.Split(" ");
+            string[] ILNParams = CurrentResponse.Split(" ");
             string status = ILNParams[2];
             string email = ILNParams[3];
             string displayName = "";
@@ -327,7 +327,7 @@ namespace UWPMessengerClient.MSNP
         public void HandleNLN()
         {
             //gets the parameters, does a LINQ query in the contact list and sets the contact's status
-            string[] NLNParams = current_response.Split(" ");
+            string[] NLNParams = CurrentResponse.Split(" ");
             string status = NLNParams[1];
             string email = NLNParams[2];
             string displayName = "";
@@ -367,7 +367,7 @@ namespace UWPMessengerClient.MSNP
 
         public void HandleFLN()
         {
-            string[] FLNParams = current_response.Split(" ");
+            string[] FLNParams = CurrentResponse.Split(" ");
             //for the FLN response gets the email, does a LINQ query in the contact list and sets the contact's status to offline
             string email = FLNParams[1];
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -392,7 +392,7 @@ namespace UWPMessengerClient.MSNP
         public void HandleUBX()
         {
             string personal_message;
-            string[] UBXParams = current_response.Split(" ");
+            string[] UBXParams = CurrentResponse.Split(" ");
             string principal_email = UBXParams[1];
             string length_str = "";
             switch (MSNPVersion)
@@ -408,7 +408,7 @@ namespace UWPMessengerClient.MSNP
             }
             int ubx_length;
             int.TryParse(length_str, out ubx_length);
-            string payload = SeparatePayloadFromResponse(next_response, ubx_length);
+            string payload = SeparatePayloadFromResponse(NextResponse, ubx_length);
             XmlDocument personalMessagePayload = new XmlDocument();
             try
             {
@@ -439,12 +439,12 @@ namespace UWPMessengerClient.MSNP
                     contact.personalMessage = personal_message;
                 }
             });
-            SeparateAndProcessCommandFromResponse(next_response, ubx_length);
+            SeparateAndProcessCommandFromResponse(NextResponse, ubx_length);
         }
 
         public async Task HandleXFR()
         {
-            string[] XFRParams = current_response.Split(" ");
+            string[] XFRParams = CurrentResponse.Split(" ");
             string[] address_and_port = XFRParams[3].Split(":");
             string sb_address = address_and_port[0];
             int sb_port;
@@ -461,7 +461,7 @@ namespace UWPMessengerClient.MSNP
                 default:
                     throw new Exceptions.VersionNotSelectedException();
             }
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, auth_string, userInfo.displayName)
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, Email, auth_string, userInfo.displayName)
             {
                 KeepMessagingHistory = KeepMessagingHistoryInSwitchboard
             };
@@ -473,7 +473,7 @@ namespace UWPMessengerClient.MSNP
 
         public void HandleRNG()
         {
-            string[] RNGParams = current_response.Split(" ");
+            string[] RNGParams = CurrentResponse.Split(" ");
             string sessionID = RNGParams[1];
             string[] address_and_port = RNGParams[2].Split(":");
             int sb_port;
@@ -485,7 +485,7 @@ namespace UWPMessengerClient.MSNP
             int conv_id = random.Next(1000, 9999);
             SBConversation conversation = new SBConversation(this, Convert.ToString(conv_id));
             SBConversations.Add(conversation);
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, email, authString, userInfo.displayName, principalName, principalEmail, sessionID)
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, Email, authString, userInfo.displayName, principalName, principalEmail, sessionID)
             {
                 KeepMessagingHistory = KeepMessagingHistoryInSwitchboard
             };

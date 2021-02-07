@@ -11,7 +11,7 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class SwitchboardConnection
     {
-        private string current_response;
+        private string CurrentResponse;
         public ObservableCollection<Message> MessageList { get; set; } = new ObservableCollection<Message>();
         public event EventHandler NewMessage;
         public event EventHandler<MessageEventArgs> MessageReceived;
@@ -21,15 +21,15 @@ namespace UWPMessengerClient.MSNP
         {
             SwitchboardConnection switchboardConnection = (SwitchboardConnection)asyncResult.AsyncState;
             int bytes_received = switchboardConnection.SBSocket.StopReceiving(asyncResult);
-            switchboardConnection.outputString = Encoding.UTF8.GetString(switchboardConnection.outputBuffer, 0, bytes_received);
-            string[] responses = switchboardConnection.outputString.Split("\r\n");
+            switchboardConnection.OutputString = Encoding.UTF8.GetString(switchboardConnection.OutputBuffer, 0, bytes_received);
+            string[] responses = switchboardConnection.OutputString.Split("\r\n");
             for (var i = 0; i < responses.Length; i++)
             {
                 string[] res_params = responses[i].Split(" ");
-                switchboardConnection.current_response = responses[i];
+                switchboardConnection.CurrentResponse = responses[i];
                 try
                 {
-                    switchboardConnection.command_handlers[res_params[0]]();
+                    switchboardConnection.CommandHandlers[res_params[0]]();
                 }
                 catch (KeyNotFoundException)
                 {
@@ -42,7 +42,7 @@ namespace UWPMessengerClient.MSNP
             }
             if (bytes_received > 0)
             {
-                SBSocket.BeginReceiving(outputBuffer, new AsyncCallback(ReceivingCallback), switchboardConnection);
+                SBSocket.BeginReceiving(OutputBuffer, new AsyncCallback(ReceivingCallback), switchboardConnection);
             }
         }
 
@@ -59,9 +59,9 @@ namespace UWPMessengerClient.MSNP
             string new_command = response.Replace(payload, "");
             if (new_command != "")
             {
-                outputString = new_command;
+                OutputString = new_command;
                 string[] cmd_params = new_command.Split(" ");
-                command_handlers[cmd_params[0]]();
+                CommandHandlers[cmd_params[0]]();
             }
         }
 
@@ -81,46 +81,46 @@ namespace UWPMessengerClient.MSNP
 
         protected void HandleUSR()
         {
-            string[] usr_params = current_response.Split(" ");
+            string[] usr_params = CurrentResponse.Split(" ");
             if (usr_params[2] != "OK")
             {
-                connected = false;
+                Connected = false;
             }
             else
             {
-                connected = true;
+                Connected = true;
             }
         }
 
         protected void HandleANS()
         {
-            string[] ans_params = current_response.Split(" ");
+            string[] ans_params = CurrentResponse.Split(" ");
             if (ans_params[2] != "OK")
             {
-                connected = false;
+                Connected = false;
             }
             else
             {
-                connected = true;
+                Connected = true;
             }
         }
 
         protected void HandleCAL()
         {
-            string[] cal_params = current_response.Split(" ");
+            string[] cal_params = CurrentResponse.Split(" ");
             SessionID = cal_params[3];
             PrincipalInvited?.Invoke(this, new EventArgs());
         }
 
         protected void HandleMSG()
         {
-            string[] MSG_Responses = outputString.Split("\r\n");
+            string[] MSG_Responses = OutputString.Split("\r\n");
             string[] MSGParams = MSG_Responses[0].Split(" ");
             string senderDisplayName = MSGParams[2];
             string length_str = MSGParams[3];
             int msg_length;
             int.TryParse(length_str, out msg_length);
-            string msg_payload = SeparatePayloadFromResponse(outputString, msg_length);
+            string msg_payload = SeparatePayloadFromResponse(OutputString, msg_length);
             string[] MSGPayloadParams = msg_payload.Split("\r\n");
             string[] FirstHeaderParams = MSGPayloadParams[0].Split(" ");
             string[] SecondHeaderParams = MSGPayloadParams[1].Split(" ");
@@ -153,7 +153,7 @@ namespace UWPMessengerClient.MSNP
                     ContentTypeDictionary[SecondHeaderParams[1]]();
                     break;
             }
-            SeparateAndProcessCommandFromResponse(outputString, msg_length);
+            SeparateAndProcessCommandFromResponse(OutputString, msg_length);
         }
 
         protected void AddMessage(string message_text, UserInfo sender, UserInfo receiver)

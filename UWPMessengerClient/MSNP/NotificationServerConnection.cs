@@ -23,17 +23,16 @@ namespace UWPMessengerClient.MSNP
         public List<SBConversation> SBConversations { get; set; } = new List<SBConversation>();
         //notification server(escargot) address and address for SSO auth
         protected string NSaddress = "m1.escargot.log1p.xyz";
-        protected string nexus_address = "https://m1.escargot.log1p.xyz/nexus-mock";
-        //local addresses are 127.0.0.1 for NSaddress, http://localhost/RST.srf for RST_address
-        //and http://localhost/nexus-mock for nexus_address
-        protected readonly int port = 1863;
-        private string email;
-        private string password;
+        protected string NexusAddress = "https://m1.escargot.log1p.xyz/nexus-mock";
+        //local addresses are 127.0.0.1 for NSaddress and http://localhost/nexus-mock for nexus_address
+        protected readonly int Port = 1863;
+        private string Email;
+        private string Password;
         protected Regex PlusCharactersRegex = new Regex("\\[(.*?)\\]");
         public bool UsingLocalhost { get; protected set; } = false;
         public string MSNPVersion { get; protected set; } = "MSNP15";
-        protected int transactionID = 0;
-        protected uint clientCapabilities = 0x84140428;
+        protected int TransactionID = 0;
+        protected uint ClientCapabilities = 0x84140428;
         public Contact ContactToChat { get; set; }
         public string UserPresenceStatus { get; set; }
         public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;
@@ -41,7 +40,7 @@ namespace UWPMessengerClient.MSNP
         private static Random random = new Random();
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler NotConnected;
-        protected Dictionary<string, Action> command_handlers;
+        protected Dictionary<string, Action> CommandHandlers;
         private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
         public ObservableCollection<string> ErrorLog
         {
@@ -55,7 +54,7 @@ namespace UWPMessengerClient.MSNP
 
         public NotificationServerConnection()
         {
-            command_handlers = new Dictionary<string, Action>()
+            CommandHandlers = new Dictionary<string, Action>()
             {
                 {"LST", () => HandleLST() },
                 {"ADC", () => HandleADC() },
@@ -72,7 +71,7 @@ namespace UWPMessengerClient.MSNP
 
         public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version, string initial_status = PresenceStatuses.Available)
         {
-            command_handlers = new Dictionary<string, Action>()
+            CommandHandlers = new Dictionary<string, Action>()
             {
                 {"LST", () => HandleLST() },
                 {"ADC", () => HandleADC() },
@@ -85,15 +84,15 @@ namespace UWPMessengerClient.MSNP
                 {"XFR", async () => await HandleXFR() },
                 {"RNG", () => HandleRNG() }
             };
-            email = messenger_email;
-            password = messenger_password;
+            Email = messenger_email;
+            Password = messenger_password;
             UsingLocalhost = use_localhost;
             MSNPVersion = msnp_version;
             UserPresenceStatus = initial_status;
             if (UsingLocalhost)
             {
                 NSaddress = "127.0.0.1";
-                nexus_address = "http://localhost/nexus-mock";
+                NexusAddress = "http://localhost/nexus-mock";
                 //setting local addresses
             }
             SOAPRequests = new SOAPRequests(UsingLocalhost);
@@ -133,8 +132,8 @@ namespace UWPMessengerClient.MSNP
             if (status == "") { throw new ArgumentNullException("Status is empty"); }
             Action changePresence = new Action(() =>
             {
-                transactionID++;
-                NSSocket.SendCommand($"CHG {transactionID} {status} {clientCapabilities}\r\n");
+                TransactionID++;
+                NSSocket.SendCommand($"CHG {TransactionID} {status} {ClientCapabilities}\r\n");
             });
             UserPresenceStatus = status;
             await Task.Run(changePresence);
@@ -148,8 +147,8 @@ namespace UWPMessengerClient.MSNP
                 SOAPRequests.ChangeUserDisplayNameRequest(newDisplayName);
             }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
-            transactionID++;
-            await Task.Run(() => NSSocket.SendCommand($"PRP {transactionID} MFN {urlEncodedNewDisplayName}\r\n"));
+            TransactionID++;
+            await Task.Run(() => NSSocket.SendCommand($"PRP {TransactionID} MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
         public async Task SendUserPersonalMessage(string newPersonalMessage)
@@ -159,8 +158,8 @@ namespace UWPMessengerClient.MSNP
                 string encodedPersonalMessage = newPersonalMessage.Replace("&", "&amp;");
                 string psm_payload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
                 int payload_length = Encoding.UTF8.GetBytes(psm_payload).Length;
-                transactionID++;
-                NSSocket.SendCommand($"UUX {transactionID} {payload_length}\r\n" + psm_payload);
+                TransactionID++;
+                NSSocket.SendCommand($"UUX {TransactionID} {payload_length}\r\n" + psm_payload);
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     userInfo.personalMessage = newPersonalMessage;
@@ -211,8 +210,8 @@ namespace UWPMessengerClient.MSNP
 
         protected async Task InitiateSB()
         {
-            transactionID++;
-            await Task.Run(() => NSSocket.SendCommand($"XFR {transactionID} SB\r\n"));
+            TransactionID++;
+            await Task.Run(() => NSSocket.SendCommand($"XFR {TransactionID} SB\r\n"));
         }
 
         public SBConversation ReturnConversationFromConversationID(string conversation_id)

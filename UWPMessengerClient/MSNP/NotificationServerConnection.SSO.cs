@@ -16,30 +16,30 @@ namespace UWPMessengerClient.MSNP
 
         protected async Task MSNP15LoginToMessengerAsync()
         {
-            NSSocket = new SocketCommands(NSaddress, port);
+            NSSocket = new SocketCommands(NSaddress, Port);
             Action loginAction = new Action(() =>
             {
                 NSSocket.ConnectSocket();
                 NSSocket.SetReceiveTimeout(25000);
-                transactionID++;
-                NSSocket.SendCommand($"VER {transactionID} MSNP15 CVR0\r\n");
-                output_string = NSSocket.ReceiveMessage(received_bytes);//receive VER response
-                transactionID++;
-                NSSocket.SendCommand($"CVR {transactionID} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");
-                output_string = NSSocket.ReceiveMessage(received_bytes);//receive CVR response
-                transactionID++;
-                NSSocket.SendCommand($"USR {transactionID} SSO I {email}\r\n");
-                output_string = NSSocket.ReceiveMessage(received_bytes);//receive GCF
-                output_string = NSSocket.ReceiveMessage(received_bytes);//receive USR response with nonce
-                transactionID++;
-                userInfo.Email = email;
+                TransactionID++;
+                NSSocket.SendCommand($"VER {TransactionID} MSNP15 CVR0\r\n");
+                OutputString = NSSocket.ReceiveMessage(ReceivedBytes);//receive VER response
+                TransactionID++;
+                NSSocket.SendCommand($"CVR {TransactionID} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");
+                OutputString = NSSocket.ReceiveMessage(ReceivedBytes);//receive CVR response
+                TransactionID++;
+                NSSocket.SendCommand($"USR {TransactionID} SSO I {Email}\r\n");
+                OutputString = NSSocket.ReceiveMessage(ReceivedBytes);//receive GCF
+                OutputString = NSSocket.ReceiveMessage(ReceivedBytes);//receive USR response with nonce
+                TransactionID++;
+                userInfo.Email = Email;
                 GetMBIKeyOldNonce();
-                SOAPResult = SOAPRequests.SSORequest(email, password, MBIKeyOldNonce);
+                SOAPResult = SOAPRequests.SSORequest(Email, Password, MBIKeyOldNonce);
                 GetContactsFromDatabase();
                 string response_struct = GetSSOReturnValue();
-                NSSocket.SendCommand($"USR {transactionID} SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
-                output_string = NSSocket.ReceiveMessage(received_bytes);//receive USR OK
-                NSSocket.BeginReceiving(received_bytes, new AsyncCallback(ReceivingCallback), this);
+                NSSocket.SendCommand($"USR {TransactionID} SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
+                OutputString = NSSocket.ReceiveMessage(ReceivedBytes);//receive USR OK
+                NSSocket.BeginReceiving(ReceivedBytes, new AsyncCallback(ReceivingCallback), this);
                 MembershipLists = SOAPRequests.FindMembership();
                 AddressBook = SOAPRequests.ABFindAll();
                 FillContactListFromSOAP();
@@ -47,8 +47,8 @@ namespace UWPMessengerClient.MSNP
                 SendBLP();
                 SendInitialADL();
                 SendUserDisplayName();
-                transactionID++;
-                NSSocket.SendCommand($"CHG {transactionID} {UserPresenceStatus} {clientCapabilities}\r\n");//setting presence as available
+                TransactionID++;
+                NSSocket.SendCommand($"CHG {TransactionID} {UserPresenceStatus} {ClientCapabilities}\r\n");//setting presence as available
             });
             await Task.Run(loginAction);
         }
