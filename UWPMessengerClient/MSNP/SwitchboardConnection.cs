@@ -29,7 +29,6 @@ namespace UWPMessengerClient.MSNP
         protected bool WaitingTyping = false;
         protected bool WaitingNudge = false;
         protected int MaximumInkSize = 1140;
-        private static Random random = new Random();
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler HistoryLoaded;
         Dictionary<string, Action> CommandHandlers;
