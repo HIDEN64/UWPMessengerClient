@@ -302,25 +302,9 @@ namespace UWPMessengerClient.MSNP
 
         public static string GenerateMessageID()
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            List<string> sets = new List<string>();
-            sets.Add(new string(Enumerable.Repeat(chars, 8)
-              .Select(s => s[random.Next(s.Length)]).ToArray()));
-            sets.Add(new string(Enumerable.Repeat(chars, 4)
-              .Select(s => s[random.Next(s.Length)]).ToArray()));
-            sets.Add(new string(Enumerable.Repeat(chars, 4)
-              .Select(s => s[random.Next(s.Length)]).ToArray()));
-            sets.Add(new string(Enumerable.Repeat(chars, 4)
-              .Select(s => s[random.Next(s.Length)]).ToArray()));
-            sets.Add(new string(Enumerable.Repeat(chars, 12)
-              .Select(s => s[random.Next(s.Length)]).ToArray()));
-            StringBuilder stringBuilder = new StringBuilder(38);
+            StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.Append("{");
-            stringBuilder.Append(sets[0]);
-            for (int i = 1; i < sets.Count; i++)
-            {
-                stringBuilder.Append("-" + sets[i]);
-            }
+            stringBuilder.Append(Guid.NewGuid().ToString().ToUpper());
             stringBuilder.Append("}");
             string message_id = stringBuilder.ToString();
             return message_id;
