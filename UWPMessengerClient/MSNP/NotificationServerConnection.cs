@@ -22,8 +22,8 @@ namespace UWPMessengerClient.MSNP
         protected SocketCommands NSSocket;
         public List<SBConversation> SBConversations { get; set; } = new List<SBConversation>();
         //notification server(escargot) address and address for SSO auth
-        protected string NSaddress = "m1.escargot.log1p.xyz";
-        protected string NexusAddress = "https://m1.escargot.log1p.xyz/nexus-mock";
+        protected string NSaddress = "m1.escargot.chat";
+        protected string NexusAddress = "https://m1.escargot.chat/nexus-mock";
         //local addresses are 127.0.0.1 for NSaddress and http://localhost/nexus-mock for nexus_address
         protected readonly int Port = 1863;
         private string Email;

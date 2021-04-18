@@ -25,7 +25,7 @@ namespace UWPMessengerClient
     public sealed partial class SettingsPage : Page, INotifyPropertyChanged
     {
         private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-        private string server_address = "m1.escargot.log1p.xyz";//escargot address
+        private string server_address = "m1.escargot.chat";//escargot address
         private int server_port = 1863;
         private SocketCommands TestSocket;
         public event PropertyChangedEventHandler PropertyChanged;
