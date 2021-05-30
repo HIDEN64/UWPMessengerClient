@@ -25,9 +25,6 @@ namespace UWPMessengerClient
     public sealed partial class SettingsPage : Page, INotifyPropertyChanged
     {
         private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-        private string serverAddress = "m1.escargot.chat";//escargot address
-        private int serverPort = 1863;
-        private SocketCommands testSocket;
         public event PropertyChangedEventHandler PropertyChanged;
         private NotificationServerConnection notificationServerConnection;
         private ObservableCollection<string> errors;
@@ -45,7 +42,6 @@ namespace UWPMessengerClient
         {
             this.InitializeComponent();
             SetConfigDefaultValuesIfNull();
-            testSocket = new SocketCommands(serverAddress, serverPort);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -58,7 +54,6 @@ namespace UWPMessengerClient
                 Errors = notificationServerConnection.ErrorLog;
                 notificationServerConnection.KeepMessagingHistoryInSwitchboard = (bool)localSettings.Values["KeepHistory"];
             }
-            var task = TestServer();
             base.OnNavigatedTo(e);
         }
 
@@ -106,45 +101,11 @@ namespace UWPMessengerClient
             }
         }
 
-        private async Task TestServer()
-        {
-            server_connection_status.Text = "Testing server response time...";
-            Stopwatch stopwatch = new Stopwatch();
-            string status = "";
-            await Task.Run(() =>
-            {
-                testSocket.ConnectSocket();
-                testSocket.SetReceiveTimeout(25000);
-                byte[] buffer = new byte[4096];
-                testSocket.SendCommand("VER 1 MSNP15 CVR0\r\n");
-                stopwatch.Start();
-                try
-                {
-                    testSocket.ReceiveMessage(buffer);
-                    status = "Connected to server";
-                }
-                catch (System.Net.Sockets.SocketException e)
-                {
-                    if (e.SocketErrorCode == System.Net.Sockets.SocketError.TimedOut)
-                    {
-                        status = "Could not connect to server";
-                    }
-                }
-                stopwatch.Stop();
-            });
-            server_connection_status.Text = $"{status} - {stopwatch.Elapsed.TotalSeconds} seconds response time";
-        }
-
         private void SetSavedSettings()
         {
             version_box.SelectedIndex = (int)localSettings.Values["MsnpVersionIndex"];
             localhost_toggle.IsOn = (bool)localSettings.Values["UsingLocalhost"];
             MessagingHistorySwitch.IsOn = (bool)localSettings.Values["KeepHistory"];
-        }
-
-        private async void testServerButton_Click(object sender, RoutedEventArgs e)
-        {
-            await TestServer();
         }
 
         private void MessagingHistorySwitch_Toggled(object sender, RoutedEventArgs e)

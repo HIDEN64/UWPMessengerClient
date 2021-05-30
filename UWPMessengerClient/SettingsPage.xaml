@@ -56,14 +56,6 @@
                     </ListView.ItemTemplate>
                 </ListView>
             </PivotItem>
-            <PivotItem Header="Server connection">
-                <StackPanel>
-                    <TextBlock Text="Server connection viewer" Style="{ThemeResource TitleTextBlockStyle}" Margin="5"/>
-                    <TextBlock x:Name="server_connection_status" Text="" Margin="5" TextWrapping="Wrap"
-                        Style="{ThemeResource BodyTextBlockStyle}"/>
-                    <Button x:Name="testServerButton" Content="Click to test server response time again" Click="testServerButton_Click"/>
-                </StackPanel>
-            </PivotItem>
             <PivotItem Header="Errors">
                 <ListView x:Name="errorList" ItemsSource="{x:Bind errors, Mode=OneWay}"/>
             </PivotItem>
