@@ -14,7 +14,7 @@ namespace UWPMessengerClient.MSNP
         private HttpClient httpClient;
         private string token;
 
-        protected async Task MSNP12LoginToMessengerAsync()
+        private async Task MSNP12LoginToMessengerAsync()
         {
             httpClient = new HttpClient();
             nsSocket = new SocketCommands(nsAddress, port);

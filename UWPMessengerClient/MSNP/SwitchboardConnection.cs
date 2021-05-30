@@ -13,12 +13,12 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class SwitchboardConnection : INotifyPropertyChanged
     {
-        protected SocketCommands sbSocket;
-        protected string sbAddress;
-        protected int sbPort = 0;
-        protected int transactionId = 0;
-        protected string authString;
-        public string SessionID { get; protected set; }
+        private SocketCommands sbSocket;
+        private string sbAddress;
+        private int sbPort = 0;
+        private int transactionId = 0;
+        private string authString;
+        public string SessionID { get; private set; }
         public UserInfo PrincipalInfo { get; set; } = new UserInfo();
         public UserInfo UserInfo { get; set; } = new UserInfo();
         public bool Connected { get; set; }
@@ -26,9 +26,9 @@ namespace UWPMessengerClient.MSNP
         public string OutputString { get; set; }
         public byte[] OutputBuffer { get; set; } = new byte[4096];
         public bool KeepMessagingHistory { get; set; } = true;
-        protected bool waitingTyping = false;
-        protected bool waitingNudge = false;
-        protected int maximumInkSize = 1140;
+        private bool waitingTyping = false;
+        private bool waitingNudge = false;
+        private int maximumInkSize = 1140;
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler HistoryLoaded;
         Dictionary<string, Action> commandHandlers;

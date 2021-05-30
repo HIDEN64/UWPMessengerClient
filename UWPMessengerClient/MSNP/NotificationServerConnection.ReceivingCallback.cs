@@ -56,7 +56,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected void SeparateAndProcessCommandFromResponse(string response, int payloadSize)
+        private void SeparateAndProcessCommandFromResponse(string response, int payloadSize)
         {
             if (response.Contains("\r\n"))
             {
@@ -75,7 +75,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected string SeparatePayloadFromResponse(string response, int payloadSize)
+        private string SeparatePayloadFromResponse(string response, int payloadSize)
         {
             byte[] responseBytes = Encoding.UTF8.GetBytes(response);
             byte[] payloadBytes = new byte[payloadSize];
@@ -84,7 +84,7 @@ namespace UWPMessengerClient.MSNP
             return payload;
         }
 
-        protected void GetMbiKeyOldNonce()
+        private void GetMbiKeyOldNonce()
         {
             string[] usrResponse = outputString.Split("USR ", 2);
             //ensuring the last element of the USRReponse array is just the USR response

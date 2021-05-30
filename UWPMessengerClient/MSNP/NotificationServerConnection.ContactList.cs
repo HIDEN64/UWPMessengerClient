@@ -20,7 +20,7 @@ namespace UWPMessengerClient.MSNP
         public ObservableCollection<Contact> ContactsInForwardList { get; set; } = new ObservableCollection<Contact>();
         public ObservableCollection<Contact> ContactsInPendingOrReverseList { get; set; } = new ObservableCollection<Contact>();
 
-        protected void GetContactsFromDatabase()
+        private void GetContactsFromDatabase()
         {
             List<string> jsonContactList = DatabaseAccess.GetUserContacts(UserInfo.Email);
             foreach (string jsonContact in jsonContactList)
@@ -30,7 +30,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected void FillContactListFromSOAP()
+        private void FillContactListFromSOAP()
         {
             XmlDocument memberList = new XmlDocument();
             memberList.LoadXml(membershipLists);
@@ -112,7 +112,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected void FillContactsInForwardListFromSOAP()
+        private void FillContactsInForwardListFromSOAP()
         {
             XmlDocument addressBookXml = new XmlDocument();
             addressBookXml.LoadXml(addressBook);
@@ -225,7 +225,7 @@ namespace UWPMessengerClient.MSNP
             return contactPayload;
         }
 
-        protected void SendBLP()
+        private void SendBLP()
         {
             string setting = "";
             switch (UserInfo.BlpValue)
@@ -242,7 +242,7 @@ namespace UWPMessengerClient.MSNP
             nsSocket.SendCommand($"BLP {transactionId} {setting}\r\n");
         }
 
-        protected void SendInitialADL()
+        private void SendInitialADL()
         {
             string contactPayload = ReturnXMLContactPayload(ContactList);
             int payloadLength = Encoding.UTF8.GetBytes(contactPayload).Length;
@@ -250,7 +250,7 @@ namespace UWPMessengerClient.MSNP
             nsSocket.SendCommand($"ADL {transactionId} {payloadLength}\r\n{contactPayload}");
         }
 
-        protected void SendUserDisplayName()
+        private void SendUserDisplayName()
         {
             transactionId++;
             nsSocket.SendCommand($"PRP {transactionId} MFN {UserInfo.DisplayName}\r\n");

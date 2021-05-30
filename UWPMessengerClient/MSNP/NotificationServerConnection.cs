@@ -19,20 +19,20 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection : INotifyPropertyChanged
     {
-        protected SocketCommands nsSocket;
+        private SocketCommands nsSocket;
         public List<SBConversation> SbConversations { get; set; } = new List<SBConversation>();
         //notification server(escargot) address and address for SSO auth
-        protected string nsAddress = "m1.escargot.log1p.xyz";
-        protected string nexusAddress = "https://m1.escargot.log1p.xyz/nexus-mock";
+        private string nsAddress = "m1.escargot.chat";
+        private string nexusAddress = "https://m1.escargot.chat/nexus-mock";
         //local addresses are 127.0.0.1 for NSaddress and http://localhost/nexus-mock for nexus_address
-        protected readonly int port = 1863;
+        private readonly int port = 1863;
         private string email;
         private string password;
-        protected Regex plusCharactersRegex = new Regex("\\[(.*?)\\]");
-        public bool UsingLocalhost { get; protected set; } = false;
-        public string MsnpVersion { get; protected set; } = "MSNP15";
-        protected int transactionId = 0;
-        protected uint clientCapabilities = 0x84140428;
+        private Regex plusCharactersRegex = new Regex("\\[(.*?)\\]");
+        public bool UsingLocalhost { get; private set; } = false;
+        public string MsnpVersion { get; private set; } = "MSNP15";
+        private int transactionId = 0;
+        private uint clientCapabilities = 0x84140428;
         public Contact ContactToChat { get; set; }
         public string UserPresenceStatus { get; set; }
         public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;
@@ -40,7 +40,7 @@ namespace UWPMessengerClient.MSNP
         private static Random random = new Random();
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler NotConnected;
-        protected Dictionary<string, Action> CommandHandlers;
+        private Dictionary<string, Action> CommandHandlers;
         private ObservableCollection<string> errorLog = new ObservableCollection<string>();
         public ObservableCollection<string> ErrorLog
         {
@@ -208,7 +208,7 @@ namespace UWPMessengerClient.MSNP
             while (isConnected);
         }
 
-        protected async Task InitiateSB()
+        private async Task InitiateSB()
         {
             transactionId++;
             await Task.Run(() => nsSocket.SendCommand($"XFR {transactionId} SB\r\n"));

@@ -46,7 +46,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected void SeparateAndProcessCommandFromResponse(string response, int payloadSize)
+        private void SeparateAndProcessCommandFromResponse(string response, int payloadSize)
         {
             if (response.Contains("\r\n"))
             {
@@ -65,7 +65,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected string SeparatePayloadFromResponse(string response, int payloadSize)
+        private string SeparatePayloadFromResponse(string response, int payloadSize)
         {
             string payload_response = response;
             if (response.Contains("\r\n"))
@@ -79,7 +79,7 @@ namespace UWPMessengerClient.MSNP
             return payload;
         }
 
-        protected void HandleUsr()
+        private void HandleUsr()
         {
             string[] usrParameters = currentResponse.Split(" ");
             if (usrParameters[2] != "OK")
@@ -92,7 +92,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected void HandleAns()
+        private void HandleAns()
         {
             string[] ansParameters = currentResponse.Split(" ");
             if (ansParameters[2] != "OK")
@@ -105,14 +105,14 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected void HandleCal()
+        private void HandleCal()
         {
             string[] calParameters = currentResponse.Split(" ");
             SessionID = calParameters[3];
             PrincipalInvited?.Invoke(this, new EventArgs());
         }
 
-        protected void HandleMsg()
+        private void HandleMsg()
         {
             string[] msgResponses = OutputString.Split("\r\n");
             string[] msgParameters = msgResponses[0].Split(" ");
@@ -156,7 +156,7 @@ namespace UWPMessengerClient.MSNP
             SeparateAndProcessCommandFromResponse(OutputString, messageLength);
         }
 
-        protected void AddMessage(string messageText, UserInfo sender, UserInfo receiver)
+        private void AddMessage(string messageText, UserInfo sender, UserInfo receiver)
         {
             Message newMessage = new Message()
             {
@@ -172,14 +172,14 @@ namespace UWPMessengerClient.MSNP
             MessageReceived?.Invoke(this, new MessageEventArgs() { message = newMessage });
         }
 
-        protected void AddMessage(Message message)
+        private void AddMessage(Message message)
         {
             NullTypingUser();
             AddToMessageListAndDatabase(message);
             MessageReceived?.Invoke(this, new MessageEventArgs() { message = message });
         }
 
-        protected void AddToMessageListAndDatabase(Message message)
+        private void AddToMessageListAndDatabase(Message message)
         {
             var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
@@ -193,7 +193,7 @@ namespace UWPMessengerClient.MSNP
             });
         }
 
-        protected void AddToMessageList(Message message)
+        private void AddToMessageList(Message message)
         {
             var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {

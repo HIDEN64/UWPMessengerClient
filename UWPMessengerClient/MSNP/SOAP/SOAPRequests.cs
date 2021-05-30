@@ -11,9 +11,9 @@ namespace UWPMessengerClient.MSNP.SOAP
 {
     partial class SOAPRequests
     {
-        protected string rstAddress = "https://m1.escargot.log1p.xyz/RST.srf";
+        private string rstAddress = "https://m1.escargot.chat/RST.srf";
         public string TicketToken { get; set; }
-        public bool UsingLocalhost { get; protected set; }
+        public bool UsingLocalhost { get; private set; }
 
         public SOAPRequests(bool useLocalhost = false)
         {

@@ -14,7 +14,7 @@ namespace UWPMessengerClient.MSNP
         private string mbiKeyOldNonce;
         private string ticketToken;
 
-        protected async Task MSNP15LoginToMessengerAsync()
+        private async Task MSNP15LoginToMessengerAsync()
         {
             nsSocket = new SocketCommands(nsAddress, port);
             Action loginAction = new Action(() =>
@@ -58,7 +58,7 @@ namespace UWPMessengerClient.MSNP
             return first.Concat(second).ToArray();
         }
 
-        protected byte[] GetResultFromSSOHashs(byte[] key, string wsSecure)
+        private byte[] GetResultFromSSOHashs(byte[] key, string wsSecure)
         {
             HMACSHA1 hMACSHA1 = new HMACSHA1(key);
             byte[] wsSecureBytes = Encoding.ASCII.GetBytes(wsSecure);
@@ -72,7 +72,7 @@ namespace UWPMessengerClient.MSNP
             return returnKey;
         }
 
-        protected string ReturnBinarySecret()
+        private string ReturnBinarySecret()
         {
             XmlDocument resultXml = new XmlDocument();
             resultXml.LoadXml(soapResult);
@@ -113,7 +113,7 @@ namespace UWPMessengerClient.MSNP
             return byteArray;
         }
 
-        protected void GetTicketToken()
+        private void GetTicketToken()
         {
             XmlDocument resultXml = new XmlDocument();
             resultXml.LoadXml(soapResult);
@@ -128,7 +128,7 @@ namespace UWPMessengerClient.MSNP
             soapRequests.TicketToken = ticketToken;
         }
 
-        protected string GetSSOReturnValue()
+        private string GetSSOReturnValue()
         {
             string binarySecret = ReturnBinarySecret();
             string ticket = ReturnTicket();
