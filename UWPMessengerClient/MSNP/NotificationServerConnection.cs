@@ -24,7 +24,7 @@ namespace UWPMessengerClient.MSNP
         //notification server(escargot) address and address for SSO auth
         private string nsAddress = "m1.escargot.chat";
         private string nexusAddress = "https://m1.escargot.chat/nexus-mock";
-        //local addresses are 127.0.0.1 for NSaddress and http://localhost/nexus-mock for nexus_address
+        //local addresses are 127.0.0.1 for nsAddress and http://localhost/nexus-mock for nexusAddress
         private readonly int port = 1863;
         private string email;
         private string password;

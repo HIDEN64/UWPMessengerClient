@@ -12,13 +12,13 @@ namespace UWPMessengerClient
     {
         public GroupInfoList(IEnumerable<object> items) : base(items) { }
         public event PropertyChangedEventHandler PropertyChanged;
-        private object _Key;
+        private object key;
         public object Key
         {
-            get => _Key;
+            get => key;
             set
             {
-                _Key = value;
+                key = value;
                 NotifyPropertyChanged();
             }
         }
