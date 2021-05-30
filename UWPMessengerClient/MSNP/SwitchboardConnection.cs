@@ -316,7 +316,7 @@ namespace UWPMessengerClient.MSNP
             numberOfChunksDouble = Math.Ceiling(numberOfChunksDouble);
             int numberOfChunks = Convert.ToInt32(numberOfChunksDouble);
             int numberOfFullChunks = numberOfChunks;
-            if (numberOfChunks % maximumInkSize > 0)
+            if (inkBytes.Length % maximumInkSize > 0)
             {
                 numberOfFullChunks--;
             }
