@@ -22,7 +22,7 @@ namespace UWPMessengerClient.MSNP.SOAP
             {
                 rstAddress = "http://localhost/RST.srf";
                 sharingServiceUrl = "http://localhost/abservice/SharingService.asmx";
-                AbServiceUrl = "http://localhost/abservice/abservice.asmx";
+                abServiceUrl = "http://localhost/abservice/abservice.asmx";
                 //setting local addresses
             }
         }

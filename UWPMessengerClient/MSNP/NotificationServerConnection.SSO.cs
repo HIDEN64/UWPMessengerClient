@@ -36,8 +36,8 @@ namespace UWPMessengerClient.MSNP
                 GetMbiKeyOldNonce();
                 soapResult = soapRequests.SsoRequest(email, password, mbiKeyOldNonce);
                 GetContactsFromDatabase();
-                string response_struct = GetSSOReturnValue();
-                nsSocket.SendCommand($"USR {transactionId} SSO S {ssoTicket} {response_struct}\r\n");//sending response to USR
+                string responseStruct = GetSsoReturnValue();
+                nsSocket.SendCommand($"USR {transactionId} SSO S {ssoTicket} {responseStruct}\r\n");//sending response to USR
                 outputString = nsSocket.ReceiveMessage(receivedBytes);//receive USR OK
                 nsSocket.BeginReceiving(receivedBytes, new AsyncCallback(ReceivingCallback), this);
                 membershipLists = soapRequests.FindMembership();
@@ -128,7 +128,7 @@ namespace UWPMessengerClient.MSNP
             soapRequests.TicketToken = ticketToken;
         }
 
-        private string GetSSOReturnValue()
+        private string GetSsoReturnValue()
         {
             string binarySecret = ReturnBinarySecret();
             string ticket = ReturnTicket();

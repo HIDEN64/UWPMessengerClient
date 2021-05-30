@@ -34,8 +34,8 @@ namespace UWPMessengerClient.MSNP
                 transactionId++;
                 nsSocket.SendCommand($"USR {transactionId} TWN I {email}\r\n");//sends email to get a string for use in authentication
                 transactionId++;
-                Task<string> token_task = GetNexusTokenAsync(httpClient);
-                token = token_task.Result;
+                Task<string> tokenTask = GetNexusTokenAsync(httpClient);
+                token = tokenTask.Result;
                 nsSocket.SendCommand($"USR {transactionId} TWN S t={token}\r\n");//sending authentication token
                 transactionId++;
                 nsSocket.SendCommand($"SYN {transactionId} 0 0\r\n");//sync contact list
