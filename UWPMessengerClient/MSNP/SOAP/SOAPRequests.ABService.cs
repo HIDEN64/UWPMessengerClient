@@ -8,10 +8,10 @@ namespace UWPMessengerClient.MSNP.SOAP
 {
     partial class SOAPRequests
     {
-        protected string abservice_url = "https://m1.escargot.chat/abservice/abservice.asmx";
+        protected string AbServiceUrl = "https://m1.escargot.log1p.xyz/abservice/abservice.asmx";
         //local address is http://localhost/abservice/abservice.asmx for abservice_url
 
-        public string ABFindAll()
+        public string AbFindAll()
         {
             string address_book_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/""
@@ -38,12 +38,12 @@ namespace UWPMessengerClient.MSNP.SOAP
 		            </ABFindAll>
 	            </soap:Body>
             </soap:Envelope>";
-            return MakeSOAPRequest(address_book_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABFindAll");
+            return MakeSoapRequest(address_book_xml, AbServiceUrl, "http://www.msn.com/webservices/AddressBook/ABFindAll");
         }
 
-        public string ABContactAdd(string newContactEmail)
+        public string AbContactAdd(string newContactEmail)
         {
-            string add_contact_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            string addContactXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/""
                            xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
                            xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
@@ -76,12 +76,12 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </ABContactAdd>
                 </soap:Body>
             </soap:Envelope>";
-            return MakeSOAPRequest(add_contact_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactAdd");
+            return MakeSoapRequest(addContactXml, AbServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactAdd");
         }
 
-        public string ABContactDelete(Contact contact)
+        public string AbContactDelete(Contact contact)
         {
-            string remove_contact_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            string removeContactXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/""
                            xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
                            xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
@@ -102,19 +102,19 @@ namespace UWPMessengerClient.MSNP.SOAP
                         <abId>00000000-0000-0000-0000-000000000000</abId>
                         <contacts>
                             <Contact>
-                                <contactId>{contact.contactID}</contactId>
+                                <contactId>{contact.ContactID}</contactId>
                             </Contact>
                         </contacts>
                     </ABContactDelete>
                 </soap:Body>
             </soap:Envelope>";
-            return MakeSOAPRequest(remove_contact_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactDelete");
+            return MakeSoapRequest(removeContactXml, AbServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactDelete");
         }
 
         public string ChangeUserDisplayNameRequest(string newDisplayName)
         {
             if (newDisplayName == "") { throw new ArgumentNullException("Display name is empty"); }
-            string ab_display_name_change_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            string abDisplayNameChangeXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" 
                            xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
                            xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" 
@@ -145,7 +145,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </ABContactUpdate>
                 </soap:Body>
             </soap:Envelope>";
-            return MakeSOAPRequest(ab_display_name_change_xml, abservice_url, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
+            return MakeSoapRequest(abDisplayNameChangeXml, AbServiceUrl, "http://www.msn.com/webservices/AddressBook/ABContactUpdate");
         }
     }
 }

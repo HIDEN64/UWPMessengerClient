@@ -54,7 +54,7 @@ namespace UWPMessengerClient.MSNP
                 };
                 string jsonContact = JsonConvert.SerializeObject(contact);
                 Contact contact_to_add = JsonConvert.DeserializeObject<Contact>(jsonContact);
-                contact_to_add.presenceStatus = null;
+                contact_to_add.PresenceStatus = null;
                 jsonContact = JsonConvert.SerializeObject(contact_to_add);
                 updateCommand.CommandText = "UPDATE Contacts SET JSONContact = @json_contact WHERE Email = @email AND " +
                     "UserAccount = @account";
@@ -137,7 +137,7 @@ namespace UWPMessengerClient.MSNP
             return entries;
         }
 
-        public static void AddMessageToTable(string user_email, string principal_email, Message message)
+        public static void AddMessageToTable(string user_email, string principalEmail, Message message)
         {
             string dbpath = Path.Combine(ApplicationData.Current.LocalFolder.Path, "UWPMessengerClient.db");
             using (SqliteConnection db =
@@ -153,7 +153,7 @@ namespace UWPMessengerClient.MSNP
                 // Use parameterized query to prevent SQL injection attacks
                 insertCommand.CommandText = "INSERT INTO Messages VALUES (NULL, @user, @principal, @json_message)";
                 insertCommand.Parameters.AddWithValue("@user", user_email);
-                insertCommand.Parameters.AddWithValue("@principal", principal_email);
+                insertCommand.Parameters.AddWithValue("@principal", principalEmail);
                 insertCommand.Parameters.AddWithValue("@json_message", jsonMessage);
                 insertCommand.ExecuteReader();
 
@@ -161,7 +161,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public static List<string> ReturnMessagesFromSenderAndReceiver(string user_email, string principal_email)
+        public static List<string> ReturnMessagesFromSenderAndReceiver(string userEmail, string principalEmail)
         {
             List<string> entries = new List<string>();
 
@@ -173,8 +173,8 @@ namespace UWPMessengerClient.MSNP
 
                 SqliteCommand selectCommand = new SqliteCommand
                     ("SELECT JSONMessage from Messages WHERE User = @user AND Principal = @principal", db);
-                selectCommand.Parameters.AddWithValue("@user", user_email);
-                selectCommand.Parameters.AddWithValue("@principal", principal_email);
+                selectCommand.Parameters.AddWithValue("@user", userEmail);
+                selectCommand.Parameters.AddWithValue("@principal", principalEmail);
                 SqliteDataReader query = selectCommand.ExecuteReader();
 
                 while (query.Read())

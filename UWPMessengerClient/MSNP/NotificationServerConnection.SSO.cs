@@ -11,44 +11,44 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection
     {
-        private string MBIKeyOldNonce;
-        private string TicketToken;
+        private string mbiKeyOldNonce;
+        private string ticketToken;
 
         protected async Task MSNP15LoginToMessengerAsync()
         {
-            NSSocket = new SocketCommands(NSaddress, Port);
+            NsSocket = new SocketCommands(nsAddress, Port);
             Action loginAction = new Action(() =>
             {
-                NSSocket.ConnectSocket();
-                NSSocket.SetReceiveTimeout(25000);
-                TransactionID++;
-                NSSocket.SendCommand($"VER {TransactionID} MSNP15 CVR0\r\n");
-                OutputString = NSSocket.ReceiveMessage(ReceivedBytes);//receive VER response
-                TransactionID++;
-                NSSocket.SendCommand($"CVR {TransactionID} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");
-                OutputString = NSSocket.ReceiveMessage(ReceivedBytes);//receive CVR response
-                TransactionID++;
-                NSSocket.SendCommand($"USR {TransactionID} SSO I {Email}\r\n");
-                OutputString = NSSocket.ReceiveMessage(ReceivedBytes);//receive GCF
-                OutputString = NSSocket.ReceiveMessage(ReceivedBytes);//receive USR response with nonce
-                TransactionID++;
-                userInfo.Email = Email;
-                GetMBIKeyOldNonce();
-                SOAPResult = SOAPRequests.SSORequest(Email, Password, MBIKeyOldNonce);
+                NsSocket.ConnectSocket();
+                NsSocket.SetReceiveTimeout(25000);
+                transactionId++;
+                NsSocket.SendCommand($"VER {transactionId} MSNP15 CVR0\r\n");
+                outputString = NsSocket.ReceiveMessage(receivedBytes);//receive VER response
+                transactionId++;
+                NsSocket.SendCommand($"CVR {transactionId} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");
+                outputString = NsSocket.ReceiveMessage(receivedBytes);//receive CVR response
+                transactionId++;
+                NsSocket.SendCommand($"USR {transactionId} SSO I {email}\r\n");
+                outputString = NsSocket.ReceiveMessage(receivedBytes);//receive GCF
+                outputString = NsSocket.ReceiveMessage(receivedBytes);//receive USR response with nonce
+                transactionId++;
+                UserInfo.Email = email;
+                GetMbiKeyOldNonce();
+                soapResult = soapRequests.SsoRequest(email, password, mbiKeyOldNonce);
                 GetContactsFromDatabase();
                 string response_struct = GetSSOReturnValue();
-                NSSocket.SendCommand($"USR {TransactionID} SSO S {SSO_Ticket} {response_struct}\r\n");//sending response to USR
-                OutputString = NSSocket.ReceiveMessage(ReceivedBytes);//receive USR OK
-                NSSocket.BeginReceiving(ReceivedBytes, new AsyncCallback(ReceivingCallback), this);
-                MembershipLists = SOAPRequests.FindMembership();
-                AddressBook = SOAPRequests.ABFindAll();
+                NsSocket.SendCommand($"USR {transactionId} SSO S {ssoTicket} {response_struct}\r\n");//sending response to USR
+                outputString = NsSocket.ReceiveMessage(receivedBytes);//receive USR OK
+                NsSocket.BeginReceiving(receivedBytes, new AsyncCallback(ReceivingCallback), this);
+                membershipLists = soapRequests.FindMembership();
+                addressBook = soapRequests.AbFindAll();
                 FillContactListFromSOAP();
                 FillContactsInForwardListFromSOAP();
                 SendBLP();
                 SendInitialADL();
                 SendUserDisplayName();
-                TransactionID++;
-                NSSocket.SendCommand($"CHG {TransactionID} {UserPresenceStatus} {ClientCapabilities}\r\n");//setting presence as available
+                transactionId++;
+                NsSocket.SendCommand($"CHG {transactionId} {UserPresenceStatus} {clientCapabilities}\r\n");//setting presence as available
             });
             await Task.Run(loginAction);
         }
@@ -58,10 +58,10 @@ namespace UWPMessengerClient.MSNP
             return first.Concat(second).ToArray();
         }
 
-        protected byte[] GetResultFromSSOHashs(byte[] key, string ws_secure)
+        protected byte[] GetResultFromSSOHashs(byte[] key, string wsSecure)
         {
             HMACSHA1 hMACSHA1 = new HMACSHA1(key);
-            byte[] ws_secure_bytes = Encoding.ASCII.GetBytes(ws_secure);
+            byte[] ws_secure_bytes = Encoding.ASCII.GetBytes(wsSecure);
             byte[] hash1 = hMACSHA1.ComputeHash(ws_secure_bytes);
             byte[] hash2 = hMACSHA1.ComputeHash(JoinBytes(hash1, ws_secure_bytes));
             byte[] hash3 = hMACSHA1.ComputeHash(hash1);
@@ -75,7 +75,7 @@ namespace UWPMessengerClient.MSNP
         protected string ReturnBinarySecret()
         {
             XmlDocument result_xml = new XmlDocument();
-            result_xml.LoadXml(SOAPResult);
+            result_xml.LoadXml(soapResult);
             XmlNamespaceManager xmlNamespaceManager = new XmlNamespaceManager(result_xml.NameTable);
             xmlNamespaceManager.AddNamespace("S", "http://schemas.xmlsoap.org/soap/envelope/");
             xmlNamespaceManager.AddNamespace("wsse", "http://schemas.xmlsoap.org/ws/2003/06/secext");
@@ -91,7 +91,7 @@ namespace UWPMessengerClient.MSNP
         public string ReturnTicket()
         {
             XmlDocument result_xml = new XmlDocument();
-            result_xml.LoadXml(SOAPResult);
+            result_xml.LoadXml(soapResult);
             XmlNamespaceManager xmlNamespaceManager = new XmlNamespaceManager(result_xml.NameTable);
             xmlNamespaceManager.AddNamespace("S", "http://schemas.xmlsoap.org/soap/envelope/");
             xmlNamespaceManager.AddNamespace("wsse", "http://schemas.xmlsoap.org/ws/2003/06/secext");
@@ -101,13 +101,13 @@ namespace UWPMessengerClient.MSNP
             return BinarySecurityToken.InnerText;
         }
 
-        public byte[] ReturnByteArrayFromUIntArray(uint[] uint_array)
+        public byte[] ReturnByteArrayFromUIntArray(uint[] uintArray)
         {
-            byte[] byte_array = new byte[sizeof(uint) * uint_array.Length];
+            byte[] byte_array = new byte[sizeof(uint) * uintArray.Length];
             byte[] number_bytes;
-            for (int i = 0; i < uint_array.Length; i++)
+            for (int i = 0; i < uintArray.Length; i++)
             {
-                number_bytes = BitConverter.GetBytes(uint_array[i]);
+                number_bytes = BitConverter.GetBytes(uintArray[i]);
                 Buffer.BlockCopy(number_bytes, 0, byte_array, i * sizeof(uint), sizeof(uint));
             }
             return byte_array;
@@ -116,16 +116,16 @@ namespace UWPMessengerClient.MSNP
         protected void GetTicketToken()
         {
             XmlDocument result_xml = new XmlDocument();
-            result_xml.LoadXml(SOAPResult);
+            result_xml.LoadXml(soapResult);
             XmlNamespaceManager xmlNamespaceManager = new XmlNamespaceManager(result_xml.NameTable);
             xmlNamespaceManager.AddNamespace("S", "http://schemas.xmlsoap.org/soap/envelope/");
             xmlNamespaceManager.AddNamespace("wsse", "http://schemas.xmlsoap.org/ws/2003/06/secext");
             xmlNamespaceManager.AddNamespace("wst", "http://schemas.xmlsoap.org/ws/2004/04/trust");
             string xPathString = "//S:Envelope/S:Body/wst:RequestSecurityTokenResponseCollection/wst:RequestSecurityTokenResponse/wst:RequestedSecurityToken/wsse:BinarySecurityToken[@Id='Compact3']";
             XmlNode BinarySecurityToken = result_xml.SelectSingleNode(xPathString, xmlNamespaceManager);
-            TicketToken = BinarySecurityToken.InnerText;
-            TicketToken = TicketToken.Replace("&", "&amp;");
-            SOAPRequests.TicketToken = TicketToken;
+            ticketToken = BinarySecurityToken.InnerText;
+            ticketToken = ticketToken.Replace("&", "&amp;");
+            soapRequests.TicketToken = ticketToken;
         }
 
         protected string GetSSOReturnValue()
@@ -133,8 +133,8 @@ namespace UWPMessengerClient.MSNP
             string binary_secret = ReturnBinarySecret();
             string ticket = ReturnTicket();
             GetTicketToken();
-            SSO_Ticket = ticket;
-            byte[] nonce_bytes = Encoding.ASCII.GetBytes(MBIKeyOldNonce);
+            ssoTicket = ticket;
+            byte[] nonce_bytes = Encoding.ASCII.GetBytes(mbiKeyOldNonce);
             byte[] key1 = Convert.FromBase64String(binary_secret);
             byte[] key2 = GetResultFromSSOHashs(key1, "WS-SecureConversationSESSION KEY HASH");
             byte[] key3 = GetResultFromSSOHashs(key1, "WS-SecureConversationSESSION KEY ENCRYPTION");

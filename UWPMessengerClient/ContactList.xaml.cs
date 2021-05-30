@@ -25,7 +25,7 @@ namespace UWPMessengerClient
     {
         private NotificationServerConnection _notificationServerConnection;
         private ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
-        private Contact ContactInContext;
+        private Contact contactInContext;
         public event PropertyChangedEventHandler PropertyChanged;
 
         private NotificationServerConnection notificationServerConnection
@@ -65,9 +65,9 @@ namespace UWPMessengerClient
                     break;
             }
             Presence.SelectedItem = fullStatus;
-            if (roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"] != null)
+            if (roamingSettings.Values[$"{notificationServerConnection.UserInfo.Email}_PersonalMessage"] != null)
             {
-                _ = notificationServerConnection.SendUserPersonalMessage((string)roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"]);
+                _ = notificationServerConnection.SendUserPersonalMessage((string)roamingSettings.Values[$"{notificationServerConnection.UserInfo.Email}_PersonalMessage"]);
             }
             base.OnNavigatedTo(e);
         }
@@ -124,7 +124,7 @@ namespace UWPMessengerClient
             {
                 try
                 {
-                    string conversationID = await notificationServerConnection.StartChat(ContactInContext);
+                    string conversationID = await notificationServerConnection.StartChat(contactInContext);
                     Frame.Navigate(typeof(ChatPage), new ChatPageNavigationParams()
                     {
                         notificationServerConnection = notificationServerConnection,
@@ -150,7 +150,7 @@ namespace UWPMessengerClient
 
         private async void start_chat_button_Click(object sender, RoutedEventArgs e)
         {
-            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            contactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
             await StartChat();
         }
 
@@ -228,7 +228,7 @@ namespace UWPMessengerClient
                 ChangeUserDisplayNameTextBox.Text = "";
                 PersonalMessageErrors.Text = "";
                 personalMessageFlyout.Hide();
-                roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"] = ChangeUserPersonalMessageTextBox.Text;
+                roamingSettings.Values[$"{notificationServerConnection.UserInfo.Email}_PersonalMessage"] = ChangeUserPersonalMessageTextBox.Text;
             }
             catch (Exception ex)
             {
@@ -256,10 +256,10 @@ namespace UWPMessengerClient
         {
             ListView contactListView = (ListView)sender;
             ContactMenuFlyout.ShowAt(contactListView, e.GetPosition(contactListView));
-            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
-            if (ContactInContext != null)
+            contactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            if (contactInContext != null)
             {
-                if (ContactInContext.onBlock)
+                if (contactInContext.OnBlock)
                 {
                     UnblockItem.Visibility = Visibility.Visible;
                     BlockItem.Visibility = Visibility.Collapsed;
@@ -274,7 +274,7 @@ namespace UWPMessengerClient
 
         private async void contactListView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            contactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
             await StartChat();
         }
 
@@ -282,10 +282,10 @@ namespace UWPMessengerClient
         {
             ListView contactListView = (ListView)sender;
             ContactMenuFlyout.ShowAt(contactListView, e.GetPosition(contactListView));
-            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
-            if (ContactInContext != null)
+            contactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            if (contactInContext != null)
             {
-                if (ContactInContext.onBlock)
+                if (contactInContext.OnBlock)
                 {
                     UnblockItem.Visibility = Visibility.Visible;
                     BlockItem.Visibility = Visibility.Collapsed;
@@ -302,39 +302,39 @@ namespace UWPMessengerClient
         {
             try
             {
-                await notificationServerConnection.RemoveContact(ContactInContext);
+                await notificationServerConnection.RemoveContact(contactInContext);
             }
             catch (Exception ex)
             {
                 await ShowDialog("Error", ex.Message);
             }
-            ContactInContext = null;
+            contactInContext = null;
         }
 
         private async void BlockItem_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                await notificationServerConnection.BlockContact(ContactInContext);
+                await notificationServerConnection.BlockContact(contactInContext);
             }
             catch (Exception ex)
             {
                 await ShowDialog("Error", ex.Message);
             }
-            ContactInContext = null;
+            contactInContext = null;
         }
 
         private async void UnblockItem_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                await notificationServerConnection.UnblockContact(ContactInContext);
+                await notificationServerConnection.UnblockContact(contactInContext);
             }
             catch (Exception ex)
             {
                 await ShowDialog("Error", ex.Message);
             }
-            ContactInContext = null;
+            contactInContext = null;
         }
     }
 }

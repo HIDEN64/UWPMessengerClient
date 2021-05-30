@@ -11,7 +11,7 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class SwitchboardConnection
     {
-        private string CurrentResponse;
+        private string currentResponse;
         public ObservableCollection<Message> MessageList { get; set; } = new ObservableCollection<Message>();
         public event EventHandler NewMessage;
         public event EventHandler<MessageEventArgs> MessageReceived;
@@ -20,16 +20,16 @@ namespace UWPMessengerClient.MSNP
         public void ReceivingCallback(IAsyncResult asyncResult)
         {
             SwitchboardConnection switchboardConnection = (SwitchboardConnection)asyncResult.AsyncState;
-            int bytes_received = switchboardConnection.SBSocket.StopReceiving(asyncResult);
+            int bytes_received = switchboardConnection.sbSocket.StopReceiving(asyncResult);
             switchboardConnection.OutputString = Encoding.UTF8.GetString(switchboardConnection.OutputBuffer, 0, bytes_received);
             string[] responses = switchboardConnection.OutputString.Split("\r\n");
             for (var i = 0; i < responses.Length; i++)
             {
                 string[] res_params = responses[i].Split(" ");
-                switchboardConnection.CurrentResponse = responses[i];
+                switchboardConnection.currentResponse = responses[i];
                 try
                 {
-                    switchboardConnection.CommandHandlers[res_params[0]]();
+                    switchboardConnection.commandHandlers[res_params[0]]();
                 }
                 catch (KeyNotFoundException)
                 {
@@ -42,7 +42,7 @@ namespace UWPMessengerClient.MSNP
             }
             if (bytes_received > 0)
             {
-                SBSocket.BeginReceiving(OutputBuffer, new AsyncCallback(ReceivingCallback), switchboardConnection);
+                sbSocket.BeginReceiving(OutputBuffer, new AsyncCallback(ReceivingCallback), switchboardConnection);
             }
         }
 
@@ -61,7 +61,7 @@ namespace UWPMessengerClient.MSNP
             {
                 OutputString = new_command;
                 string[] cmd_params = new_command.Split(" ");
-                CommandHandlers[cmd_params[0]]();
+                commandHandlers[cmd_params[0]]();
             }
         }
 
@@ -81,7 +81,7 @@ namespace UWPMessengerClient.MSNP
 
         protected void HandleUSR()
         {
-            string[] usr_params = CurrentResponse.Split(" ");
+            string[] usr_params = currentResponse.Split(" ");
             if (usr_params[2] != "OK")
             {
                 Connected = false;
@@ -94,7 +94,7 @@ namespace UWPMessengerClient.MSNP
 
         protected void HandleANS()
         {
-            string[] ans_params = CurrentResponse.Split(" ");
+            string[] ans_params = currentResponse.Split(" ");
             if (ans_params[2] != "OK")
             {
                 Connected = false;
@@ -107,7 +107,7 @@ namespace UWPMessengerClient.MSNP
 
         protected void HandleCAL()
         {
-            string[] cal_params = CurrentResponse.Split(" ");
+            string[] cal_params = currentResponse.Split(" ");
             SessionID = cal_params[3];
             PrincipalInvited?.Invoke(this, new EventArgs());
         }
@@ -136,7 +136,7 @@ namespace UWPMessengerClient.MSNP
             });
             Dictionary<string, Action> ContentTypeDictionary = new Dictionary<string, Action>()
             {
-                {"text/plain;", () => AddMessage(MSGPayloadParams[4], PrincipalInfo, userInfo) },
+                {"text/plain;", () => AddMessage(MSGPayloadParams[4], PrincipalInfo, UserInfo) },
                 {"text/x-msmsgscontrol", msmsgscontrolAction },
                 {"text/x-msnmsgr-datacast", () => HandleDatacast(msg_payload) },
                 {"application/x-ms-ink", () => HandleInk(msg_payload) }
@@ -160,11 +160,11 @@ namespace UWPMessengerClient.MSNP
         {
             Message newMessage = new Message()
             {
-                message_text = message_text,
-                sender = sender.displayName,
-                receiver = receiver.displayName,
-                sender_email = sender.Email,
-                receiver_email = receiver.Email,
+                MessageText = message_text,
+                Sender = sender.displayName,
+                Receiver = receiver.displayName,
+                SenderEmail = sender.Email,
+                ReceiverEmail = receiver.Email,
                 IsHistory = false
             };
             NullTypingUser();
@@ -187,7 +187,7 @@ namespace UWPMessengerClient.MSNP
                 MessageList.Add(message);
                 if (KeepMessagingHistory)
                 {
-                    DatabaseAccess.AddMessageToTable(userInfo.Email, PrincipalInfo.Email, message);
+                    DatabaseAccess.AddMessageToTable(UserInfo.Email, PrincipalInfo.Email, message);
                 }
                 NewMessage?.Invoke(this, new EventArgs());
             });
@@ -218,10 +218,10 @@ namespace UWPMessengerClient.MSNP
             string[] MSGPayloadParams = msg_payload.Split("\r\n");
             Message InkMessage = new Message()
             {
-                message_text = $"{PrincipalInfo.displayName} sent you ink",
-                sender_email = PrincipalInfo.Email,
-                receiver = userInfo.displayName,
-                receiver_email = userInfo.Email
+                MessageText = $"{PrincipalInfo.displayName} sent you ink",
+                SenderEmail = PrincipalInfo.Email,
+                Receiver = UserInfo.displayName,
+                ReceiverEmail = UserInfo.Email
             };
             if (MSGPayloadParams.Length > 4)
             {
@@ -282,10 +282,10 @@ namespace UWPMessengerClient.MSNP
             string nudge_text = $"{HttpUtility.UrlDecode(PrincipalInfo.displayName)} sent you a nudge!";
             Message newMessage = new Message()
             {
-                message_text = nudge_text,
-                receiver = userInfo.displayName,
-                sender_email = PrincipalInfo.Email,
-                receiver_email = userInfo.Email,
+                MessageText = nudge_text,
+                Receiver = UserInfo.displayName,
+                SenderEmail = PrincipalInfo.Email,
+                ReceiverEmail = UserInfo.Email,
                 IsHistory = false
             };
             NullTypingUser();

@@ -11,37 +11,37 @@ namespace UWPMessengerClient.MSNP.SOAP
 {
     partial class SOAPRequests
     {
-        protected string RST_address = "https://m1.escargot.chat/RST.srf";
+        protected string rstAddress = "https://m1.escargot.log1p.xyz/RST.srf";
         public string TicketToken { get; set; }
         public bool UsingLocalhost { get; protected set; }
 
-        public SOAPRequests(bool use_localhost = false)
+        public SOAPRequests(bool useLocalhost = false)
         {
-            UsingLocalhost = use_localhost;
+            UsingLocalhost = useLocalhost;
             if (UsingLocalhost)
             {
-                RST_address = "http://localhost/RST.srf";
-                SharingService_url = "http://localhost/abservice/SharingService.asmx";
-                abservice_url = "http://localhost/abservice/abservice.asmx";
+                rstAddress = "http://localhost/RST.srf";
+                SharingServiceUrl = "http://localhost/abservice/SharingService.asmx";
+                AbServiceUrl = "http://localhost/abservice/abservice.asmx";
                 //setting local addresses
             }
         }
 
-        public static HttpWebRequest CreateSOAPRequest(string soap_action, string address)
+        public static HttpWebRequest CreateSOAPRequest(string soapAction, string address)
         {
             HttpWebRequest request = WebRequest.CreateHttp(address);
-            request.Headers.Add($@"SOAPAction:{soap_action}");
+            request.Headers.Add($@"SOAPAction:{soapAction}");
             request.ContentType = "text/xml;charset=\"utf-8\"";
             request.Accept = "text/xml";
             request.Method = "POST";
             return request;
         }
 
-        public static string MakeSOAPRequest(string SOAP_body, string address, string soap_action)
+        public static string MakeSoapRequest(string soapBody, string address, string soapAction)
         {
-            HttpWebRequest SOAPRequest = CreateSOAPRequest(soap_action, address);
+            HttpWebRequest SOAPRequest = CreateSOAPRequest(soapAction, address);
             XmlDocument SoapXMLBody = new XmlDocument();
-            SoapXMLBody.LoadXml(SOAP_body);
+            SoapXMLBody.LoadXml(soapBody);
             using (Stream stream = SOAPRequest.GetRequestStream())
             {
                 SoapXMLBody.Save(stream);
@@ -56,9 +56,9 @@ namespace UWPMessengerClient.MSNP.SOAP
             }
         }
 
-        public string SSORequest(string email, string password, string MBIKeyOldNonce)
+        public string SsoRequest(string email, string password, string mbiKeyOldNonce)
         {
-            string SSO_XML = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
+            string ssoXml = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
             <Envelope xmlns=""http://schemas.xmlsoap.org/soap/envelope/""
                 xmlns:wsse=""http://schemas.xmlsoap.org/ws/2003/06/secext""
                 xmlns:saml=""urn:oasis:names:tc:SAML:1.0:assertion""
@@ -103,7 +103,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                                     <wsa:Address>messengerclear.live.com</wsa:Address>
                                 </wsa:EndpointReference>
                             </wsp:AppliesTo>
-                            <wsse:PolicyReference URI=""{MBIKeyOldNonce}""></wsse:PolicyReference>
+                            <wsse:PolicyReference URI=""{mbiKeyOldNonce}""></wsse:PolicyReference>
                         </wst:RequestSecurityToken>
                         <wst:RequestSecurityToken Id=""RST2"">
                             <wst:RequestType>http://schemas.xmlsoap.org/ws/2004/04/security/trust/Issue</wst:RequestType>
@@ -118,7 +118,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </ps:RequestMultipleSecurityTokens>
                 </Body>
             </Envelope>";
-            return MakeSOAPRequest(SSO_XML, RST_address, "http://www.msn.com/webservices/storage/w10/");
+            return MakeSoapRequest(ssoXml, rstAddress, "http://www.msn.com/webservices/storage/w10/");
         }
     }
 }

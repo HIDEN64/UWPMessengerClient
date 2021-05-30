@@ -18,37 +18,37 @@ namespace UWPMessengerClient.MSNP
     {
         private NotificationServerConnection notificationServerConnection;
         private SwitchboardConnection switchboardConnection;
-        public UserInfo _UserInfo = new UserInfo();
-        public UserInfo _ContactInfo = new UserInfo();
+        private UserInfo userInfo = new UserInfo();
+        private UserInfo contactInfo = new UserInfo();
         public string ConversationID
         { get; private set; }
         public event EventHandler MessageListUpdated;
         public event PropertyChangedEventHandler PropertyChanged;
-        public ObservableCollection<Message> _Messages;
+        public ObservableCollection<Message> messages;
         public ObservableCollection<Message> Messages
         {
-            get => _Messages;
+            get => messages;
             private set
             {
-                _Messages = value;
+                messages = value;
                 MessageListUpdated?.Invoke(this, new EventArgs());
             }
         }
         public UserInfo UserInfo
         {
-            get => _UserInfo;
+            get => userInfo;
             set
             {
-                _UserInfo = value;
+                userInfo = value;
                 NotifyPropertyChanged();
             }
         }
         public UserInfo ContactInfo
         {
-            get => _ContactInfo;
+            get => contactInfo;
             set
             {
-                _ContactInfo = value;
+                contactInfo = value;
                 NotifyPropertyChanged();
             }
         }
@@ -64,16 +64,16 @@ namespace UWPMessengerClient.MSNP
         public SBConversation(NotificationServerConnection notificationConnection)
         {
             notificationServerConnection = notificationConnection;
-            UserInfo = notificationServerConnection.userInfo;
+            UserInfo = notificationServerConnection.UserInfo;
             notificationServerConnection.SwitchboardCreated += NotificationServerConnection_SwitchboardCreated;
         }
 
-        public SBConversation(NotificationServerConnection notificationConnection, string conversation_id)
+        public SBConversation(NotificationServerConnection notificationConnection, string conversationId)
         {
             notificationServerConnection = notificationConnection;
-            UserInfo = notificationServerConnection.userInfo;
+            UserInfo = notificationServerConnection.UserInfo;
             notificationServerConnection.SwitchboardCreated += NotificationServerConnection_SwitchboardCreated;
-            ConversationID = conversation_id;
+            ConversationID = conversationId;
         }
 
         public async Task SendTypingUser()
@@ -107,7 +107,7 @@ namespace UWPMessengerClient.MSNP
 
         private void SwitchboardConnection_MessageReceived(object sender, MessageEventArgs e)
         {
-            SendMessageToast(e.message.message_text, e.message.sender);
+            SendMessageToast(e.message.MessageText, e.message.Sender);
         }
 
         private void SwitchboardConnection_NewMessage(object sender, EventArgs e)
@@ -133,7 +133,7 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        private void SendMessageToast(string message_text, string message_sender)
+        private void SendMessageToast(string messageText, string messageSender)
         {
             var content = new ToastContentBuilder()
                 .AddToastActivationInfo(new QueryString()
@@ -141,8 +141,8 @@ namespace UWPMessengerClient.MSNP
                     {"action", "newMessage" },
                     {"conversationID", ConversationID }
                 }.ToString(), ToastActivationType.Foreground)
-                .AddText(HttpUtility.UrlDecode(message_sender))
-                .AddText(message_text)
+                .AddText(HttpUtility.UrlDecode(messageSender))
+                .AddText(messageText)
                 .AddInputTextBox("ReplyBox", "Type your reply")
                 .AddButton("Reply", ToastActivationType.Background, new QueryString()
                 {

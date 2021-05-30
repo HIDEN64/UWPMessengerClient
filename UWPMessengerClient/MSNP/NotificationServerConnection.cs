@@ -19,35 +19,35 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection : INotifyPropertyChanged
     {
-        protected SocketCommands NSSocket;
-        public List<SBConversation> SBConversations { get; set; } = new List<SBConversation>();
+        protected SocketCommands NsSocket;
+        public List<SBConversation> SbConversations { get; set; } = new List<SBConversation>();
         //notification server(escargot) address and address for SSO auth
-        protected string NSaddress = "m1.escargot.chat";
-        protected string NexusAddress = "https://m1.escargot.chat/nexus-mock";
+        protected string nsAddress = "m1.escargot.log1p.xyz";
+        protected string nexusAddress = "https://m1.escargot.log1p.xyz/nexus-mock";
         //local addresses are 127.0.0.1 for NSaddress and http://localhost/nexus-mock for nexus_address
         protected readonly int Port = 1863;
-        private string Email;
-        private string Password;
-        protected Regex PlusCharactersRegex = new Regex("\\[(.*?)\\]");
+        private string email;
+        private string password;
+        protected Regex plusCharactersRegex = new Regex("\\[(.*?)\\]");
         public bool UsingLocalhost { get; protected set; } = false;
-        public string MSNPVersion { get; protected set; } = "MSNP15";
-        protected int TransactionID = 0;
-        protected uint ClientCapabilities = 0x84140428;
-        public Contact ContactToChat { get; set; }
+        public string MsnpVersion { get; protected set; } = "MSNP15";
+        protected int transactionId = 0;
+        protected uint clientCapabilities = 0x84140428;
+        public Contact contactToChat { get; set; }
         public string UserPresenceStatus { get; set; }
         public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;
-        public UserInfo userInfo { get; set; } = new UserInfo();
+        public UserInfo UserInfo { get; set; } = new UserInfo();
         private static Random random = new Random();
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler NotConnected;
         protected Dictionary<string, Action> CommandHandlers;
-        private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
+        private ObservableCollection<string> errorLog = new ObservableCollection<string>();
         public ObservableCollection<string> ErrorLog
         {
-            get => _errorLog;
+            get => errorLog;
             private set
             {
-                _errorLog = value;
+                errorLog = value;
                 NotifyPropertyChanged();
             }
         }
@@ -84,18 +84,18 @@ namespace UWPMessengerClient.MSNP
                 {"XFR", async () => await HandleXFR() },
                 {"RNG", () => HandleRNG() }
             };
-            Email = messenger_email;
-            Password = messenger_password;
+            email = messenger_email;
+            password = messenger_password;
             UsingLocalhost = use_localhost;
-            MSNPVersion = msnp_version;
+            MsnpVersion = msnp_version;
             UserPresenceStatus = initial_status;
             if (UsingLocalhost)
             {
-                NSaddress = "127.0.0.1";
-                NexusAddress = "http://localhost/nexus-mock";
+                nsAddress = "127.0.0.1";
+                nexusAddress = "http://localhost/nexus-mock";
                 //setting local addresses
             }
-            SOAPRequests = new SOAPRequests(UsingLocalhost);
+            soapRequests = new SOAPRequests(UsingLocalhost);
         }
 
         public async Task AddToErrorLog(string error)
@@ -108,7 +108,7 @@ namespace UWPMessengerClient.MSNP
 
         public async Task LoginToMessengerAsync()
         {
-            switch (MSNPVersion)
+            switch (MsnpVersion)
             {
                 case "MSNP12":
                     await MSNP12LoginToMessengerAsync();
@@ -132,8 +132,8 @@ namespace UWPMessengerClient.MSNP
             if (status == "") { throw new ArgumentNullException("Status is empty"); }
             Action changePresence = new Action(() =>
             {
-                TransactionID++;
-                NSSocket.SendCommand($"CHG {TransactionID} {status} {ClientCapabilities}\r\n");
+                transactionId++;
+                NsSocket.SendCommand($"CHG {transactionId} {status} {clientCapabilities}\r\n");
             });
             UserPresenceStatus = status;
             await Task.Run(changePresence);
@@ -142,13 +142,13 @@ namespace UWPMessengerClient.MSNP
         public async Task ChangeUserDisplayName(string newDisplayName)
         {
             if (newDisplayName == "") { throw new ArgumentNullException("Display name is empty"); }
-            if (MSNPVersion == "MSNP15")
+            if (MsnpVersion == "MSNP15")
             {
-                SOAPRequests.ChangeUserDisplayNameRequest(newDisplayName);
+                soapRequests.ChangeUserDisplayNameRequest(newDisplayName);
             }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
-            TransactionID++;
-            await Task.Run(() => NSSocket.SendCommand($"PRP {TransactionID} MFN {urlEncodedNewDisplayName}\r\n"));
+            transactionId++;
+            await Task.Run(() => NsSocket.SendCommand($"PRP {transactionId} MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
         public async Task SendUserPersonalMessage(string newPersonalMessage)
@@ -158,11 +158,11 @@ namespace UWPMessengerClient.MSNP
                 string encodedPersonalMessage = newPersonalMessage.Replace("&", "&amp;");
                 string psm_payload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
                 int payload_length = Encoding.UTF8.GetBytes(psm_payload).Length;
-                TransactionID++;
-                NSSocket.SendCommand($"UUX {TransactionID} {payload_length}\r\n" + psm_payload);
+                transactionId++;
+                NsSocket.SendCommand($"UUX {transactionId} {payload_length}\r\n" + psm_payload);
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    userInfo.personalMessage = newPersonalMessage;
+                    UserInfo.personalMessage = newPersonalMessage;
                 });
             });
             await Task.Run(psm_action);
@@ -170,11 +170,11 @@ namespace UWPMessengerClient.MSNP
 
         public async Task<string> StartChat(Contact contactToChat)
         {
-            ContactToChat = contactToChat;
+            this.contactToChat = contactToChat;
             await InitiateSB();
             int conv_id = random.Next(1000, 9999);
             SBConversation conversation = new SBConversation(this, Convert.ToString(conv_id));
-            SBConversations.Add(conversation);
+            SbConversations.Add(conversation);
             return conversation.ConversationID;
         }
 
@@ -187,18 +187,18 @@ namespace UWPMessengerClient.MSNP
                 {
                     try
                     {
-                        NSSocket.SendCommandWithException("PNG\r\n");
+                        NsSocket.SendCommandWithException("PNG\r\n");
                         return true;
                     }
                     catch (NotConnectedException)
                     {
-                        NSSocket.CloseSocket();
+                        NsSocket.CloseSocket();
                         NotConnected?.Invoke(this, new EventArgs());
                         return false;
                     }
                     catch (SocketException)
                     {
-                        NSSocket.CloseSocket();
+                        NsSocket.CloseSocket();
                         NotConnected?.Invoke(this, new EventArgs());
                         return false;
                     }
@@ -210,20 +210,20 @@ namespace UWPMessengerClient.MSNP
 
         protected async Task InitiateSB()
         {
-            TransactionID++;
-            await Task.Run(() => NSSocket.SendCommand($"XFR {TransactionID} SB\r\n"));
+            transactionId++;
+            await Task.Run(() => NsSocket.SendCommand($"XFR {transactionId} SB\r\n"));
         }
 
         public SBConversation ReturnConversationFromConversationID(string conversation_id)
         {
-            var conv_item = SBConversations.FirstOrDefault(sb => sb.ConversationID == conversation_id);
+            var conv_item = SbConversations.FirstOrDefault(sb => sb.ConversationID == conversation_id);
             return conv_item;
         }
 
         public void Exit()
         {
-            NSSocket.SendCommand("OUT\r\n");
-            NSSocket.CloseSocket();
+            NsSocket.SendCommand("OUT\r\n");
+            NsSocket.CloseSocket();
         }
 
         ~NotificationServerConnection()

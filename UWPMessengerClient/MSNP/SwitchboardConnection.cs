@@ -13,39 +13,40 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class SwitchboardConnection : INotifyPropertyChanged
     {
-        protected SocketCommands SBSocket;
-        protected string SBAddress;
-        protected int SBPort = 0;
-        protected int TransactionID = 0;
-        protected string AuthString;
+        protected SocketCommands sbSocket;
+        protected string sbAddress;
+        protected int sbPort = 0;
+        protected int transactionId = 0;
+        protected string authString;
         public string SessionID { get; protected set; }
         public UserInfo PrincipalInfo { get; set; } = new UserInfo();
-        public UserInfo userInfo { get; set; } = new UserInfo();
+        public UserInfo UserInfo { get; set; } = new UserInfo();
         public bool Connected { get; set; }
         public int PrincipalsConnected { get; set; }
         public string OutputString { get; set; }
         public byte[] OutputBuffer { get; set; } = new byte[4096];
         public bool KeepMessagingHistory { get; set; } = true;
-        protected bool WaitingTyping = false;
-        protected bool WaitingNudge = false;
-        protected int MaximumInkSize = 1140;
+        protected bool waitingTyping = false;
+        protected bool waitingNudge = false;
+        protected int maximumInkSize = 1140;
+        private static Random random = new Random();
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler HistoryLoaded;
-        Dictionary<string, Action> CommandHandlers;
-        private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
+        Dictionary<string, Action> commandHandlers;
+        private ObservableCollection<string> errorLog = new ObservableCollection<string>();
         public ObservableCollection<string> ErrorLog
         {
-            get => _errorLog;
+            get => errorLog;
             private set
             {
-                _errorLog = value;
+                errorLog = value;
                 NotifyPropertyChanged();
             }
         }
 
         public SwitchboardConnection(string address, int port, string email, string authString, string userDisplayName)
         {
-            CommandHandlers = new Dictionary<string, Action>()
+            commandHandlers = new Dictionary<string, Action>()
             {
                 {"USR", () => HandleUSR() },
                 {"ANS", () => HandleANS() },
@@ -54,16 +55,16 @@ namespace UWPMessengerClient.MSNP
                 {"IRO", () => PrincipalsConnected++ },
                 {"MSG", () => HandleMSG() }
             };
-            SBAddress = address;
-            SBPort = port;
-            userInfo.Email = email;
-            AuthString = authString;
-            userInfo.displayName = userDisplayName;
+            sbAddress = address;
+            sbPort = port;
+            UserInfo.Email = email;
+            this.authString = authString;
+            UserInfo.displayName = userDisplayName;
         }
 
         public SwitchboardConnection(string address, int port, string email, string authString, string userDisplayName, string principalDisplayName, string principalEmail, string sessionID)
         {
-            CommandHandlers = new Dictionary<string, Action>()
+            commandHandlers = new Dictionary<string, Action>()
             {
                 {"USR", () => HandleUSR() },
                 {"ANS", () => HandleANS() },
@@ -72,12 +73,12 @@ namespace UWPMessengerClient.MSNP
                 {"IRO", () => PrincipalsConnected++ },
                 {"MSG", () => HandleMSG() }
             };
-            SBAddress = address;
-            SBPort = port;
-            userInfo.Email = email;
-            AuthString = authString;
+            sbAddress = address;
+            sbPort = port;
+            UserInfo.Email = email;
+            this.authString = authString;
             SessionID = sessionID;
-            userInfo.displayName = userDisplayName;
+            UserInfo.displayName = userDisplayName;
             PrincipalInfo.displayName = principalDisplayName;
             PrincipalInfo.Email = principalEmail;
         }
@@ -97,15 +98,15 @@ namespace UWPMessengerClient.MSNP
 
         public async Task LoginToNewSwitchboardAsync()
         {
-            Action sbconnect = new Action(() =>
+            Action sbConnect = new Action(() =>
             {
-                SBSocket = new SocketCommands(SBAddress, SBPort);
-                SBSocket.ConnectSocket();
-                SBSocket.BeginReceiving(OutputBuffer, new AsyncCallback(ReceivingCallback), this);
-                TransactionID++;
-                SBSocket.SendCommand($"USR {TransactionID} {userInfo.Email} {AuthString}\r\n");
+                sbSocket = new SocketCommands(sbAddress, sbPort);
+                sbSocket.ConnectSocket();
+                sbSocket.BeginReceiving(OutputBuffer, new AsyncCallback(ReceivingCallback), this);
+                transactionId++;
+                sbSocket.SendCommand($"USR {transactionId} {UserInfo.Email} {authString}\r\n");
             });
-            await Task.Run(sbconnect);
+            await Task.Run(sbConnect);
             Connected = true;
         }
 
@@ -113,7 +114,7 @@ namespace UWPMessengerClient.MSNP
         {
             if (KeepMessagingHistory)
             {
-                List<string> JSONMessages = DatabaseAccess.ReturnMessagesFromSenderAndReceiver(userInfo.Email, PrincipalInfo.Email);
+                List<string> JSONMessages = DatabaseAccess.ReturnMessagesFromSenderAndReceiver(UserInfo.Email, PrincipalInfo.Email);
                 foreach (string JSONMessage in JSONMessages)
                 {
                     Message pastMessage = JsonConvert.DeserializeObject<Message>(JSONMessage);
@@ -127,15 +128,15 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public async Task InvitePrincipal(string principal_email)
+        public async Task InvitePrincipal(string principalEmail)
         {
             if (Connected)
             {
-                PrincipalInfo.Email = principal_email;
-                TransactionID++;
+                PrincipalInfo.Email = principalEmail;
+                transactionId++;
                 await Task.Run(() =>
                 {
-                    SBSocket.SendCommand($"CAL {TransactionID} {principal_email}\r\n");
+                    sbSocket.SendCommand($"CAL {transactionId} {principalEmail}\r\n");
                 });
             }
             else
@@ -144,18 +145,18 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public async Task InvitePrincipal(string principal_email, string principal_display_name)
+        public async Task InvitePrincipal(string principalEmail, string principalDisplayName)
         {
             if (Connected)
             {
-                PrincipalInfo.Email = principal_email;
-                TransactionID++;
+                PrincipalInfo.Email = principalEmail;
+                transactionId++;
                 await Task.Run(() =>
                 {
-                    SBSocket.SendCommand($"CAL {TransactionID} {principal_email}\r\n");
+                    sbSocket.SendCommand($"CAL {transactionId} {principalEmail}\r\n");
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        PrincipalInfo.displayName = principal_display_name;
+                        PrincipalInfo.displayName = principalDisplayName;
                     });
                 });
             }
@@ -165,25 +166,25 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public async Task SendTextMessage(string message_text)
+        public async Task SendTextMessage(string messageText)
         {
             if (Connected && PrincipalsConnected > 0)
             {
-                Action message_action = new Action(() =>
+                Action messageAction = new Action(() =>
                 {
-                    string message = "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nX-MMS-IM-Format: FN=Arial; EF=; CO=0; CS=0; PF=22\r\n\r\n" + message_text;
-                    byte[] byte_message = Encoding.UTF8.GetBytes(message);
-                    TransactionID++;
-                    SBSocket.SendCommand($"MSG {TransactionID} N {byte_message.Length}\r\n{message}");
+                    string message = "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nX-MMS-IM-Format: FN=Arial; EF=; CO=0; CS=0; PF=22\r\n\r\n" + messageText;
+                    byte[] byteMessage = Encoding.UTF8.GetBytes(message);
+                    transactionId++;
+                    sbSocket.SendCommand($"MSG {transactionId} N {byteMessage.Length}\r\n{message}");
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         Message newMessage = new Message()
                         {
-                            message_text = message_text,
-                            sender = userInfo.displayName,
-                            receiver = PrincipalInfo.displayName,
-                            sender_email = userInfo.Email,
-                            receiver_email = PrincipalInfo.Email,
+                            MessageText = messageText,
+                            Sender = UserInfo.displayName,
+                            Receiver = PrincipalInfo.displayName,
+                            SenderEmail = UserInfo.Email,
+                            ReceiverEmail = PrincipalInfo.Email,
                             IsHistory = false
                         };
                         AddToMessageListAndDatabase(newMessage);
@@ -191,7 +192,7 @@ namespace UWPMessengerClient.MSNP
                 });
                 try
                 {
-                    await Task.Run(message_action);
+                    await Task.Run(messageAction);
                 }
                 catch (AggregateException ae)
                 {
@@ -201,8 +202,8 @@ namespace UWPMessengerClient.MSNP
                         {
                             MessageList.Add(new Message()
                             {
-                                message_text = "There was an error sending this message: " + ie.Message,
-                                sender = "Error",
+                                MessageText = "There was an error sending this message: " + ie.Message,
+                                Sender = "Error",
                                 IsHistory = false
                             });
                         });
@@ -214,8 +215,8 @@ namespace UWPMessengerClient.MSNP
                     {
                         MessageList.Add(new Message()
                         {
-                            message_text = "There was an error sending this message: " + ex.Message,
-                            sender = "Error",
+                            MessageText = "There was an error sending this message: " + ex.Message,
+                            Sender = "Error",
                             IsHistory = false
                         });
                     });
@@ -225,19 +226,19 @@ namespace UWPMessengerClient.MSNP
 
         public async Task SendTypingUser()
         {
-            if (Connected && PrincipalsConnected > 0 && !WaitingTyping)
+            if (Connected && PrincipalsConnected > 0 && !waitingTyping)
             {
                 await Task.Run(() =>
                 {
-                    string message = $"MIME-Version: 1.0\r\nContent-Type: text/x-msmsgscontrol\r\nTypingUser: {userInfo.Email}\r\n\r\n\r\n";
-                    byte[] byte_message = Encoding.UTF8.GetBytes(message);
-                    TransactionID++;
-                    SBSocket.SendCommand($"MSG {TransactionID} U {byte_message.Length}\r\n{message}");
+                    string message = $"MIME-Version: 1.0\r\nContent-Type: text/x-msmsgscontrol\r\nTypingUser: {UserInfo.Email}\r\n\r\n\r\n";
+                    byte[] byteMessage = Encoding.UTF8.GetBytes(message);
+                    transactionId++;
+                    sbSocket.SendCommand($"MSG {transactionId} U {byteMessage.Length}\r\n{message}");
                 });
-                WaitingTyping = true;
+                waitingTyping = true;
                 //sending TypingUser every 5 seconds only
                 await Task.Delay(5000);
-                WaitingTyping = false;
+                waitingTyping = false;
             }
         }
 
@@ -245,24 +246,24 @@ namespace UWPMessengerClient.MSNP
         {
             if (Connected && PrincipalsConnected > 0)
             {
-                if (!WaitingNudge)
+                if (!waitingNudge)
                 {
                     try
                     {
                         await Task.Run(() =>
                         {
-                            string nudge_message = "MIME-Version: 1.0\r\nContent-Type: text/x-msnmsgr-datacast\r\n\r\nID: 1\r\n";
-                            byte[] byte_message = Encoding.UTF8.GetBytes(nudge_message);
-                            TransactionID++;
-                            SBSocket.SendCommand($"MSG {TransactionID} A {byte_message.Length}\r\n{nudge_message}");
+                            string nudgeMessage = "MIME-Version: 1.0\r\nContent-Type: text/x-msnmsgr-datacast\r\n\r\nID: 1\r\n";
+                            byte[] byteMessage = Encoding.UTF8.GetBytes(nudgeMessage);
+                            transactionId++;
+                            sbSocket.SendCommand($"MSG {transactionId} A {byteMessage.Length}\r\n{nudgeMessage}");
                         });
-                        string nudge_text = $"You sent {PrincipalInfo.displayName} a nudge";
+                        string nudgeText = $"You sent {PrincipalInfo.displayName} a nudge";
                         Message newMessage = new Message()
                         {
-                            message_text = nudge_text,
-                            receiver = PrincipalInfo.displayName,
-                            sender_email = userInfo.Email,
-                            receiver_email = PrincipalInfo.Email,
+                            MessageText = nudgeText,
+                            Receiver = PrincipalInfo.displayName,
+                            SenderEmail = UserInfo.Email,
+                            ReceiverEmail = PrincipalInfo.Email,
                             IsHistory = false
                         };
                         AddToMessageListAndDatabase(newMessage);
@@ -273,16 +274,16 @@ namespace UWPMessengerClient.MSNP
                         {
                             MessageList.Add(new Message()
                             {
-                                message_text = "There was an error sending this message: " + ex.Message,
-                                sender = "Error",
+                                MessageText = "There was an error sending this message: " + ex.Message,
+                                Sender = "Error",
                                 IsHistory = false
                             });
                         });
                     }
-                    WaitingNudge = true;
+                    waitingNudge = true;
                     //12 second cooldown, about the same as the wlm 2009 client
                     await Task.Delay(12000);
-                    WaitingNudge = false;
+                    waitingNudge = false;
                 }
                 else
                 {
@@ -290,8 +291,8 @@ namespace UWPMessengerClient.MSNP
                     {
                         MessageList.Add(new Message()
                         {
-                            message_text = "Wait before sending nudge again",
-                            sender = "",
+                            MessageText = "Wait before sending nudge again",
+                            Sender = "",
                             IsHistory = false
                         });
                     });
@@ -312,34 +313,34 @@ namespace UWPMessengerClient.MSNP
         private List<InkChunk> DivideInkIntoChunks(byte[] ink_bytes, string MessageId)
         {
             List<InkChunk> InkChunks = new List<InkChunk>();
-            double NumberOfChunksDouble = ink_bytes.Length / MaximumInkSize;
+            double NumberOfChunksDouble = ink_bytes.Length / maximumInkSize;
             NumberOfChunksDouble = Math.Ceiling(NumberOfChunksDouble);
             int NumberOfChunks = Convert.ToInt32(NumberOfChunksDouble);
             int NumberOfFullChunks = NumberOfChunks;
-            if (NumberOfChunks % MaximumInkSize > 0)
+            if (NumberOfChunks % maximumInkSize > 0)
             {
                 NumberOfFullChunks--;
             }
             int ink_pos = 0;
-            byte[] ink_chunk = new byte[MaximumInkSize];
-            Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, MaximumInkSize);
+            byte[] ink_chunk = new byte[maximumInkSize];
+            Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, maximumInkSize);
             InkChunks.Add(new InkChunk()
             {
                 ChunkNumber = 0,
                 MessageID = MessageId,
                 EncodedChunk = "base64:" + Convert.ToBase64String(ink_chunk)
             });
-            ink_pos += MaximumInkSize;
+            ink_pos += maximumInkSize;
             for (int i = 1; i <= NumberOfFullChunks; i++)
             {
-                Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, MaximumInkSize);
+                Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, maximumInkSize);
                 InkChunks.Add(new InkChunk()
                 {
                     ChunkNumber = i,
                     MessageID = MessageId,
                     EncodedChunk = Convert.ToBase64String(ink_chunk)
                 });
-                ink_pos += MaximumInkSize;
+                ink_pos += maximumInkSize;
             }
             int LastChunkLen = ink_bytes.Length - ink_pos;
             ink_chunk = new byte[LastChunkLen];
@@ -355,16 +356,16 @@ namespace UWPMessengerClient.MSNP
 
         public async Task SendInk(byte[] ink_bytes)
         {
-            if (ink_bytes.Length > MaximumInkSize)
+            if (ink_bytes.Length > maximumInkSize)
             {
                 string MessageId = GenerateMessageID();
                 List<InkChunk> InkChunks = DivideInkIntoChunks(ink_bytes, MessageId);
-                TransactionID++;
+                transactionId++;
                 string InkChunkMessagePayload = $"Mime-Version: 1.0\r\nContent-Type: application/x-ms-ink\r\nMessage-ID: {MessageId}\r\nChunks: {InkChunks.Count}\r\n\r\n{InkChunks[0].EncodedChunk}";
-                string InkChunkMessage = $"MSG {TransactionID} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
+                string InkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
                 try
                 {
-                    SBSocket.SendCommand(InkChunkMessage);
+                    sbSocket.SendCommand(InkChunkMessage);
                 }
                 catch (Exception ex)
                 {
@@ -372,20 +373,20 @@ namespace UWPMessengerClient.MSNP
                     {
                         MessageList.Add(new Message()
                         {
-                            message_text = "There was an error sending this message: " + ex.Message,
-                            sender = "Error",
+                            MessageText = "There was an error sending this message: " + ex.Message,
+                            Sender = "Error",
                             IsHistory = false
                         });
                     });
                 }
                 for (int i = 1; i < InkChunks.Count; i++)
                 {
-                    TransactionID++;
+                    transactionId++;
                     InkChunkMessagePayload = $"Message-ID: {MessageId}\r\nChunk: {InkChunks[i].ChunkNumber}\r\n\r\n{InkChunks[i].EncodedChunk}";
-                    InkChunkMessage = $"MSG {TransactionID} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
+                    InkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
                     try
                     {
-                        SBSocket.SendCommand(InkChunkMessage);
+                        sbSocket.SendCommand(InkChunkMessage);
                     }
                     catch (Exception ex)
                     {
@@ -393,8 +394,8 @@ namespace UWPMessengerClient.MSNP
                         {
                             MessageList.Add(new Message()
                             {
-                                message_text = "There was an error sending this message: " + ex.Message,
-                                sender = "Error",
+                                MessageText = "There was an error sending this message: " + ex.Message,
+                                Sender = "Error",
                                 IsHistory = false
                             });
                         });
@@ -404,12 +405,12 @@ namespace UWPMessengerClient.MSNP
             }
             else
             {
-                TransactionID++;
+                transactionId++;
                 string InkChunkMessagePayload = $"Mime-Version: 1.0\r\nContent-Type: application/x-ms-ink\r\n\r\n{"base64:" + Convert.ToBase64String(ink_bytes)}";
-                string InkChunkMessage = $"MSG {TransactionID} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
+                string InkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
                 try
                 {
-                    SBSocket.SendCommand(InkChunkMessage);
+                    sbSocket.SendCommand(InkChunkMessage);
                 }
                 catch (Exception ex)
                 {
@@ -417,8 +418,8 @@ namespace UWPMessengerClient.MSNP
                     {
                         MessageList.Add(new Message()
                         {
-                            message_text = "There was an error sending this message: " + ex.Message,
-                            sender = "Error",
+                            MessageText = "There was an error sending this message: " + ex.Message,
+                            Sender = "Error",
                             IsHistory = false
                         });
                     });
@@ -427,10 +428,10 @@ namespace UWPMessengerClient.MSNP
             }
             Message InkMessage = new Message()
             {
-                message_text = $"You sent {PrincipalInfo.displayName} ink",
-                sender_email = userInfo.Email,
-                receiver = PrincipalInfo.displayName,
-                receiver_email = PrincipalInfo.Email
+                MessageText = $"You sent {PrincipalInfo.displayName} ink",
+                SenderEmail = UserInfo.Email,
+                Receiver = PrincipalInfo.displayName,
+                ReceiverEmail = PrincipalInfo.Email
             };
             AddToMessageList(InkMessage);
             //sends ink in ISF format
@@ -440,18 +441,18 @@ namespace UWPMessengerClient.MSNP
         {
             await Task.Run(() =>
             {
-                SBSocket = new SocketCommands(SBAddress, SBPort);
-                SBSocket.ConnectSocket();
-                SBSocket.BeginReceiving(OutputBuffer, new AsyncCallback(ReceivingCallback), this);
-                TransactionID++;
-                SBSocket.SendCommand($"ANS {TransactionID} {userInfo.Email} {AuthString} {SessionID}\r\n");
+                sbSocket = new SocketCommands(sbAddress, sbPort);
+                sbSocket.ConnectSocket();
+                sbSocket.BeginReceiving(OutputBuffer, new AsyncCallback(ReceivingCallback), this);
+                transactionId++;
+                sbSocket.SendCommand($"ANS {transactionId} {UserInfo.Email} {authString} {SessionID}\r\n");
             });
         }
 
         public void Exit()
         {
-            SBSocket.SendCommand("OUT\r\n");
-            SBSocket.CloseSocket();
+            sbSocket.SendCommand("OUT\r\n");
+            sbSocket.CloseSocket();
         }
 
         ~SwitchboardConnection()

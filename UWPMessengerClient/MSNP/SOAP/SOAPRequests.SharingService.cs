@@ -8,7 +8,7 @@ namespace UWPMessengerClient.MSNP.SOAP
 {
     partial class SOAPRequests
     {
-        protected string SharingService_url = "https://m1.escargot.chat/abservice/SharingService.asmx";
+        protected string SharingServiceUrl = "https://m1.escargot.log1p.xyz/abservice/SharingService.asmx";
         //local address is http://localhost/abservice/SharingService.asmx for SharingService_url
 
         public string FindMembership()
@@ -38,7 +38,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                    </FindMembership>
                </soap:Body>
             </soap:Envelope>";
-            return MakeSOAPRequest(membership_lists_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/FindMembership");
+            return MakeSoapRequest(membership_lists_xml, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/FindMembership");
         }
 
         public string AddMember(string contactEmail, string memberRole)
@@ -81,7 +81,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </AddMember>
                 </soap:Body>
             </soap:Envelope>";
-            return MakeSOAPRequest(member_role_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/AddMember");
+            return MakeSoapRequest(member_role_xml, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/AddMember");
         }
 
         public string DeleteMember(string membershipId, string member_role)
@@ -124,7 +124,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </DeleteMember>
                 </soap:Body>
             </soap:Envelope>";
-            return MakeSOAPRequest(member_role_xml, SharingService_url, "http://www.msn.com/webservices/AddressBook/DeleteMember");
+            return MakeSoapRequest(member_role_xml, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/DeleteMember");
         }
 
         public void BlockContactRequests(Contact contact)
