@@ -17,30 +17,30 @@ namespace UWPMessengerClient.MSNP
         protected async Task MSNP12LoginToMessengerAsync()
         {
             httpClient = new HttpClient();
-            NsSocket = new SocketCommands(nsAddress, Port);
+            nsSocket = new SocketCommands(nsAddress, port);
             Action loginAction = new Action(() =>
             {
                 //sequence of commands to login to escargot
-                NsSocket.ConnectSocket();
-                NsSocket.SetReceiveTimeout(25000);
+                nsSocket.ConnectSocket();
+                nsSocket.SetReceiveTimeout(25000);
                 UserInfo.Email = email;
                 GetContactsFromDatabase();
                 //begin receiving from escargot
-                NsSocket.BeginReceiving(receivedBytes, new AsyncCallback(ReceivingCallback), this);
+                nsSocket.BeginReceiving(receivedBytes, new AsyncCallback(ReceivingCallback), this);
                 transactionId++;
-                NsSocket.SendCommand($"VER {transactionId} MSNP12 CVR0\r\n");//send msnp version
+                nsSocket.SendCommand($"VER {transactionId} MSNP12 CVR0\r\n");//send msnp version
                 transactionId++;
-                NsSocket.SendCommand($"CVR {transactionId} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");//send client information
+                nsSocket.SendCommand($"CVR {transactionId} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");//send client information
                 transactionId++;
-                NsSocket.SendCommand($"USR {transactionId} TWN I {email}\r\n");//sends email to get a string for use in authentication
+                nsSocket.SendCommand($"USR {transactionId} TWN I {email}\r\n");//sends email to get a string for use in authentication
                 transactionId++;
                 Task<string> token_task = GetNexusTokenAsync(httpClient);
                 token = token_task.Result;
-                NsSocket.SendCommand($"USR {transactionId} TWN S t={token}\r\n");//sending authentication token
+                nsSocket.SendCommand($"USR {transactionId} TWN S t={token}\r\n");//sending authentication token
                 transactionId++;
-                NsSocket.SendCommand($"SYN {transactionId} 0 0\r\n");//sync contact list
+                nsSocket.SendCommand($"SYN {transactionId} 0 0\r\n");//sync contact list
                 transactionId++;
-                NsSocket.SendCommand($"CHG {transactionId} {UserPresenceStatus} {clientCapabilities}\r\n");//set presence as available
+                nsSocket.SendCommand($"CHG {transactionId} {UserPresenceStatus} {clientCapabilities}\r\n");//set presence as available
             });
             await Task.Run(loginAction);
         }
@@ -53,24 +53,24 @@ namespace UWPMessengerClient.MSNP
             HttpResponseHeaders responseHeaders = response.Headers;
             //parsing the response headers to extract the login server adress
             string headersString = responseHeaders.ToString();
-            string[] SplitHeadersString = headersString.Split("DALogin=");
-            string DALogin = SplitHeadersString[1];
+            string[] splitHeadersString = headersString.Split("DALogin=");
+            string DALogin = splitHeadersString[1];
             DALogin = DALogin.Remove(DALogin.IndexOf("\r"));
             if (UsingLocalhost)
             {
                 DALogin = "http://localhost/login";
             }
-            string email_encoded = HttpUtility.UrlEncode(email);
-            string password_encoded = HttpUtility.UrlEncode(password);
+            string emailEncoded = HttpUtility.UrlEncode(email);
+            string passwordEncoded = HttpUtility.UrlEncode(password);
             //makes a request to the login address and gets the from-PP header
-            httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Passport1.4 OrgVerb=GET,OrgUrl=http%3A%2F%2Fmessenger%2Emsn%2Ecom,sign-in={email_encoded},pwd={password_encoded},ct=1,rver=1,wp=FS_40SEC_0_COMPACT,lc=1,id=1");
+            httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Passport1.4 OrgVerb=GET,OrgUrl=http%3A%2F%2Fmessenger%2Emsn%2Ecom,sign-in={emailEncoded},pwd={passwordEncoded},ct=1,rver=1,wp=FS_40SEC_0_COMPACT,lc=1,id=1");
             response = await httpClient.GetAsync(DALogin);
             response.EnsureSuccessStatusCode();
             responseHeaders = response.Headers;
             //parsing the response headers to extract the token
             headersString = responseHeaders.ToString();
-            string[] fromPP_split = headersString.Split("from-PP='");
-            string fromPP = fromPP_split[1];
+            string[] fromPpSplit = headersString.Split("from-PP='");
+            string fromPP = fromPpSplit[1];
             fromPP = fromPP.Remove(fromPP.IndexOf("'\r"));
             return fromPP;
         }

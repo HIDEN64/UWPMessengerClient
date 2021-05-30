@@ -10,10 +10,10 @@ namespace UWPMessengerClient.MSNP
 {
     public class UserInfo : INotifyPropertyChanged
     {
-        private string _displayName;
-        private string _personalMessage;
-        private string _typingUser;
-        public string BLPValue { get; set; }
+        private string displayName;
+        private string personalMessage;
+        private string typingUser;
+        public string BlpValue { get; set; }
         public string Email { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -22,32 +22,32 @@ namespace UWPMessengerClient.MSNP
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public string displayName
+        public string DisplayName
         {
-            get => _displayName;
+            get => displayName;
             set
             {
-                _displayName = value;
+                displayName = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public string personalMessage
+        public string PersonalMessage
         {
-            get => _personalMessage;
+            get => personalMessage;
             set
             {
-                _personalMessage = value;
+                personalMessage = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public string typingUser
+        public string UserIsTyping
         {
-            get => _typingUser;
+            get => typingUser;
             set
             {
-                _typingUser = value;
+                typingUser = value;
                 NotifyPropertyChanged();
             }
         }

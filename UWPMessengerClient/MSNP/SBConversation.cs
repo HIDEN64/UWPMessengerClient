@@ -20,7 +20,7 @@ namespace UWPMessengerClient.MSNP
         private SwitchboardConnection switchboardConnection;
         private UserInfo userInfo = new UserInfo();
         private UserInfo contactInfo = new UserInfo();
-        public string ConversationID
+        public string ConversationId
         { get; private set; }
         public event EventHandler MessageListUpdated;
         public event PropertyChangedEventHandler PropertyChanged;
@@ -73,7 +73,7 @@ namespace UWPMessengerClient.MSNP
             notificationServerConnection = notificationConnection;
             UserInfo = notificationServerConnection.UserInfo;
             notificationServerConnection.SwitchboardCreated += NotificationServerConnection_SwitchboardCreated;
-            ConversationID = conversationId;
+            ConversationId = conversationId;
         }
 
         public async Task SendTypingUser()
@@ -81,9 +81,9 @@ namespace UWPMessengerClient.MSNP
             await switchboardConnection.SendTypingUser();
         }
 
-        public async Task SendTextMessage(string message_text)
+        public async Task SendTextMessage(string messageText)
         {
-            await switchboardConnection.SendTextMessage(message_text);
+            await switchboardConnection.SendTextMessage(messageText);
         }
 
         public async Task SendNudge()
@@ -91,9 +91,9 @@ namespace UWPMessengerClient.MSNP
             await switchboardConnection.SendNudge();
         }
 
-        public async Task SendInk(byte[] InkBytes)
+        public async Task SendInk(byte[] inkBytes)
         {
-            await switchboardConnection.SendInk(InkBytes);
+            await switchboardConnection.SendInk(inkBytes);
         }
 
         private void AssignSwitchboard(SwitchboardConnection switchboard)
@@ -139,7 +139,7 @@ namespace UWPMessengerClient.MSNP
                 .AddToastActivationInfo(new QueryString()
                 {
                     {"action", "newMessage" },
-                    {"conversationID", ConversationID }
+                    {"conversationId", ConversationId }
                 }.ToString(), ToastActivationType.Foreground)
                 .AddText(HttpUtility.UrlDecode(messageSender))
                 .AddText(messageText)
@@ -147,7 +147,7 @@ namespace UWPMessengerClient.MSNP
                 .AddButton("Reply", ToastActivationType.Background, new QueryString()
                 {
                     {"action", "ReplyMessage" },
-                    {"conversationID", ConversationID }
+                    {"conversationId", ConversationId }
                 }.ToString())
                 .AddButton("Dismiss all", ToastActivationType.Background, new QueryString()
                 {
@@ -156,11 +156,11 @@ namespace UWPMessengerClient.MSNP
                 .GetToastContent();
             try
             {
-                var notif = new ToastNotification(content.GetXml())
+                var notification = new ToastNotification(content.GetXml())
                 {
                     Group = "messages"
                 };
-                ToastNotificationManager.CreateToastNotifier().Show(notif);
+                ToastNotificationManager.CreateToastNotifier().Show(notification);
             }
             catch (ArgumentException) { }
         }

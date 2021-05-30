@@ -104,17 +104,17 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public void ReceiveSingleInk(string encoded_ink)
+        public void ReceiveSingleInk(string encodedInk)
         {
-            encoded_ink = encoded_ink.Replace("base64:", "");
-            Base64Ink = encoded_ink;
-            InkBytes = Convert.FromBase64String(encoded_ink);
+            encodedInk = encodedInk.Replace("base64:", "");
+            Base64Ink = encodedInk;
+            InkBytes = Convert.FromBase64String(encodedInk);
         }
 
-        public void ReceiveFirstInkChunk(int chunks, string message_id, string chunk)
+        public void ReceiveFirstInkChunk(int chunks, string messageId, string chunk)
         {
             numberOfInkChunks = chunks;
-            InkMessageID = message_id;
+            InkMessageID = messageId;
             chunk = chunk.Replace("base64:", "");
             InkChunk inkChunk = new InkChunk()
             {
@@ -125,20 +125,20 @@ namespace UWPMessengerClient.MSNP
             inkChunks.Add(inkChunk);
         }
 
-        public void ReceiveInkChunk(int chunk_number, string chunk)
+        public void ReceiveInkChunk(int chunkNumber, string chunk)
         {
-            if (chunk_number > numberOfInkChunks)
+            if (chunkNumber > numberOfInkChunks)
             {
                 throw new Exception();
             }
             InkChunk inkChunk = new InkChunk()
             {
-                ChunkNumber = chunk_number,
+                ChunkNumber = chunkNumber,
                 MessageID = InkMessageID,
                 EncodedChunk = chunk
             };
             inkChunks.Add(inkChunk);
-            if (chunk_number == (numberOfInkChunks - 1))
+            if (chunkNumber == (numberOfInkChunks - 1))
             {
                 JoinChunks();
             }
@@ -146,13 +146,13 @@ namespace UWPMessengerClient.MSNP
 
         public void JoinChunks()
         {
-            string joined_chunks = "";
+            string joinedChunks = "";
             foreach (InkChunk inkChunk in inkChunks)
             {
-                joined_chunks += inkChunk.EncodedChunk;
+                joinedChunks += inkChunk.EncodedChunk;
             }
-            Base64Ink = joined_chunks;
-            InkBytes = Convert.FromBase64String(joined_chunks);
+            Base64Ink = joinedChunks;
+            InkBytes = Convert.FromBase64String(joinedChunks);
         }
     }
 }

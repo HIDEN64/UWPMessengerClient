@@ -8,12 +8,12 @@ namespace UWPMessengerClient.MSNP.SOAP
 {
     partial class SOAPRequests
     {
-        protected string SharingServiceUrl = "https://m1.escargot.log1p.xyz/abservice/SharingService.asmx";
+        protected string sharingServiceUrl = "https://m1.escargot.log1p.xyz/abservice/SharingService.asmx";
         //local address is http://localhost/abservice/SharingService.asmx for SharingService_url
 
         public string FindMembership()
         {
-            string membership_lists_xml = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
+            string membershipListsXml = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
                <soap:Header xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
                    <ABApplicationHeader xmlns=""http://www.msn.com/webservices/AddressBook"">
@@ -38,12 +38,12 @@ namespace UWPMessengerClient.MSNP.SOAP
                    </FindMembership>
                </soap:Body>
             </soap:Envelope>";
-            return MakeSoapRequest(membership_lists_xml, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/FindMembership");
+            return MakeSoapRequest(membershipListsXml, sharingServiceUrl, "http://www.msn.com/webservices/AddressBook/FindMembership");
         }
 
         public string AddMember(string contactEmail, string memberRole)
         {
-            string member_role_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            string memberRoleXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" 
                            xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" 
                            xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" 
@@ -81,12 +81,12 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </AddMember>
                 </soap:Body>
             </soap:Envelope>";
-            return MakeSoapRequest(member_role_xml, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/AddMember");
+            return MakeSoapRequest(memberRoleXml, sharingServiceUrl, "http://www.msn.com/webservices/AddressBook/AddMember");
         }
 
-        public string DeleteMember(string membershipId, string member_role)
+        public string DeleteMember(string membershipId, string memberRole)
         {
-            string member_role_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            string memberRoleXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" 
                            xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" 
                            xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" 
@@ -111,7 +111,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                         </serviceHandle>
                         <memberships>
                             <Membership>
-                                <MemberRole>{member_role}</MemberRole>
+                                <MemberRole>{memberRole}</MemberRole>
                                 <Members>
                                     <Member xsi:type=""PassportMember"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
                                         <Type>Passport</Type>
@@ -124,7 +124,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </DeleteMember>
                 </soap:Body>
             </soap:Envelope>";
-            return MakeSoapRequest(member_role_xml, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/DeleteMember");
+            return MakeSoapRequest(memberRoleXml, sharingServiceUrl, "http://www.msn.com/webservices/AddressBook/DeleteMember");
         }
 
         public void BlockContactRequests(Contact contact)

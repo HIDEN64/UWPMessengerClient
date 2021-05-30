@@ -21,13 +21,13 @@ namespace UWPMessengerClient.MSNP.SOAP
             if (UsingLocalhost)
             {
                 rstAddress = "http://localhost/RST.srf";
-                SharingServiceUrl = "http://localhost/abservice/SharingService.asmx";
+                sharingServiceUrl = "http://localhost/abservice/SharingService.asmx";
                 AbServiceUrl = "http://localhost/abservice/abservice.asmx";
                 //setting local addresses
             }
         }
 
-        public static HttpWebRequest CreateSOAPRequest(string soapAction, string address)
+        public static HttpWebRequest CreateSoapRequest(string soapAction, string address)
         {
             HttpWebRequest request = WebRequest.CreateHttp(address);
             request.Headers.Add($@"SOAPAction:{soapAction}");
@@ -39,14 +39,14 @@ namespace UWPMessengerClient.MSNP.SOAP
 
         public static string MakeSoapRequest(string soapBody, string address, string soapAction)
         {
-            HttpWebRequest SOAPRequest = CreateSOAPRequest(soapAction, address);
-            XmlDocument SoapXMLBody = new XmlDocument();
-            SoapXMLBody.LoadXml(soapBody);
-            using (Stream stream = SOAPRequest.GetRequestStream())
+            HttpWebRequest soapRequest = CreateSoapRequest(soapAction, address);
+            XmlDocument soapXmlBody = new XmlDocument();
+            soapXmlBody.LoadXml(soapBody);
+            using (Stream stream = soapRequest.GetRequestStream())
             {
-                SoapXMLBody.Save(stream);
+                soapXmlBody.Save(stream);
             }
-            using (WebResponse webResponse = SOAPRequest.GetResponse())
+            using (WebResponse webResponse = soapRequest.GetResponse())
             {
                 using (StreamReader rd = new StreamReader(webResponse.GetResponseStream()))
                 {
@@ -75,7 +75,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                         <ps:BinaryVersion>4</ps:BinaryVersion>
                         <ps:UIVersion>1</ps:UIVersion>
                         <ps:Cookies></ps:Cookies>
-                        <ps:RequestParams>AQAAAAIAAABsYwQAAAAxMDMz</ps:RequestParams>
+                        <ps:RequestParameters>AQAAAAIAAABsYwQAAAAxMDMz</ps:RequestParameters>
                     </ps:AuthInfo>
                     <wsse:Security>
                         <wsse:UsernameToken Id=""user"">

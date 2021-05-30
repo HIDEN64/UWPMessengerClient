@@ -129,7 +129,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ChatPageNavigationParams.cs" />
+    <Compile Include="ChatPageNavigationParameters.cs" />
     <Compile Include="Converters\ContactBlockedConverter.cs" />
     <Compile Include="GroupInfoList.cs" />
     <Compile Include="Converters\MessageHistoryConverter.cs" />

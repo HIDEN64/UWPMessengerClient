@@ -14,7 +14,7 @@ namespace UWPMessengerClient.MSNP
         private string email;
         private string displayName;
         private string guid;
-        private string contactID;
+        private string contactId;
         private string presenceStatus;
         private string personalMessage;
         public string AllowMembershipID { get; set; }
@@ -30,40 +30,40 @@ namespace UWPMessengerClient.MSNP
 
         public Contact() { }
 
-        public Contact(int listbit)
+        public Contact(int listNumber)
         {
-            SetListsFromListnumber(listbit);
+            SetListsFromListNumber(listNumber);
         }
 
-        public void SetListsFromListnumber(int listnumber)
+        public void SetListsFromListNumber(int listNumber)
         {
-            OnForward = (listnumber & (int)ListNumbers.Forward) == (int)ListNumbers.Forward;
-            OnAllow = (listnumber & (int)ListNumbers.Allow) == (int)ListNumbers.Allow;
-            onBlock = (listnumber & (int)ListNumbers.Block) == (int)ListNumbers.Block;
-            OnReverse = (listnumber & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse;
-            Pending = (listnumber & (int)ListNumbers.Pending) == (int)ListNumbers.Pending;
+            OnForward = (listNumber & (int)ListNumbers.Forward) == (int)ListNumbers.Forward;
+            OnAllow = (listNumber & (int)ListNumbers.Allow) == (int)ListNumbers.Allow;
+            onBlock = (listNumber & (int)ListNumbers.Block) == (int)ListNumbers.Block;
+            OnReverse = (listNumber & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse;
+            Pending = (listNumber & (int)ListNumbers.Pending) == (int)ListNumbers.Pending;
         }
 
-        public void UpdateListsFromListnumber(int listnumber)
+        public void UpdateListsFromListNumber(int listNumber)
         {
-            if ((listnumber & (int)ListNumbers.Forward) == (int)ListNumbers.Forward) { OnForward = true; }
-            if ((listnumber & (int)ListNumbers.Allow) == (int)ListNumbers.Allow) { OnAllow = true; }
-            if ((listnumber & (int)ListNumbers.Block) == (int)ListNumbers.Block) { onBlock = true; }
-            if ((listnumber & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse) { OnReverse = true; }
-            if ((listnumber & (int)ListNumbers.Pending) == (int)ListNumbers.Pending) { Pending = true; }
+            if ((listNumber & (int)ListNumbers.Forward) == (int)ListNumbers.Forward) { OnForward = true; }
+            if ((listNumber & (int)ListNumbers.Allow) == (int)ListNumbers.Allow) { OnAllow = true; }
+            if ((listNumber & (int)ListNumbers.Block) == (int)ListNumbers.Block) { onBlock = true; }
+            if ((listNumber & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse) { OnReverse = true; }
+            if ((listNumber & (int)ListNumbers.Pending) == (int)ListNumbers.Pending) { Pending = true; }
         }
 
-        public int GetListnumberFromForwardAllowBlock()
+        public int GetListNumberFromForwardAllowBlock()
         {
             int onForwardInt = OnForward ? (int)ListNumbers.Forward : 0;
             int onAllowInt = OnAllow ? (int)ListNumbers.Allow : 0;
             int onBlockInt = onBlock ? (int)ListNumbers.Block : 0;
             //respective value of each list if true and 0 if false
-            int listbit = (onForwardInt & (int)ListNumbers.Forward) + (onAllowInt & (int)ListNumbers.Allow) + (onBlockInt & (int)ListNumbers.Block);
-            return listbit;
+            int listNumber = (onForwardInt & (int)ListNumbers.Forward) + (onAllowInt & (int)ListNumbers.Allow) + (onBlockInt & (int)ListNumbers.Block);
+            return listNumber;
         }
 
-        public int GetListnumber()
+        public int GetListNumber()
         {
             int onForwardInt = OnForward ? (int)ListNumbers.Forward : 0;
             int onAllowInt = OnAllow ? (int)ListNumbers.Allow : 0;
@@ -71,8 +71,8 @@ namespace UWPMessengerClient.MSNP
             int onReverseInt = OnReverse ? (int)ListNumbers.Reverse : 0;
             int PendingInt = Pending ? (int)ListNumbers.Pending : 0;
             //respective value of each list if true and 0 if false
-            int listbit = (onForwardInt & (int)ListNumbers.Forward) + (onAllowInt & (int)ListNumbers.Allow) + (onBlockInt & (int)ListNumbers.Block) + (onReverseInt & (int)ListNumbers.Reverse) + (PendingInt & (int)ListNumbers.Pending);
-            return listbit;
+            int listNumber = (onForwardInt & (int)ListNumbers.Forward) + (onAllowInt & (int)ListNumbers.Allow) + (onBlockInt & (int)ListNumbers.Block) + (onReverseInt & (int)ListNumbers.Reverse) + (PendingInt & (int)ListNumbers.Pending);
+            return listNumber;
         }
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -115,10 +115,10 @@ namespace UWPMessengerClient.MSNP
 
         public string ContactID
         {
-            get => contactID;
+            get => contactId;
             set
             {
-                contactID = value;
+                contactId = value;
                 NotifyPropertyChanged();
             }
         }

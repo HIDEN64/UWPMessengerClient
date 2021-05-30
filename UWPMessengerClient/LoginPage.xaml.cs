@@ -47,33 +47,33 @@ namespace UWPMessengerClient
                 DisableProgressRingAndShowButtons();
                 return;
             }
-            string selected_version = "MSNP15";
-            if (localSettings.Values["MSNP_Version"] != null)
+            string selectedVersion = "MSNP15";
+            if (localSettings.Values["MsnpVersion"] != null)
             {
-                selected_version = localSettings.Values["MSNP_Version"].ToString();
+                selectedVersion = localSettings.Values["MsnpVersion"].ToString();
             }
-            bool using_localhost = false;
-            if (localSettings.Values["Using_Localhost"] != null)
+            bool usingLocalhost = false;
+            if (localSettings.Values["UsingLocalhost"] != null)
             {
-                using_localhost = (bool)localSettings.Values["Using_Localhost"];
+                usingLocalhost = (bool)localSettings.Values["UsingLocalhost"];
             }
-            string initial_status = PresenceStatuses.Available;
+            string initialStatus = PresenceStatuses.Available;
             switch (InitialStatusBox.SelectedItem.ToString())
             {
                 case "Available":
-                    initial_status = PresenceStatuses.Available;
+                    initialStatus = PresenceStatuses.Available;
                     break;
                 case "Busy":
-                    initial_status = PresenceStatuses.Busy;
+                    initialStatus = PresenceStatuses.Busy;
                     break;
                 case "Away":
-                    initial_status = PresenceStatuses.Away;
+                    initialStatus = PresenceStatuses.Away;
                     break;
                 case "Invisible":
-                    initial_status = PresenceStatuses.Hidden;
+                    initialStatus = PresenceStatuses.Hidden;
                     break;
             }
-            notificationServerConnection = new NotificationServerConnection(email, password, using_localhost, selected_version, initial_status);
+            notificationServerConnection = new NotificationServerConnection(email, password, usingLocalhost, selectedVersion, initialStatus);
             if (localSettings.Values["KeepHistory"] != null)
             {
                 notificationServerConnection.KeepMessagingHistoryInSwitchboard = (bool)localSettings.Values["KeepHistory"];

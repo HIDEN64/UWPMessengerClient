@@ -120,14 +120,14 @@ namespace UWPMessengerClient
                     {
                         case "newMessage":
                             notificationHistory.RemoveGroup("messages");
-                            if (rootFrame.Content is ChatPage && (rootFrame.Content as ChatPage).ConversationID.Equals(arguments["conversationID"]))
+                            if (rootFrame.Content is ChatPage && (rootFrame.Content as ChatPage).ConversationId.Equals(arguments["conversationId"]))
                             {
                                 break;
                             }
-                            _ = rootFrame.Navigate(typeof(ChatPage), new ChatPageNavigationParams()
+                            _ = rootFrame.Navigate(typeof(ChatPage), new ChatPageNavigationParameters()
                             {
-                                notificationServerConnection = NotificationServerConnection,
-                                SBConversationID = arguments["conversationID"]
+                                NotificationServerConnection = NotificationServerConnection,
+                                SbConversationId = arguments["conversationId"]
                             });
                             break;
                     }
@@ -167,7 +167,7 @@ namespace UWPMessengerClient
                                 notificationHistory.RemoveGroup("messages");
                                 break;
                             case "ReplyMessage":
-                                SBConversation conversation = NotificationServerConnection.ReturnConversationFromConversationID(arguments["conversationID"]);
+                                SBConversation conversation = NotificationServerConnection.ReturnConversationFromConversationId(arguments["conversationId"]);
                                 string reply = (string)userInput["ReplyBox"];
                                 await conversation.SendTextMessage(reply);
                                 break;

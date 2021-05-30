@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:UWPMessengerClient"
-    xmlns:msnp_local="using:UWPMessengerClient.MSNP"
+    xmlns:msnpLocal="using:UWPMessengerClient.MSNP"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -47,7 +47,7 @@
                 <ListView x:Name="ReverseContactsList" ItemsSource="{x:Bind notificationServerConnection.ContactsInPendingOrReverseList, Mode=OneWay}"
                           HorizontalAlignment="Stretch">
                     <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="msnp_local:Contact">
+                        <DataTemplate x:DataType="msnpLocal:Contact">
                             <StackPanel>
                                 <TextBlock Text="{x:Bind Email, Mode=OneWay}" Margin="0, 5, 0, 0" FontSize="16"/>
                                 <Button x:Name="AcceptContactButton" Content="Add to your list" Click="AcceptContactButton_Click" Margin="5"/>

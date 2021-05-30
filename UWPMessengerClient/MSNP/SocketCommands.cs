@@ -11,13 +11,13 @@ namespace UWPMessengerClient.MSNP
     public class SocketCommands
     {
         private Socket socket;
-        private string ServerAddress = "";
-        private int ServerPort = 0;
+        private string serverAddress = "";
+        private int serverPort = 0;
 
         public SocketCommands(string address, int port)
         {
-            ServerAddress = address;
-            ServerPort = port;
+            serverAddress = address;
+            serverPort = port;
         }
 
         public void SetReceiveTimeout(int timeout)
@@ -29,27 +29,27 @@ namespace UWPMessengerClient.MSNP
         {
             //creates a tcp socket then connects it to the server
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            IPHostEntry iPHostEntry = Dns.GetHostEntry(ServerAddress);
+            IPHostEntry iPHostEntry = Dns.GetHostEntry(serverAddress);
             IPAddress iPAddress = iPHostEntry.AddressList[1];
-            IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, ServerPort);
+            IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, serverPort);
             socket.Connect(iPEndPoint);
         }
 
-        public void SendCommand(string msg)
+        public void SendCommand(string message)
         {
             if (socket.Connected)
             {
-                byte[] message = Encoding.UTF8.GetBytes(msg);
-                socket.Send(message);
+                byte[] messageBytes = Encoding.UTF8.GetBytes(message);
+                socket.Send(messageBytes);
             }
         }
 
-        public void SendCommandWithException(string msg)
+        public void SendCommandWithException(string message)
         {
             if (socket.Connected)
             {
-                byte[] message = Encoding.UTF8.GetBytes(msg);
-                socket.Send(message);
+                byte[] messageBytes = Encoding.UTF8.GetBytes(message);
+                socket.Send(messageBytes);
             }
             else
             {
@@ -96,9 +96,9 @@ namespace UWPMessengerClient.MSNP
 
         public string ReceiveMessage(byte[] buffer)
         {
-            int bytes_read = socket.Receive(buffer);
-            string received_bytes_string = Encoding.UTF8.GetString(buffer, 0, bytes_read);
-            return received_bytes_string;
+            int bytesRead = socket.Receive(buffer);
+            string receivedBytesString = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            return receivedBytesString;
         }
 
         public void CloseSocket()

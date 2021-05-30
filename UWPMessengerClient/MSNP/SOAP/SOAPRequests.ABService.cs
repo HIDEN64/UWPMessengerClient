@@ -13,7 +13,7 @@ namespace UWPMessengerClient.MSNP.SOAP
 
         public string AbFindAll()
         {
-            string address_book_xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            string addressBookXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/""
                            xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" 
                            xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" 
@@ -38,7 +38,7 @@ namespace UWPMessengerClient.MSNP.SOAP
 		            </ABFindAll>
 	            </soap:Body>
             </soap:Envelope>";
-            return MakeSoapRequest(address_book_xml, AbServiceUrl, "http://www.msn.com/webservices/AddressBook/ABFindAll");
+            return MakeSoapRequest(addressBookXml, AbServiceUrl, "http://www.msn.com/webservices/AddressBook/ABFindAll");
         }
 
         public string AbContactAdd(string newContactEmail)

@@ -53,12 +53,12 @@ namespace UWPMessengerClient.MSNP
                     Connection = db
                 };
                 string jsonContact = JsonConvert.SerializeObject(contact);
-                Contact contact_to_add = JsonConvert.DeserializeObject<Contact>(jsonContact);
-                contact_to_add.PresenceStatus = null;
-                jsonContact = JsonConvert.SerializeObject(contact_to_add);
+                Contact contactToAdd = JsonConvert.DeserializeObject<Contact>(jsonContact);
+                contactToAdd.PresenceStatus = null;
+                jsonContact = JsonConvert.SerializeObject(contactToAdd);
                 updateCommand.CommandText = "UPDATE Contacts SET JSONContact = @json_contact WHERE Email = @email AND " +
                     "UserAccount = @account";
-                updateCommand.Parameters.AddWithValue("@email", contact_to_add.Email);
+                updateCommand.Parameters.AddWithValue("@email", contactToAdd.Email);
                 updateCommand.Parameters.AddWithValue("@account", userEmail);
                 updateCommand.Parameters.AddWithValue("@json_contact", jsonContact);
                 updateCommand.ExecuteReader();
@@ -137,7 +137,7 @@ namespace UWPMessengerClient.MSNP
             return entries;
         }
 
-        public static void AddMessageToTable(string user_email, string principalEmail, Message message)
+        public static void AddMessageToTable(string userEmail, string principalEmail, Message message)
         {
             string dbpath = Path.Combine(ApplicationData.Current.LocalFolder.Path, "UWPMessengerClient.db");
             using (SqliteConnection db =
@@ -152,7 +152,7 @@ namespace UWPMessengerClient.MSNP
                 string jsonMessage = JsonConvert.SerializeObject(message);
                 // Use parameterized query to prevent SQL injection attacks
                 insertCommand.CommandText = "INSERT INTO Messages VALUES (NULL, @user, @principal, @json_message)";
-                insertCommand.Parameters.AddWithValue("@user", user_email);
+                insertCommand.Parameters.AddWithValue("@user", userEmail);
                 insertCommand.Parameters.AddWithValue("@principal", principalEmail);
                 insertCommand.Parameters.AddWithValue("@json_message", jsonMessage);
                 insertCommand.ExecuteReader();

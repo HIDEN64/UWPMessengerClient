@@ -19,13 +19,13 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection : INotifyPropertyChanged
     {
-        protected SocketCommands NsSocket;
+        protected SocketCommands nsSocket;
         public List<SBConversation> SbConversations { get; set; } = new List<SBConversation>();
         //notification server(escargot) address and address for SSO auth
         protected string nsAddress = "m1.escargot.log1p.xyz";
         protected string nexusAddress = "https://m1.escargot.log1p.xyz/nexus-mock";
         //local addresses are 127.0.0.1 for NSaddress and http://localhost/nexus-mock for nexus_address
-        protected readonly int Port = 1863;
+        protected readonly int port = 1863;
         private string email;
         private string password;
         protected Regex plusCharactersRegex = new Regex("\\[(.*?)\\]");
@@ -33,7 +33,7 @@ namespace UWPMessengerClient.MSNP
         public string MsnpVersion { get; protected set; } = "MSNP15";
         protected int transactionId = 0;
         protected uint clientCapabilities = 0x84140428;
-        public Contact contactToChat { get; set; }
+        public Contact ContactToChat { get; set; }
         public string UserPresenceStatus { get; set; }
         public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;
         public UserInfo UserInfo { get; set; } = new UserInfo();
@@ -56,39 +56,39 @@ namespace UWPMessengerClient.MSNP
         {
             CommandHandlers = new Dictionary<string, Action>()
             {
-                {"LST", () => HandleLST() },
-                {"ADC", () => HandleADC() },
-                {"ADL", () => HandleADL() },
-                {"PRP", () => HandlePRP() },
-                {"ILN", () => HandleILN() },
-                {"NLN", () => HandleNLN() },
-                {"FLN", () => HandleFLN() },
-                {"UBX", () => HandleUBX() },
-                {"XFR", async () => await HandleXFR() },
-                {"RNG", () => HandleRNG() }
+                {"LST", () => HandleLst() },
+                {"ADC", () => HandleAdc() },
+                {"ADL", () => HandleAdl() },
+                {"PRP", () => HandlePrp() },
+                {"ILN", () => HandleIln() },
+                {"NLN", () => HandleNln() },
+                {"FLN", () => HandleFln() },
+                {"UBX", () => HandleUbx() },
+                {"XFR", async () => await HandleXfr() },
+                {"RNG", () => HandleRng() }
             };
         }
 
-        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version, string initial_status = PresenceStatuses.Available)
+        public NotificationServerConnection(string messengerEmail, string messengerPassword, bool useLocalhost, string msnpVersion, string initialStatus = PresenceStatuses.Available)
         {
             CommandHandlers = new Dictionary<string, Action>()
             {
-                {"LST", () => HandleLST() },
-                {"ADC", () => HandleADC() },
-                {"ADL", () => HandleADL() },
-                {"PRP", () => HandlePRP() },
-                {"ILN", () => HandleILN() },
-                {"NLN", () => HandleNLN() },
-                {"FLN", () => HandleFLN() },
-                {"UBX", () => HandleUBX() },
-                {"XFR", async () => await HandleXFR() },
-                {"RNG", () => HandleRNG() }
+                {"LST", () => HandleLst() },
+                {"ADC", () => HandleAdc() },
+                {"ADL", () => HandleAdl() },
+                {"PRP", () => HandlePrp() },
+                {"ILN", () => HandleIln() },
+                {"NLN", () => HandleNln() },
+                {"FLN", () => HandleFln() },
+                {"UBX", () => HandleUbx() },
+                {"XFR", async () => await HandleXfr() },
+                {"RNG", () => HandleRng() }
             };
-            email = messenger_email;
-            password = messenger_password;
-            UsingLocalhost = use_localhost;
-            MsnpVersion = msnp_version;
-            UserPresenceStatus = initial_status;
+            email = messengerEmail;
+            password = messengerPassword;
+            UsingLocalhost = useLocalhost;
+            MsnpVersion = msnpVersion;
+            UserPresenceStatus = initialStatus;
             if (UsingLocalhost)
             {
                 nsAddress = "127.0.0.1";
@@ -133,7 +133,7 @@ namespace UWPMessengerClient.MSNP
             Action changePresence = new Action(() =>
             {
                 transactionId++;
-                NsSocket.SendCommand($"CHG {transactionId} {status} {clientCapabilities}\r\n");
+                nsSocket.SendCommand($"CHG {transactionId} {status} {clientCapabilities}\r\n");
             });
             UserPresenceStatus = status;
             await Task.Run(changePresence);
@@ -148,82 +148,82 @@ namespace UWPMessengerClient.MSNP
             }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
             transactionId++;
-            await Task.Run(() => NsSocket.SendCommand($"PRP {transactionId} MFN {urlEncodedNewDisplayName}\r\n"));
+            await Task.Run(() => nsSocket.SendCommand($"PRP {transactionId} MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
         public async Task SendUserPersonalMessage(string newPersonalMessage)
         {
-            Action psm_action = new Action(() =>
+            Action psmAction = new Action(() =>
             {
                 string encodedPersonalMessage = newPersonalMessage.Replace("&", "&amp;");
-                string psm_payload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
-                int payload_length = Encoding.UTF8.GetBytes(psm_payload).Length;
+                string psmPayload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
+                int payloadLength = Encoding.UTF8.GetBytes(psmPayload).Length;
                 transactionId++;
-                NsSocket.SendCommand($"UUX {transactionId} {payload_length}\r\n" + psm_payload);
+                nsSocket.SendCommand($"UUX {transactionId} {payloadLength}\r\n" + psmPayload);
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    UserInfo.personalMessage = newPersonalMessage;
+                    UserInfo.PersonalMessage = newPersonalMessage;
                 });
             });
-            await Task.Run(psm_action);
+            await Task.Run(psmAction);
         }
 
         public async Task<string> StartChat(Contact contactToChat)
         {
-            this.contactToChat = contactToChat;
+            ContactToChat = contactToChat;
             await InitiateSB();
-            int conv_id = random.Next(1000, 9999);
-            SBConversation conversation = new SBConversation(this, Convert.ToString(conv_id));
+            int conversationId = random.Next(1000, 9999);
+            SBConversation conversation = new SBConversation(this, Convert.ToString(conversationId));
             SbConversations.Add(conversation);
-            return conversation.ConversationID;
+            return conversation.ConversationId;
         }
 
         public async Task Ping()
         {
-            bool IsConnected;
+            bool isConnected;
             do
             {
-                IsConnected = await Task.Run(() =>
+                isConnected = await Task.Run(() =>
                 {
                     try
                     {
-                        NsSocket.SendCommandWithException("PNG\r\n");
+                        nsSocket.SendCommandWithException("PNG\r\n");
                         return true;
                     }
                     catch (NotConnectedException)
                     {
-                        NsSocket.CloseSocket();
+                        nsSocket.CloseSocket();
                         NotConnected?.Invoke(this, new EventArgs());
                         return false;
                     }
                     catch (SocketException)
                     {
-                        NsSocket.CloseSocket();
+                        nsSocket.CloseSocket();
                         NotConnected?.Invoke(this, new EventArgs());
                         return false;
                     }
                 });
                 await Task.Delay(60000);
             }
-            while (IsConnected);
+            while (isConnected);
         }
 
         protected async Task InitiateSB()
         {
             transactionId++;
-            await Task.Run(() => NsSocket.SendCommand($"XFR {transactionId} SB\r\n"));
+            await Task.Run(() => nsSocket.SendCommand($"XFR {transactionId} SB\r\n"));
         }
 
-        public SBConversation ReturnConversationFromConversationID(string conversation_id)
+        public SBConversation ReturnConversationFromConversationId(string conversationId)
         {
-            var conv_item = SbConversations.FirstOrDefault(sb => sb.ConversationID == conversation_id);
-            return conv_item;
+            var conversationItem = SbConversations.FirstOrDefault(sb => sb.ConversationId == conversationId);
+            return conversationItem;
         }
 
         public void Exit()
         {
-            NsSocket.SendCommand("OUT\r\n");
-            NsSocket.CloseSocket();
+            nsSocket.SendCommand("OUT\r\n");
+            nsSocket.CloseSocket();
         }
 
         ~NotificationServerConnection()

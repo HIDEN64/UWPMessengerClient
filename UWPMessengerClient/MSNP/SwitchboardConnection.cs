@@ -29,7 +29,6 @@ namespace UWPMessengerClient.MSNP
         protected bool waitingTyping = false;
         protected bool waitingNudge = false;
         protected int maximumInkSize = 1140;
-        private static Random random = new Random();
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler HistoryLoaded;
         Dictionary<string, Action> commandHandlers;
@@ -48,38 +47,38 @@ namespace UWPMessengerClient.MSNP
         {
             commandHandlers = new Dictionary<string, Action>()
             {
-                {"USR", () => HandleUSR() },
-                {"ANS", () => HandleANS() },
-                {"CAL", () => HandleCAL() },
+                {"USR", () => HandleUsr() },
+                {"ANS", () => HandleAns() },
+                {"CAL", () => HandleCal() },
                 {"JOI", () => PrincipalsConnected++ },
                 {"IRO", () => PrincipalsConnected++ },
-                {"MSG", () => HandleMSG() }
+                {"MSG", () => HandleMsg() }
             };
             sbAddress = address;
             sbPort = port;
             UserInfo.Email = email;
             this.authString = authString;
-            UserInfo.displayName = userDisplayName;
+            UserInfo.DisplayName = userDisplayName;
         }
 
         public SwitchboardConnection(string address, int port, string email, string authString, string userDisplayName, string principalDisplayName, string principalEmail, string sessionID)
         {
             commandHandlers = new Dictionary<string, Action>()
             {
-                {"USR", () => HandleUSR() },
-                {"ANS", () => HandleANS() },
-                {"CAL", () => HandleCAL() },
+                {"USR", () => HandleUsr() },
+                {"ANS", () => HandleAns() },
+                {"CAL", () => HandleCal() },
                 {"JOI", () => PrincipalsConnected++ },
                 {"IRO", () => PrincipalsConnected++ },
-                {"MSG", () => HandleMSG() }
+                {"MSG", () => HandleMsg() }
             };
             sbAddress = address;
             sbPort = port;
             UserInfo.Email = email;
             this.authString = authString;
             SessionID = sessionID;
-            UserInfo.displayName = userDisplayName;
-            PrincipalInfo.displayName = principalDisplayName;
+            UserInfo.DisplayName = userDisplayName;
+            PrincipalInfo.DisplayName = principalDisplayName;
             PrincipalInfo.Email = principalEmail;
         }
 
@@ -156,7 +155,7 @@ namespace UWPMessengerClient.MSNP
                     sbSocket.SendCommand($"CAL {transactionId} {principalEmail}\r\n");
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
-                        PrincipalInfo.displayName = principalDisplayName;
+                        PrincipalInfo.DisplayName = principalDisplayName;
                     });
                 });
             }
@@ -181,8 +180,8 @@ namespace UWPMessengerClient.MSNP
                         Message newMessage = new Message()
                         {
                             MessageText = messageText,
-                            Sender = UserInfo.displayName,
-                            Receiver = PrincipalInfo.displayName,
+                            Sender = UserInfo.DisplayName,
+                            Receiver = PrincipalInfo.DisplayName,
                             SenderEmail = UserInfo.Email,
                             ReceiverEmail = PrincipalInfo.Email,
                             IsHistory = false
@@ -257,11 +256,11 @@ namespace UWPMessengerClient.MSNP
                             transactionId++;
                             sbSocket.SendCommand($"MSG {transactionId} A {byteMessage.Length}\r\n{nudgeMessage}");
                         });
-                        string nudgeText = $"You sent {PrincipalInfo.displayName} a nudge";
+                        string nudgeText = $"You sent {PrincipalInfo.DisplayName} a nudge";
                         Message newMessage = new Message()
                         {
                             MessageText = nudgeText,
-                            Receiver = PrincipalInfo.displayName,
+                            Receiver = PrincipalInfo.DisplayName,
                             SenderEmail = UserInfo.Email,
                             ReceiverEmail = PrincipalInfo.Email,
                             IsHistory = false
@@ -306,66 +305,66 @@ namespace UWPMessengerClient.MSNP
             stringBuilder.Append("{");
             stringBuilder.Append(Guid.NewGuid().ToString().ToUpper());
             stringBuilder.Append("}");
-            string message_id = stringBuilder.ToString();
-            return message_id;
+            string messageId = stringBuilder.ToString();
+            return messageId;
         }
 
-        private List<InkChunk> DivideInkIntoChunks(byte[] ink_bytes, string MessageId)
+        private List<InkChunk> DivideInkIntoChunks(byte[] inkBytes, string messageId)
         {
-            List<InkChunk> InkChunks = new List<InkChunk>();
-            double NumberOfChunksDouble = ink_bytes.Length / maximumInkSize;
-            NumberOfChunksDouble = Math.Ceiling(NumberOfChunksDouble);
-            int NumberOfChunks = Convert.ToInt32(NumberOfChunksDouble);
-            int NumberOfFullChunks = NumberOfChunks;
-            if (NumberOfChunks % maximumInkSize > 0)
+            List<InkChunk> inkChunks = new List<InkChunk>();
+            double numberOfChunksDouble = inkBytes.Length / maximumInkSize;
+            numberOfChunksDouble = Math.Ceiling(numberOfChunksDouble);
+            int numberOfChunks = Convert.ToInt32(numberOfChunksDouble);
+            int numberOfFullChunks = numberOfChunks;
+            if (numberOfChunks % maximumInkSize > 0)
             {
-                NumberOfFullChunks--;
+                numberOfFullChunks--;
             }
-            int ink_pos = 0;
-            byte[] ink_chunk = new byte[maximumInkSize];
-            Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, maximumInkSize);
-            InkChunks.Add(new InkChunk()
+            int inkPos = 0;
+            byte[] inkChunk = new byte[maximumInkSize];
+            Buffer.BlockCopy(inkBytes, inkPos, inkChunk, 0, maximumInkSize);
+            inkChunks.Add(new InkChunk()
             {
                 ChunkNumber = 0,
-                MessageID = MessageId,
-                EncodedChunk = "base64:" + Convert.ToBase64String(ink_chunk)
+                MessageID = messageId,
+                EncodedChunk = "base64:" + Convert.ToBase64String(inkChunk)
             });
-            ink_pos += maximumInkSize;
-            for (int i = 1; i <= NumberOfFullChunks; i++)
+            inkPos += maximumInkSize;
+            for (int i = 1; i <= numberOfFullChunks; i++)
             {
-                Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, maximumInkSize);
-                InkChunks.Add(new InkChunk()
+                Buffer.BlockCopy(inkBytes, inkPos, inkChunk, 0, maximumInkSize);
+                inkChunks.Add(new InkChunk()
                 {
                     ChunkNumber = i,
-                    MessageID = MessageId,
-                    EncodedChunk = Convert.ToBase64String(ink_chunk)
+                    MessageID = messageId,
+                    EncodedChunk = Convert.ToBase64String(inkChunk)
                 });
-                ink_pos += maximumInkSize;
+                inkPos += maximumInkSize;
             }
-            int LastChunkLen = ink_bytes.Length - ink_pos;
-            ink_chunk = new byte[LastChunkLen];
-            Buffer.BlockCopy(ink_bytes, ink_pos, ink_chunk, 0, LastChunkLen);
-            InkChunks.Add(new InkChunk()
+            int lastChunkLength = inkBytes.Length - inkPos;
+            inkChunk = new byte[lastChunkLength];
+            Buffer.BlockCopy(inkBytes, inkPos, inkChunk, 0, lastChunkLength);
+            inkChunks.Add(new InkChunk()
             {
-                ChunkNumber = NumberOfChunks,
-                MessageID = MessageId,
-                EncodedChunk = Convert.ToBase64String(ink_chunk)
+                ChunkNumber = numberOfChunks,
+                MessageID = messageId,
+                EncodedChunk = Convert.ToBase64String(inkChunk)
             });
-            return InkChunks;
+            return inkChunks;
         }
 
-        public async Task SendInk(byte[] ink_bytes)
+        public async Task SendInk(byte[] inkBytes)
         {
-            if (ink_bytes.Length > maximumInkSize)
+            if (inkBytes.Length > maximumInkSize)
             {
-                string MessageId = GenerateMessageID();
-                List<InkChunk> InkChunks = DivideInkIntoChunks(ink_bytes, MessageId);
+                string messageId = GenerateMessageID();
+                List<InkChunk> inkChunks = DivideInkIntoChunks(inkBytes, messageId);
                 transactionId++;
-                string InkChunkMessagePayload = $"Mime-Version: 1.0\r\nContent-Type: application/x-ms-ink\r\nMessage-ID: {MessageId}\r\nChunks: {InkChunks.Count}\r\n\r\n{InkChunks[0].EncodedChunk}";
-                string InkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
+                string inkChunkMessagePayload = $"Mime-Version: 1.0\r\nContent-Type: application/x-ms-ink\r\nMessage-ID: {messageId}\r\nChunks: {inkChunks.Count}\r\n\r\n{inkChunks[0].EncodedChunk}";
+                string inkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(inkChunkMessagePayload).Length}\r\n{inkChunkMessagePayload}";
                 try
                 {
-                    sbSocket.SendCommand(InkChunkMessage);
+                    sbSocket.SendCommand(inkChunkMessage);
                 }
                 catch (Exception ex)
                 {
@@ -379,14 +378,14 @@ namespace UWPMessengerClient.MSNP
                         });
                     });
                 }
-                for (int i = 1; i < InkChunks.Count; i++)
+                for (int i = 1; i < inkChunks.Count; i++)
                 {
                     transactionId++;
-                    InkChunkMessagePayload = $"Message-ID: {MessageId}\r\nChunk: {InkChunks[i].ChunkNumber}\r\n\r\n{InkChunks[i].EncodedChunk}";
-                    InkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
+                    inkChunkMessagePayload = $"Message-ID: {messageId}\r\nChunk: {inkChunks[i].ChunkNumber}\r\n\r\n{inkChunks[i].EncodedChunk}";
+                    inkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(inkChunkMessagePayload).Length}\r\n{inkChunkMessagePayload}";
                     try
                     {
-                        sbSocket.SendCommand(InkChunkMessage);
+                        sbSocket.SendCommand(inkChunkMessage);
                     }
                     catch (Exception ex)
                     {
@@ -406,11 +405,11 @@ namespace UWPMessengerClient.MSNP
             else
             {
                 transactionId++;
-                string InkChunkMessagePayload = $"Mime-Version: 1.0\r\nContent-Type: application/x-ms-ink\r\n\r\n{"base64:" + Convert.ToBase64String(ink_bytes)}";
-                string InkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(InkChunkMessagePayload).Length}\r\n{InkChunkMessagePayload}";
+                string inkChunkMessagePayload = $"Mime-Version: 1.0\r\nContent-Type: application/x-ms-ink\r\n\r\n{"base64:" + Convert.ToBase64String(inkBytes)}";
+                string inkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(inkChunkMessagePayload).Length}\r\n{inkChunkMessagePayload}";
                 try
                 {
-                    sbSocket.SendCommand(InkChunkMessage);
+                    sbSocket.SendCommand(inkChunkMessage);
                 }
                 catch (Exception ex)
                 {
@@ -426,14 +425,14 @@ namespace UWPMessengerClient.MSNP
                     return;
                 }
             }
-            Message InkMessage = new Message()
+            Message inkMessage = new Message()
             {
-                MessageText = $"You sent {PrincipalInfo.displayName} ink",
+                MessageText = $"You sent {PrincipalInfo.DisplayName} ink",
                 SenderEmail = UserInfo.Email,
-                Receiver = PrincipalInfo.displayName,
+                Receiver = PrincipalInfo.DisplayName,
                 ReceiverEmail = PrincipalInfo.Email
             };
-            AddToMessageList(InkMessage);
+            AddToMessageList(inkMessage);
             //sends ink in ISF format
         }
 
