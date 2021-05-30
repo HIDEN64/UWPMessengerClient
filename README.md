@@ -1,5 +1,5 @@
 # UWPMessengerClient
-A UWP MSNP client, made to work with Escargot server https://escargot.log1p.xyz/
+A UWP MSNP client, made to work with Escargot server https://escargot.chat/
 
 ## Current capabilities
 Currently it can use either MSNP12 or MSNP15, you can:
@@ -9,5 +9,4 @@ Currently it can use either MSNP12 or MSNP15, you can:
 * Change your display name
 * Change your personal message
 * Send and receive messages and nudges
-* View the server connection status
 * Send and receive ink

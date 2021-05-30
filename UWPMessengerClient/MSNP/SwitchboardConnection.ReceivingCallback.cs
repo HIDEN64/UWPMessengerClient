@@ -11,7 +11,7 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class SwitchboardConnection
     {
-        private string CurrentResponse;
+        private string currentResponse;
         public ObservableCollection<Message> MessageList { get; set; } = new ObservableCollection<Message>();
         public event EventHandler NewMessage;
         public event EventHandler<MessageEventArgs> MessageReceived;
@@ -20,16 +20,16 @@ namespace UWPMessengerClient.MSNP
         public void ReceivingCallback(IAsyncResult asyncResult)
         {
             SwitchboardConnection switchboardConnection = (SwitchboardConnection)asyncResult.AsyncState;
-            int bytes_received = switchboardConnection.SBSocket.StopReceiving(asyncResult);
-            switchboardConnection.OutputString = Encoding.UTF8.GetString(switchboardConnection.OutputBuffer, 0, bytes_received);
+            int bytesReceived = switchboardConnection.sbSocket.StopReceiving(asyncResult);
+            switchboardConnection.OutputString = Encoding.UTF8.GetString(switchboardConnection.OutputBuffer, 0, bytesReceived);
             string[] responses = switchboardConnection.OutputString.Split("\r\n");
             for (var i = 0; i < responses.Length; i++)
             {
-                string[] res_params = responses[i].Split(" ");
-                switchboardConnection.CurrentResponse = responses[i];
+                string[] responseParameters = responses[i].Split(" ");
+                switchboardConnection.currentResponse = responses[i];
                 try
                 {
-                    switchboardConnection.CommandHandlers[res_params[0]]();
+                    switchboardConnection.commandHandlers[responseParameters[0]]();
                 }
                 catch (KeyNotFoundException)
                 {
@@ -37,52 +37,52 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    var task = switchboardConnection.AddToErrorLog($"{res_params[0]} processing error: " + e.Message);
+                    var task = switchboardConnection.AddToErrorLog($"{responseParameters[0]} processing error: " + e.Message);
                 }
             }
-            if (bytes_received > 0)
+            if (bytesReceived > 0)
             {
-                SBSocket.BeginReceiving(OutputBuffer, new AsyncCallback(ReceivingCallback), switchboardConnection);
+                sbSocket.BeginReceiving(OutputBuffer, new AsyncCallback(ReceivingCallback), switchboardConnection);
             }
         }
 
-        protected void SeparateAndProcessCommandFromResponse(string response, int payload_size)
+        private void SeparateAndProcessCommandFromResponse(string response, int payloadSize)
         {
             if (response.Contains("\r\n"))
             {
                 response = response.Split("\r\n", 2)[1];
             }
-            byte[] response_bytes = Encoding.UTF8.GetBytes(response);
-            byte[] payload_bytes = new byte[payload_size];
-            Buffer.BlockCopy(response_bytes, 0, payload_bytes, 0, payload_size);
-            string payload = Encoding.UTF8.GetString(payload_bytes);
-            string new_command = response.Replace(payload, "");
-            if (new_command != "")
+            byte[] responseBytes = Encoding.UTF8.GetBytes(response);
+            byte[] payloadBytes = new byte[payloadSize];
+            Buffer.BlockCopy(responseBytes, 0, payloadBytes, 0, payloadSize);
+            string payload = Encoding.UTF8.GetString(payloadBytes);
+            string newCommand = response.Replace(payload, "");
+            if (newCommand != "")
             {
-                OutputString = new_command;
-                string[] cmd_params = new_command.Split(" ");
-                CommandHandlers[cmd_params[0]]();
+                OutputString = newCommand;
+                string[] commandParameters = newCommand.Split(" ");
+                commandHandlers[commandParameters[0]]();
             }
         }
 
-        protected string SeparatePayloadFromResponse(string response, int payload_size)
+        private string SeparatePayloadFromResponse(string response, int payloadSize)
         {
             string payload_response = response;
             if (response.Contains("\r\n"))
             {
                 payload_response = response.Split("\r\n", 2)[1];
             }
-            byte[] response_bytes = Encoding.UTF8.GetBytes(payload_response);
-            byte[] payload_bytes = new byte[payload_size];
-            Buffer.BlockCopy(response_bytes, 0, payload_bytes, 0, payload_size);
-            string payload = Encoding.UTF8.GetString(payload_bytes);
+            byte[] responseBytes = Encoding.UTF8.GetBytes(payload_response);
+            byte[] payloadBytes = new byte[payloadSize];
+            Buffer.BlockCopy(responseBytes, 0, payloadBytes, 0, payloadSize);
+            string payload = Encoding.UTF8.GetString(payloadBytes);
             return payload;
         }
 
-        protected void HandleUSR()
+        private void HandleUsr()
         {
-            string[] usr_params = CurrentResponse.Split(" ");
-            if (usr_params[2] != "OK")
+            string[] usrParameters = currentResponse.Split(" ");
+            if (usrParameters[2] != "OK")
             {
                 Connected = false;
             }
@@ -92,10 +92,10 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected void HandleANS()
+        private void HandleAns()
         {
-            string[] ans_params = CurrentResponse.Split(" ");
-            if (ans_params[2] != "OK")
+            string[] ansParameters = currentResponse.Split(" ");
+            if (ansParameters[2] != "OK")
             {
                 Connected = false;
             }
@@ -105,66 +105,66 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        protected void HandleCAL()
+        private void HandleCal()
         {
-            string[] cal_params = CurrentResponse.Split(" ");
-            SessionID = cal_params[3];
+            string[] calParameters = currentResponse.Split(" ");
+            SessionID = calParameters[3];
             PrincipalInvited?.Invoke(this, new EventArgs());
         }
 
-        protected void HandleMSG()
+        private void HandleMsg()
         {
-            string[] MSG_Responses = OutputString.Split("\r\n");
-            string[] MSGParams = MSG_Responses[0].Split(" ");
-            string senderDisplayName = MSGParams[2];
-            string length_str = MSGParams[3];
-            int msg_length;
-            int.TryParse(length_str, out msg_length);
-            string msg_payload = SeparatePayloadFromResponse(OutputString, msg_length);
-            string[] MSGPayloadParams = msg_payload.Split("\r\n");
-            string[] FirstHeaderParams = MSGPayloadParams[0].Split(" ");
-            string[] SecondHeaderParams = MSGPayloadParams[1].Split(" ");
+            string[] msgResponses = OutputString.Split("\r\n");
+            string[] msgParameters = msgResponses[0].Split(" ");
+            string senderDisplayName = msgParameters[2];
+            string lengthString = msgParameters[3];
+            int messageLength;
+            int.TryParse(lengthString, out messageLength);
+            string messagePayload = SeparatePayloadFromResponse(OutputString, messageLength);
+            string[] messagePayloadParameters = messagePayload.Split("\r\n");
+            string[] firstHeaderParameters = messagePayloadParameters[0].Split(" ");
+            string[] secondHeaderParameters = messagePayloadParameters[1].Split(" ");
             Action msmsgscontrolAction = new Action(() =>
             {
                 //first parameter of the third header in the payload
-                switch (MSGPayloadParams[2].Split(" ")[0])
+                switch (messagePayloadParameters[2].Split(" ")[0])
                 {
                     case "TypingUser:":
                         var task = ShowTypingUser();
                         break;
                 }
             });
-            Dictionary<string, Action> ContentTypeDictionary = new Dictionary<string, Action>()
+            Dictionary<string, Action> contentTypeDictionary = new Dictionary<string, Action>()
             {
-                {"text/plain;", () => AddMessage(MSGPayloadParams[4], PrincipalInfo, userInfo) },
+                {"text/plain;", () => AddMessage(messagePayloadParameters[4], PrincipalInfo, UserInfo) },
                 {"text/x-msmsgscontrol", msmsgscontrolAction },
-                {"text/x-msnmsgr-datacast", () => HandleDatacast(msg_payload) },
-                {"application/x-ms-ink", () => HandleInk(msg_payload) }
+                {"text/x-msnmsgr-datacast", () => HandleDatacast(messagePayload) },
+                {"application/x-ms-ink", () => HandleInk(messagePayload) }
             };
-            switch (FirstHeaderParams[0])
+            switch (firstHeaderParameters[0])
             {
                 case "Message-ID:":
-                    HandleInkChunk(msg_payload);
+                    HandleInkChunk(messagePayload);
                     break;
             }
-            switch (SecondHeaderParams[0])
+            switch (secondHeaderParameters[0])
             {
                 case "Content-Type:":
-                    ContentTypeDictionary[SecondHeaderParams[1]]();
+                    contentTypeDictionary[secondHeaderParameters[1]]();
                     break;
             }
-            SeparateAndProcessCommandFromResponse(OutputString, msg_length);
+            SeparateAndProcessCommandFromResponse(OutputString, messageLength);
         }
 
-        protected void AddMessage(string message_text, UserInfo sender, UserInfo receiver)
+        private void AddMessage(string messageText, UserInfo sender, UserInfo receiver)
         {
             Message newMessage = new Message()
             {
-                message_text = message_text,
-                sender = sender.displayName,
-                receiver = receiver.displayName,
-                sender_email = sender.Email,
-                receiver_email = receiver.Email,
+                MessageText = messageText,
+                Sender = sender.DisplayName,
+                Receiver = receiver.DisplayName,
+                SenderEmail = sender.Email,
+                ReceiverEmail = receiver.Email,
                 IsHistory = false
             };
             NullTypingUser();
@@ -172,14 +172,14 @@ namespace UWPMessengerClient.MSNP
             MessageReceived?.Invoke(this, new MessageEventArgs() { message = newMessage });
         }
 
-        protected void AddMessage(Message message)
+        private void AddMessage(Message message)
         {
             NullTypingUser();
             AddToMessageListAndDatabase(message);
             MessageReceived?.Invoke(this, new MessageEventArgs() { message = message });
         }
 
-        protected void AddToMessageListAndDatabase(Message message)
+        private void AddToMessageListAndDatabase(Message message)
         {
             var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
@@ -187,13 +187,13 @@ namespace UWPMessengerClient.MSNP
                 MessageList.Add(message);
                 if (KeepMessagingHistory)
                 {
-                    DatabaseAccess.AddMessageToTable(userInfo.Email, PrincipalInfo.Email, message);
+                    DatabaseAccess.AddMessageToTable(UserInfo.Email, PrincipalInfo.Email, message);
                 }
                 NewMessage?.Invoke(this, new EventArgs());
             });
         }
 
-        protected void AddToMessageList(Message message)
+        private void AddToMessageList(Message message)
         {
             var task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
@@ -202,10 +202,10 @@ namespace UWPMessengerClient.MSNP
             });
         }
 
-        public void HandleDatacast(string msg_payload)
+        public void HandleDatacast(string messagePayload)
         {
-            string[] MSGPayloadParams = msg_payload.Split("\r\n");
-            switch (MSGPayloadParams[3])
+            string[] messagePayloadParameters = messagePayload.Split("\r\n");
+            switch (messagePayloadParameters[3])
             {
                 case "ID: 1":
                     ShowNudge();
@@ -213,79 +213,78 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public void HandleInk(string msg_payload)
+        public void HandleInk(string messagePayload)
         {
-            string[] MSGPayloadParams = msg_payload.Split("\r\n");
-            Message InkMessage = new Message()
+            string[] messagePayloadParameters = messagePayload.Split("\r\n");
+            Message inkMessage = new Message()
             {
-                message_text = $"{PrincipalInfo.displayName} sent you ink",
-                sender_email = PrincipalInfo.Email,
-                receiver = userInfo.displayName,
-                receiver_email = userInfo.Email
+                MessageText = $"{PrincipalInfo.DisplayName} sent you ink",
+                SenderEmail = PrincipalInfo.Email,
+                Receiver = UserInfo.DisplayName,
+                ReceiverEmail = UserInfo.Email
             };
-            if (MSGPayloadParams.Length > 4)
+            if (messagePayloadParameters.Length > 4)
             {
-                string message_id = MSGPayloadParams[2].Split(" ")[1];
-                string chunks_str = MSGPayloadParams[3].Split(" ")[1];
-                int.TryParse(chunks_str, out int chunks);
-                string ink_chunk = MSGPayloadParams[5];
-                InkMessage.ReceiveFirstInkChunk(chunks, message_id, ink_chunk);
+                string messageId = messagePayloadParameters[2].Split(" ")[1];
+                string chunksString = messagePayloadParameters[3].Split(" ")[1];
+                int.TryParse(chunksString, out int chunks);
+                string inkChunk = messagePayloadParameters[5];
+                inkMessage.ReceiveFirstInkChunk(chunks, messageId, inkChunk);
             }
             else
             {
-                InkMessage.ReceiveSingleInk(MSGPayloadParams[3]);
+                inkMessage.ReceiveSingleInk(messagePayloadParameters[3]);
             }
             NullTypingUser();
-            AddToMessageList(InkMessage);
+            AddToMessageList(inkMessage);
         }
 
-        public void HandleInkChunk(string msg_payload)
+        public void HandleInkChunk(string messagePayload)
         {
-            string[] MSGPayloadParams = msg_payload.Split("\r\n");
-            string message_id = MSGPayloadParams[0].Split(" ")[1];
-            int chunk_number;
-            string chunk_str = MSGPayloadParams[1].Split(" ")[1];
-            int.TryParse(chunk_str, out chunk_number);
-            string encoded_chunk = MSGPayloadParams[3];
-            var ink_message_query = from ink_message in MessageList
-                                    where ink_message.InkMessageID == message_id
-                                    select ink_message;
-            foreach (Message ink_message in ink_message_query)
+            string[] messagePayloadParameters = messagePayload.Split("\r\n");
+            string messageId = messagePayloadParameters[0].Split(" ")[1];
+            string chunkString = messagePayloadParameters[1].Split(" ")[1];
+            int.TryParse(chunkString, out int chunkNumber);
+            string encodedChunk = messagePayloadParameters[3];
+            var inkMessageQuery = from inkMessage in MessageList
+                                    where inkMessage.InkMessageID == messageId
+                                    select inkMessage;
+            foreach (Message inkMessage in inkMessageQuery)
             {
-                ink_message.ReceiveInkChunk(chunk_number, encoded_chunk);
+                inkMessage.ReceiveInkChunk(chunkNumber, encodedChunk);
             }
         }
 
         public async Task ShowTypingUser()
         {
-            var Typing_Task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            var typingTask = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                PrincipalInfo.typingUser = $"{HttpUtility.UrlDecode(PrincipalInfo.displayName)} is typing...";
+                PrincipalInfo.UserIsTyping = $"{HttpUtility.UrlDecode(PrincipalInfo.DisplayName)} is typing...";
             });
             await Task.Delay(6000);
-            var Null_Task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            var nullTask = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                PrincipalInfo.typingUser = null;
+                PrincipalInfo.UserIsTyping = null;
             });
         }
 
         public void NullTypingUser()
         {
-            var Null_Task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            var nullTask = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                PrincipalInfo.typingUser = null;
+                PrincipalInfo.UserIsTyping = null;
             });
         }
 
         public void ShowNudge()
         {
-            string nudge_text = $"{HttpUtility.UrlDecode(PrincipalInfo.displayName)} sent you a nudge!";
+            string nudgeText = $"{HttpUtility.UrlDecode(PrincipalInfo.DisplayName)} sent you a nudge!";
             Message newMessage = new Message()
             {
-                message_text = nudge_text,
-                receiver = userInfo.displayName,
-                sender_email = PrincipalInfo.Email,
-                receiver_email = userInfo.Email,
+                MessageText = nudgeText,
+                Receiver = UserInfo.DisplayName,
+                SenderEmail = PrincipalInfo.Email,
+                ReceiverEmail = UserInfo.Email,
                 IsHistory = false
             };
             NullTypingUser();

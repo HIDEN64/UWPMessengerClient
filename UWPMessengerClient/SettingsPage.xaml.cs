@@ -25,18 +25,15 @@ namespace UWPMessengerClient
     public sealed partial class SettingsPage : Page, INotifyPropertyChanged
     {
         private ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-        private string server_address = "m1.escargot.chat";//escargot address
-        private int server_port = 1863;
-        private SocketCommands TestSocket;
         public event PropertyChangedEventHandler PropertyChanged;
         private NotificationServerConnection notificationServerConnection;
-        private ObservableCollection<string> _errors;
-        private ObservableCollection<string> errors
+        private ObservableCollection<string> errors;
+        private ObservableCollection<string> Errors
         {
-            get => _errors;
+            get => errors;
             set
             {
-                _errors = value;
+                errors = value;
                 NotifyPropertyChanged();
             }
         }
@@ -45,7 +42,6 @@ namespace UWPMessengerClient
         {
             this.InitializeComponent();
             SetConfigDefaultValuesIfNull();
-            TestSocket = new SocketCommands(server_address, server_port);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -55,10 +51,9 @@ namespace UWPMessengerClient
             if (e.Parameter != null)
             {
                 notificationServerConnection = (NotificationServerConnection)e.Parameter;
-                errors = notificationServerConnection.ErrorLog;
+                Errors = notificationServerConnection.ErrorLog;
                 notificationServerConnection.KeepMessagingHistoryInSwitchboard = (bool)localSettings.Values["KeepHistory"];
             }
-            var task = TestServer();
             base.OnNavigatedTo(e);
         }
 
@@ -77,28 +72,28 @@ namespace UWPMessengerClient
 
         private void version_box_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            localSettings.Values["MSNP_Version"] = version_box.SelectedItem.ToString();
-            localSettings.Values["MSNP_Version_Index"] = version_box.SelectedIndex;
+            localSettings.Values["MsnpVersion"] = version_box.SelectedItem.ToString();
+            localSettings.Values["MsnpVersionIndex"] = version_box.SelectedIndex;
         }
 
         private void localhost_toggle_Toggled(object sender, RoutedEventArgs e)
         {
-            localSettings.Values["Using_Localhost"] = localhost_toggle.IsOn;
+            localSettings.Values["UsingLocalhost"] = localhost_toggle.IsOn;
         }
 
         private void SetConfigDefaultValuesIfNull()
         {
-            if (localSettings.Values["MSNP_Version"] == null)
+            if (localSettings.Values["MsnpVersion"] == null)
             {
-                localSettings.Values["MSNP_Version"] = "MSNP15";
+                localSettings.Values["MsnpVersion"] = "MSNP15";
             }
-            if (localSettings.Values["MSNP_Version_Index"] == null)
+            if (localSettings.Values["MsnpVersionIndex"] == null)
             {
-                localSettings.Values["MSNP_Version_Index"] = 0;
+                localSettings.Values["MsnpVersionIndex"] = 0;
             }
-            if (localSettings.Values["Using_Localhost"] == null)
+            if (localSettings.Values["UsingLocalhost"] == null)
             {
-                localSettings.Values["Using_Localhost"] = false;
+                localSettings.Values["UsingLocalhost"] = false;
             }
             if (localSettings.Values["KeepHistory"] == null)
             {
@@ -106,45 +101,11 @@ namespace UWPMessengerClient
             }
         }
 
-        private async Task TestServer()
-        {
-            server_connection_status.Text = "Testing server response time...";
-            Stopwatch stopwatch = new Stopwatch();
-            string status = "";
-            await Task.Run(() =>
-            {
-                TestSocket.ConnectSocket();
-                TestSocket.SetReceiveTimeout(25000);
-                byte[] buffer = new byte[4096];
-                TestSocket.SendCommand("VER 1 MSNP15 CVR0\r\n");
-                stopwatch.Start();
-                try
-                {
-                    TestSocket.ReceiveMessage(buffer);
-                    status = "Connected to server";
-                }
-                catch (System.Net.Sockets.SocketException e)
-                {
-                    if (e.SocketErrorCode == System.Net.Sockets.SocketError.TimedOut)
-                    {
-                        status = "Could not connect to server";
-                    }
-                }
-                stopwatch.Stop();
-            });
-            server_connection_status.Text = $"{status} - {stopwatch.Elapsed.TotalSeconds} seconds response time";
-        }
-
         private void SetSavedSettings()
         {
-            version_box.SelectedIndex = (int)localSettings.Values["MSNP_Version_Index"];
-            localhost_toggle.IsOn = (bool)localSettings.Values["Using_Localhost"];
+            version_box.SelectedIndex = (int)localSettings.Values["MsnpVersionIndex"];
+            localhost_toggle.IsOn = (bool)localSettings.Values["UsingLocalhost"];
             MessagingHistorySwitch.IsOn = (bool)localSettings.Values["KeepHistory"];
-        }
-
-        private async void testServerButton_Click(object sender, RoutedEventArgs e)
-        {
-            await TestServer();
         }
 
         private void MessagingHistorySwitch_Toggled(object sender, RoutedEventArgs e)

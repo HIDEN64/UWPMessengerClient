@@ -12,8 +12,8 @@ namespace UWPMessengerClient
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            string string_value = (string)value;
-            if (string_value == "" || string_value == null)
+            string stringValue = (string)value;
+            if (stringValue == "" || stringValue == null)
             {
                 return Visibility.Collapsed;
             }

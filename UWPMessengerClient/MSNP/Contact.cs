@@ -11,68 +11,68 @@ namespace UWPMessengerClient.MSNP
 {
     public class Contact : INotifyPropertyChanged
     {
-        private string _email;
-        private string _displayName;
-        private string _GUID;
-        private string _contactID;
-        private string _presenceStatus;
-        private string _personalMessage;
+        private string email;
+        private string displayName;
+        private string guid;
+        private string contactId;
+        private string presenceStatus;
+        private string personalMessage;
+        private bool onBlock;
         public string AllowMembershipID { get; set; }
         public string BlockMembershipID { get; set; }
         public string PendingMembershipID { get; set; }
-        public bool onForward { get; set; }
-        public bool onAllow { get; set; }
-        private bool _onBlock;
-        public bool onReverse { get; set; }
+        public bool OnForward { get; set; }
+        public bool OnAllow { get; set; }
+        public bool OnReverse { get; set; }
         public bool Pending { get; set; }
-        private List<string> _groupIDs;
+        private List<string> groupIDs;
         public event PropertyChangedEventHandler PropertyChanged;
 
         public Contact() { }
 
-        public Contact(int listbit)
+        public Contact(int listNumber)
         {
-            SetListsFromListnumber(listbit);
+            SetListsFromListNumber(listNumber);
         }
 
-        public void SetListsFromListnumber(int listnumber)
+        public void SetListsFromListNumber(int listNumber)
         {
-            onForward = (listnumber & (int)ListNumbers.Forward) == (int)ListNumbers.Forward;
-            onAllow = (listnumber & (int)ListNumbers.Allow) == (int)ListNumbers.Allow;
-            onBlock = (listnumber & (int)ListNumbers.Block) == (int)ListNumbers.Block;
-            onReverse = (listnumber & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse;
-            Pending = (listnumber & (int)ListNumbers.Pending) == (int)ListNumbers.Pending;
+            OnForward = (listNumber & (int)ListNumbers.Forward) == (int)ListNumbers.Forward;
+            OnAllow = (listNumber & (int)ListNumbers.Allow) == (int)ListNumbers.Allow;
+            OnBlock = (listNumber & (int)ListNumbers.Block) == (int)ListNumbers.Block;
+            OnReverse = (listNumber & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse;
+            Pending = (listNumber & (int)ListNumbers.Pending) == (int)ListNumbers.Pending;
         }
 
-        public void UpdateListsFromListnumber(int listnumber)
+        public void UpdateListsFromListNumber(int listNumber)
         {
-            if ((listnumber & (int)ListNumbers.Forward) == (int)ListNumbers.Forward) { onForward = true; }
-            if ((listnumber & (int)ListNumbers.Allow) == (int)ListNumbers.Allow) { onAllow = true; }
-            if ((listnumber & (int)ListNumbers.Block) == (int)ListNumbers.Block) { onBlock = true; }
-            if ((listnumber & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse) { onReverse = true; }
-            if ((listnumber & (int)ListNumbers.Pending) == (int)ListNumbers.Pending) { Pending = true; }
+            if ((listNumber & (int)ListNumbers.Forward) == (int)ListNumbers.Forward) { OnForward = true; }
+            if ((listNumber & (int)ListNumbers.Allow) == (int)ListNumbers.Allow) { OnAllow = true; }
+            if ((listNumber & (int)ListNumbers.Block) == (int)ListNumbers.Block) { OnBlock = true; }
+            if ((listNumber & (int)ListNumbers.Reverse) == (int)ListNumbers.Reverse) { OnReverse = true; }
+            if ((listNumber & (int)ListNumbers.Pending) == (int)ListNumbers.Pending) { Pending = true; }
         }
 
-        public int GetListnumberFromForwardAllowBlock()
+        public int GetListNumberFromForwardAllowBlock()
         {
-            int onForwardInt = onForward ? (int)ListNumbers.Forward : 0;
-            int onAllowInt = onAllow ? (int)ListNumbers.Allow : 0;
-            int onBlockInt = onBlock ? (int)ListNumbers.Block : 0;
+            int onForwardInt = OnForward ? (int)ListNumbers.Forward : 0;
+            int onAllowInt = OnAllow ? (int)ListNumbers.Allow : 0;
+            int onBlockInt = OnBlock ? (int)ListNumbers.Block : 0;
             //respective value of each list if true and 0 if false
-            int listbit = (onForwardInt & (int)ListNumbers.Forward) + (onAllowInt & (int)ListNumbers.Allow) + (onBlockInt & (int)ListNumbers.Block);
-            return listbit;
+            int listNumber = (onForwardInt & (int)ListNumbers.Forward) + (onAllowInt & (int)ListNumbers.Allow) + (onBlockInt & (int)ListNumbers.Block);
+            return listNumber;
         }
 
-        public int GetListnumber()
+        public int GetListNumber()
         {
-            int onForwardInt = onForward ? (int)ListNumbers.Forward : 0;
-            int onAllowInt = onAllow ? (int)ListNumbers.Allow : 0;
-            int onBlockInt = onBlock ? (int)ListNumbers.Block : 0;
-            int onReverseInt = onReverse ? (int)ListNumbers.Reverse : 0;
-            int PendingInt = Pending ? (int)ListNumbers.Pending : 0;
+            int onForwardInt = OnForward ? (int)ListNumbers.Forward : 0;
+            int onAllowInt = OnAllow ? (int)ListNumbers.Allow : 0;
+            int onBlockInt = OnBlock ? (int)ListNumbers.Block : 0;
+            int onReverseInt = OnReverse ? (int)ListNumbers.Reverse : 0;
+            int pendingInt = Pending ? (int)ListNumbers.Pending : 0;
             //respective value of each list if true and 0 if false
-            int listbit = (onForwardInt & (int)ListNumbers.Forward) + (onAllowInt & (int)ListNumbers.Allow) + (onBlockInt & (int)ListNumbers.Block) + (onReverseInt & (int)ListNumbers.Reverse) + (PendingInt & (int)ListNumbers.Pending);
-            return listbit;
+            int listNumber = (onForwardInt & (int)ListNumbers.Forward) + (onAllowInt & (int)ListNumbers.Allow) + (onBlockInt & (int)ListNumbers.Block) + (onReverseInt & (int)ListNumbers.Reverse) + (pendingInt & (int)ListNumbers.Pending);
+            return listNumber;
         }
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -85,80 +85,80 @@ namespace UWPMessengerClient.MSNP
 
         public string Email
         {
-            get => _email;
+            get => email;
             set
             {
-                _email = value;
+                email = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public string displayName
+        public string DisplayName
         {
-            get => _displayName;
+            get => displayName;
             set
             {
-                _displayName = value;
+                displayName = value;
                 NotifyPropertyChanged();
             }
         }
 
         public string GUID
         {
-            get => _GUID;
+            get => guid;
             set
             {
-                _GUID = value;
+                guid = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public string contactID
+        public string ContactID
         {
-            get => _contactID;
+            get => contactId;
             set
             {
-                _contactID = value;
+                contactId = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public string presenceStatus
+        public string PresenceStatus
         {
-            get => _presenceStatus;
+            get => presenceStatus;
             set
             {
-                _presenceStatus = value;
+                presenceStatus = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public string personalMessage
+        public string PersonalMessage
         {
-            get => _personalMessage;
+            get => personalMessage;
             set
             {
-                _personalMessage = value;
+                personalMessage = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public bool onBlock
+        public bool OnBlock
         {
-            get => _onBlock;
+            get => onBlock;
             set
             {
-                _onBlock = value;
+                onBlock = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public List<string> groupIDs
+        public List<string> GroupIDs
         {
-            get => _groupIDs;
+            get => groupIDs;
             set
             {
-                _groupIDs = value;
+                groupIDs = value;
                 NotifyPropertyChanged();
             }
         }

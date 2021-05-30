@@ -15,31 +15,31 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection
     {
-        private string SOAPResult;
-        private string SSO_Ticket;
-        private byte[] ReceivedBytes = new byte[4096];
-        private string OutputString;
-        private string CurrentResponse;
-        private string NextResponse;
+        private string soapResult;
+        private string ssoTicket;
+        private byte[] receivedBytes = new byte[4096];
+        private string outputString;
+        private string currentResponse;
+        private string nextResponse;
         public event EventHandler<SwitchboardEventArgs> SwitchboardCreated;
 
         public void ReceivingCallback(IAsyncResult asyncResult)
         {
             NotificationServerConnection notificationServerConnection = (NotificationServerConnection)asyncResult.AsyncState;
-            int bytes_read = notificationServerConnection.NSSocket.StopReceiving(asyncResult);
-            notificationServerConnection.OutputString = Encoding.UTF8.GetString(notificationServerConnection.ReceivedBytes, 0, bytes_read);
-            string[] responses = notificationServerConnection.OutputString.Split("\r\n");
+            int bytesRead = notificationServerConnection.nsSocket.StopReceiving(asyncResult);
+            notificationServerConnection.outputString = Encoding.UTF8.GetString(notificationServerConnection.receivedBytes, 0, bytesRead);
+            string[] responses = notificationServerConnection.outputString.Split("\r\n");
             for (var i = 0; i < responses.Length; i++)
             {
-                string[] res_params = responses[i].Split(" ");
-                notificationServerConnection.CurrentResponse = responses[i];
+                string[] resParameters = responses[i].Split(" ");
+                notificationServerConnection.currentResponse = responses[i];
                 if (i != responses.Length - 1)
                 {
-                    notificationServerConnection.NextResponse = responses[i + 1];
+                    notificationServerConnection.nextResponse = responses[i + 1];
                 }
                 try
                 {
-                    notificationServerConnection.CommandHandlers[res_params[0]]();
+                    notificationServerConnection.CommandHandlers[resParameters[0]]();
                 }
                 catch (KeyNotFoundException)
                 {
@@ -47,95 +47,95 @@ namespace UWPMessengerClient.MSNP
                 }
                 catch (Exception e)
                 {
-                    var task = notificationServerConnection.AddToErrorLog($"{res_params[0]} processing error: " + e.Message);
+                    var task = notificationServerConnection.AddToErrorLog($"{resParameters[0]} processing error: " + e.Message);
                 }
             }
-            if (bytes_read > 0)
+            if (bytesRead > 0)
             {
-                notificationServerConnection.NSSocket.BeginReceiving(notificationServerConnection.ReceivedBytes, new AsyncCallback(ReceivingCallback), notificationServerConnection);
+                notificationServerConnection.nsSocket.BeginReceiving(notificationServerConnection.receivedBytes, new AsyncCallback(ReceivingCallback), notificationServerConnection);
             }
         }
 
-        protected void SeparateAndProcessCommandFromResponse(string response, int payload_size)
+        private void SeparateAndProcessCommandFromResponse(string response, int payloadSize)
         {
             if (response.Contains("\r\n"))
             {
                 response = response.Split("\r\n", 2)[1];
             }
-            byte[] response_bytes = Encoding.UTF8.GetBytes(response);
-            byte[] payload_bytes = new byte[payload_size];
-            Buffer.BlockCopy(response_bytes, 0, payload_bytes, 0, payload_size);
-            string payload = Encoding.UTF8.GetString(payload_bytes);
-            string new_command = response.Replace(payload, "");
-            if (new_command != "")
+            byte[] responseBytes = Encoding.UTF8.GetBytes(response);
+            byte[] payloadBytes = new byte[payloadSize];
+            Buffer.BlockCopy(responseBytes, 0, payloadBytes, 0, payloadSize);
+            string payload = Encoding.UTF8.GetString(payloadBytes);
+            string newCommand = response.Replace(payload, "");
+            if (newCommand != "")
             {
-                CurrentResponse = new_command;
-                string[] cmd_params = new_command.Split(" ");
-                CommandHandlers[cmd_params[0]]();
+                currentResponse = newCommand;
+                string[] commandParameters = newCommand.Split(" ");
+                CommandHandlers[commandParameters[0]]();
             }
         }
 
-        protected string SeparatePayloadFromResponse(string response, int payload_size)
+        private string SeparatePayloadFromResponse(string response, int payloadSize)
         {
-            byte[] response_bytes = Encoding.UTF8.GetBytes(response);
-            byte[] payload_bytes = new byte[payload_size];
-            Buffer.BlockCopy(response_bytes, 0, payload_bytes, 0, payload_size);
-            string payload = Encoding.UTF8.GetString(payload_bytes);
+            byte[] responseBytes = Encoding.UTF8.GetBytes(response);
+            byte[] payloadBytes = new byte[payloadSize];
+            Buffer.BlockCopy(responseBytes, 0, payloadBytes, 0, payloadSize);
+            string payload = Encoding.UTF8.GetString(payloadBytes);
             return payload;
         }
 
-        protected void GetMBIKeyOldNonce()
+        private void GetMbiKeyOldNonce()
         {
-            string[] USRResponse = OutputString.Split("USR ", 2);
+            string[] usrResponse = outputString.Split("USR ", 2);
             //ensuring the last element of the USRReponse array is just the USR response
-            int rnIndex = USRResponse.Last().IndexOf("\r\n");
-            if (rnIndex != USRResponse.Last().Length && rnIndex >= 0)
+            int rnIndex = usrResponse.Last().IndexOf("\r\n");
+            if (rnIndex != usrResponse.Last().Length && rnIndex >= 0)
             {
-                USRResponse[USRResponse.Length - 1] = USRResponse.Last().Remove(rnIndex);
+                usrResponse[usrResponse.Length - 1] = usrResponse.Last().Remove(rnIndex);
             }
-            string[] USRParams = USRResponse[1].Split(" ");
-            string mbi_key_old = USRParams[4];
-            MBIKeyOldNonce = mbi_key_old;
+            string[] usrParameters = usrResponse[1].Split(" ");
+            string mbiKeyOld = usrParameters[4];
+            mbiKeyOldNonce = mbiKeyOld;
         }
 
-        public void HandleLST()
+        public void HandleLst()
         {
-            string[] LSTParams = CurrentResponse.Split(" ");
+            string[] lstParameters = currentResponse.Split(" ");
             string email, displayName, guid;
-            int listnumber = 0;
-            email = LSTParams[1].Replace("N=","");
-            displayName = LSTParams[2].Replace("F=", "");
+            int listNumber = 0;
+            email = lstParameters[1].Replace("N=","");
+            displayName = lstParameters[2].Replace("F=", "");
             try
             {
-                guid = LSTParams[3].Replace("C=", "");
+                guid = lstParameters[3].Replace("C=", "");
             }
             catch (IndexOutOfRangeException)
             {
                 guid = null;
             }
-            int.TryParse(LSTParams[4], out listnumber);
-            displayName = PlusCharactersRegex.Replace(displayName, "");
-            var contactInList = from contact_in_list in ContactList
-                                where contact_in_list.Email == email
-                                select contact_in_list;
-            if (!contactInList.Any())
+            int.TryParse(lstParameters[4], out listNumber);
+            displayName = plusCharactersRegex.Replace(displayName, "");
+            var contactsInList = from contactInList in ContactList
+                                where contactInList.Email == email
+                                select contactInList;
+            if (!contactsInList.Any())
             {
-                Contact newContact = new Contact(listnumber)
+                Contact newContact = new Contact(listNumber)
                 {
-                    displayName = displayName,
+                    DisplayName = displayName,
                     Email = email,
                     GUID = guid
                 };
                 ContactList.Add(newContact);
-                DatabaseAccess.AddContactToTable(userInfo.Email, newContact);
-                if (newContact.onForward)
+                DatabaseAccess.AddContactToTable(UserInfo.Email, newContact);
+                if (newContact.OnForward)
                 {
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         ContactsInForwardList.Add(newContact);
                     });
                 }
-                if (newContact.onReverse || newContact.Pending)
+                if (newContact.OnReverse || newContact.Pending)
                 {
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
@@ -145,47 +145,47 @@ namespace UWPMessengerClient.MSNP
             }
             else
             {
-                foreach (Contact contact_in_list in contactInList)
+                foreach (Contact contactInList in contactsInList)
                 {
-                    contact_in_list.SetListsFromListnumber(listnumber);
-                    contact_in_list.displayName = displayName;
-                    contact_in_list.GUID = guid;
-                    if (contact_in_list.onForward)
+                    contactInList.SetListsFromListNumber(listNumber);
+                    contactInList.DisplayName = displayName;
+                    contactInList.GUID = guid;
+                    if (contactInList.OnForward)
                     {
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            ContactsInForwardList.Add(contact_in_list);
+                            ContactsInForwardList.Add(contactInList);
                         });
                     }
-                    if (contact_in_list.onReverse || contact_in_list.Pending)
+                    if (contactInList.OnReverse || contactInList.Pending)
                     {
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            ContactsInPendingOrReverseList.Add(contact_in_list);
+                            ContactsInPendingOrReverseList.Add(contactInList);
                         });
                     }
                 }
             }
         }
 
-        public void HandleADC()
+        public void HandleAdc()
         {
-            string[] ADCParams = CurrentResponse.Split(" ");
+            string[] adcParameters = currentResponse.Split(" ");
             string email, displayName;
-            email = ADCParams[3].Replace("N=", "");
-            displayName = ADCParams[4].Replace("F=", "");
-            displayName = PlusCharactersRegex.Replace(displayName, "");
-            if (ADCParams[2] == "RL")
+            email = adcParameters[3].Replace("N=", "");
+            displayName = adcParameters[4].Replace("F=", "");
+            displayName = plusCharactersRegex.Replace(displayName, "");
+            if (adcParameters[2] == "RL")
             {
-                var contactInList = from contact_in_list in ContactList
-                                    where contact_in_list.Email == email
-                                    select contact_in_list;
-                if (!contactInList.Any())
+                var contactsInList = from contactInList in ContactList
+                                    where contactInList.Email == email
+                                    select contactInList;
+                if (!contactsInList.Any())
                 {
                     Contact newContact = new Contact((int)ListNumbers.Reverse)
                     {
                         Email = email,
-                        displayName = displayName
+                        DisplayName = displayName
                     };
                     ContactList.Add(newContact);
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -196,9 +196,9 @@ namespace UWPMessengerClient.MSNP
                 }
                 else
                 {
-                    foreach (Contact contact in contactInList)
+                    foreach (Contact contact in contactsInList)
                     {
-                        contact.onReverse = true;
+                        contact.OnReverse = true;
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
                             ContactsInPendingOrReverseList.Add(contact);
@@ -209,37 +209,37 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public void HandleADL()
+        public void HandleAdl()
         {
-            string[] ADLParams = CurrentResponse.Split(" ");
-            if (ADLParams[2] == "OK") { return; }
-            int payload_length;
-            int.TryParse(ADLParams[2], out payload_length);
-            string payload = SeparatePayloadFromResponse(NextResponse, payload_length);
-            XmlDocument payload_xml = new XmlDocument();
-            payload_xml.LoadXml(payload);
-            XmlNode d_node = payload_xml.SelectSingleNode("//ml/d");
-            XmlNode c_node = payload_xml.SelectSingleNode("//ml/d/c");
-            XmlAttribute domain = d_node.Attributes["n"];
-            XmlAttribute email_name = c_node.Attributes["n"];
-            XmlAttribute display_name = c_node.Attributes["f"];
-            XmlAttribute listnumber_attr = c_node.Attributes["l"];
-            string email = email_name.InnerText + "@" + domain.InnerText;
-            string displayName = display_name.InnerText;
-            int listnumber;
-            int.TryParse(listnumber_attr.InnerText, out listnumber);
-            var contactInList = from contact_in_list in ContactList
-                                where contact_in_list.Email == email
-                                select contact_in_list;
-            if (!contactInList.Any())
+            string[] adlParameters = currentResponse.Split(" ");
+            if (adlParameters[2] == "OK") { return; }
+            int payloadLength;
+            int.TryParse(adlParameters[2], out payloadLength);
+            string payload = SeparatePayloadFromResponse(nextResponse, payloadLength);
+            XmlDocument payloadXml = new XmlDocument();
+            payloadXml.LoadXml(payload);
+            XmlNode dNode = payloadXml.SelectSingleNode("//ml/d");
+            XmlNode cNode = payloadXml.SelectSingleNode("//ml/d/c");
+            XmlAttribute domainAttribute = dNode.Attributes["n"];
+            XmlAttribute emailNameAttribute = cNode.Attributes["n"];
+            XmlAttribute displayNameAttribute = cNode.Attributes["f"];
+            XmlAttribute listNumberAttribute = cNode.Attributes["l"];
+            string email = emailNameAttribute.InnerText + "@" + domainAttribute.InnerText;
+            string displayName = displayNameAttribute.InnerText;
+            int listNumber;
+            int.TryParse(listNumberAttribute.InnerText, out listNumber);
+            var contactsInList = from contactInList in ContactList
+                                where contactInList.Email == email
+                                select contactInList;
+            if (!contactsInList.Any())
             {
-                Contact newContact = new Contact(listnumber)
+                Contact newContact = new Contact(listNumber)
                 {
                     Email = email,
-                    displayName = displayName
+                    DisplayName = displayName
                 };
                 ContactList.Add(newContact);
-                if ((newContact.onReverse || newContact.Pending) && !newContact.onForward)
+                if ((newContact.OnReverse || newContact.Pending) && !newContact.OnForward)
                 {
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
@@ -250,10 +250,10 @@ namespace UWPMessengerClient.MSNP
             }
             else
             {
-                foreach (Contact contact in contactInList)
+                foreach (Contact contact in contactsInList)
                 {
-                    contact.UpdateListsFromListnumber(listnumber);
-                    if ((contact.onReverse || contact.Pending) && !contact.onForward)
+                    contact.UpdateListsFromListNumber(listNumber);
+                    if ((contact.OnReverse || contact.Pending) && !contact.OnForward)
                     {
                         Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
@@ -265,227 +265,227 @@ namespace UWPMessengerClient.MSNP
             }
         }
 
-        public void HandlePRP()
+        public void HandlePrp()
         {
-            string[] PRPParams = CurrentResponse.Split(" ");
+            string[] prpParameters = currentResponse.Split(" ");
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (PRPParams[1] == "MFN")
+                if (prpParameters[1] == "MFN")
                 {
-                    string displayName = PlusCharactersRegex.Replace(PRPParams[2], "");
-                    userInfo.displayName = displayName;
+                    string displayName = plusCharactersRegex.Replace(prpParameters[2], "");
+                    UserInfo.DisplayName = displayName;
                 }
-                else if (PRPParams[2] == "MFN")
+                else if (prpParameters[2] == "MFN")
                 {
-                    string displayName = PlusCharactersRegex.Replace(PRPParams[3], "");
-                    userInfo.displayName = displayName;
-                }
-            });
-        }
-
-        public void HandleILN()
-        {
-            //gets the parameters, does a LINQ query in the contact list and sets the contact's status
-            string[] ILNParams = CurrentResponse.Split(" ");
-            string status = ILNParams[2];
-            string email = ILNParams[3];
-            string displayName = "";
-            switch (MSNPVersion)
-            {
-                case "MSNP12":
-                    displayName = ILNParams[4];
-                    break;
-                case "MSNP15":
-                    displayName = ILNParams[5];
-                    break;
-                default:
-                    throw new Exceptions.VersionNotSelectedException();
-            }
-            displayName = PlusCharactersRegex.Replace(displayName, "");
-            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-            {
-                var contactWithPresence = from contact in ContactList
-                                          where contact.Email == email
-                                          select contact;
-                foreach (Contact contact in contactWithPresence)
-                {
-                    contact.presenceStatus = status;
-                    contact.displayName = displayName;
-                    DatabaseAccess.UpdateContact(userInfo.Email, contact);
-                }
-                var contactWithPresenceInForward = from contact in ContactsInForwardList
-                                          where contact.Email == email
-                                          select contact;
-                foreach (Contact contact in contactWithPresenceInForward)
-                {
-                    contact.presenceStatus = status;
-                    contact.displayName = displayName;
+                    string displayName = plusCharactersRegex.Replace(prpParameters[3], "");
+                    UserInfo.DisplayName = displayName;
                 }
             });
         }
 
-        public void HandleNLN()
+        public void HandleIln()
         {
             //gets the parameters, does a LINQ query in the contact list and sets the contact's status
-            string[] NLNParams = CurrentResponse.Split(" ");
-            string status = NLNParams[1];
-            string email = NLNParams[2];
+            string[] ilnParameters = currentResponse.Split(" ");
+            string status = ilnParameters[2];
+            string email = ilnParameters[3];
             string displayName = "";
-            switch (MSNPVersion)
+            switch (MsnpVersion)
             {
                 case "MSNP12":
-                    displayName = NLNParams[3];
+                    displayName = ilnParameters[4];
                     break;
                 case "MSNP15":
-                    displayName = NLNParams[4];
+                    displayName = ilnParameters[5];
                     break;
                 default:
                     throw new Exceptions.VersionNotSelectedException();
             }
-            displayName = PlusCharactersRegex.Replace(displayName, "");
+            displayName = plusCharactersRegex.Replace(displayName, "");
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
-                var contactWithPresence = from contact in ContactList
+                var contactsWithPresence = from contact in ContactList
                                           where contact.Email == email
                                           select contact;
-                foreach (Contact contact in contactWithPresence)
+                foreach (Contact contact in contactsWithPresence)
                 {
-                    contact.presenceStatus = status;
-                    contact.displayName = displayName;
-                    DatabaseAccess.UpdateContact(userInfo.Email, contact);
+                    contact.PresenceStatus = status;
+                    contact.DisplayName = displayName;
+                    DatabaseAccess.UpdateContact(UserInfo.Email, contact);
                 }
-                var contactWithPresenceInForward = from contact in ContactsInForwardList
+                var contactWithPresenceInForwardList = from contact in ContactsInForwardList
+                                          where contact.Email == email
+                                          select contact;
+                foreach (Contact contact in contactWithPresenceInForwardList)
+                {
+                    contact.PresenceStatus = status;
+                    contact.DisplayName = displayName;
+                }
+            });
+        }
+
+        public void HandleNln()
+        {
+            //gets the parameters, does a LINQ query in the contact list and sets the contact's status
+            string[] nlnParameters = currentResponse.Split(" ");
+            string status = nlnParameters[1];
+            string email = nlnParameters[2];
+            string displayName = "";
+            switch (MsnpVersion)
+            {
+                case "MSNP12":
+                    displayName = nlnParameters[3];
+                    break;
+                case "MSNP15":
+                    displayName = nlnParameters[4];
+                    break;
+                default:
+                    throw new Exceptions.VersionNotSelectedException();
+            }
+            displayName = plusCharactersRegex.Replace(displayName, "");
+            Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
+            {
+                var contactsWithPresence = from contact in ContactList
+                                          where contact.Email == email
+                                          select contact;
+                foreach (Contact contact in contactsWithPresence)
+                {
+                    contact.PresenceStatus = status;
+                    contact.DisplayName = displayName;
+                    DatabaseAccess.UpdateContact(UserInfo.Email, contact);
+                }
+                var contactsWithPresenceInForwardList = from contact in ContactsInForwardList
                                                    where contact.Email == email
                                                    select contact;
-                foreach (Contact contact in contactWithPresenceInForward)
+                foreach (Contact contact in contactsWithPresenceInForwardList)
                 {
-                    contact.presenceStatus = status;
-                    contact.displayName = displayName;
+                    contact.PresenceStatus = status;
+                    contact.DisplayName = displayName;
                 }
             });
         }
 
-        public void HandleFLN()
+        public void HandleFln()
         {
-            string[] FLNParams = CurrentResponse.Split(" ");
+            string[] flnParameters = currentResponse.Split(" ");
             //for the FLN response gets the email, does a LINQ query in the contact list and sets the contact's status to offline
-            string email = FLNParams[1];
+            string email = flnParameters[1];
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                var contactWithPresence = from contact in ContactList
+                var contactsWithPresence = from contact in ContactList
                                             where contact.Email == email
                                             select contact;
-                foreach (Contact contact in contactWithPresence)
+                foreach (Contact contact in contactsWithPresence)
                 {
-                    contact.presenceStatus = null;
+                    contact.PresenceStatus = null;
                 }
-                var contactWithPresenceInForward = from contact in ContactsInForwardList
+                var contactsWithPresenceInForwardList = from contact in ContactsInForwardList
                                                    where contact.Email == email
                                                    select contact;
-                foreach (Contact contact in contactWithPresenceInForward)
+                foreach (Contact contact in contactsWithPresenceInForwardList)
                 {
-                    contact.presenceStatus = null;
+                    contact.PresenceStatus = null;
                 }
             });
         }
 
-        public void HandleUBX()
+        public void HandleUbx()
         {
-            string personal_message;
-            string[] UBXParams = CurrentResponse.Split(" ");
-            string principal_email = UBXParams[1];
-            string length_str = "";
-            switch (MSNPVersion)
+            string personalMessage;
+            string[] ubxParameters = currentResponse.Split(" ");
+            string principalEmail = ubxParameters[1];
+            string lengthString = "";
+            switch (MsnpVersion)
             {
                 case "MSNP12":
-                    length_str = UBXParams[2];
+                    lengthString = ubxParameters[2];
                     break;
                 case "MSNP15":
-                    length_str = UBXParams[3];
+                    lengthString = ubxParameters[3];
                     break;
                 default:
                     throw new Exceptions.VersionNotSelectedException();
             }
-            int ubx_length;
-            int.TryParse(length_str, out ubx_length);
-            string payload = SeparatePayloadFromResponse(NextResponse, ubx_length);
+            int ubxLength;
+            int.TryParse(lengthString, out ubxLength);
+            string payload = SeparatePayloadFromResponse(nextResponse, ubxLength);
             XmlDocument personalMessagePayload = new XmlDocument();
             try
             {
                 personalMessagePayload.LoadXml(payload);
                 string xPath = "//Data/PSM";
                 XmlNode PSM = personalMessagePayload.SelectSingleNode(xPath);
-                personal_message = PSM.InnerText;
+                personalMessage = PSM.InnerText;
             }
             catch (XmlException)
             {
-                personal_message = "XML error";
+                personalMessage = "XML error";
             }
             Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                var contactWithPersonalMessage = from contact in ContactList
-                                                 where contact.Email == principal_email
+                var contactsWithPersonalMessage = from contact in ContactList
+                                                 where contact.Email == principalEmail
                                                  select contact;
-                foreach (Contact contact in contactWithPersonalMessage)
+                foreach (Contact contact in contactsWithPersonalMessage)
                 {
-                    contact.personalMessage = personal_message;
-                    DatabaseAccess.UpdateContact(userInfo.Email, contact);
+                    contact.PersonalMessage = personalMessage;
+                    DatabaseAccess.UpdateContact(UserInfo.Email, contact);
                 }
-                var contactWithPersonalMessageInForward = from contact in ContactsInForwardList
-                                                 where contact.Email == principal_email
+                var contactWithPersonalMessageInForwardList = from contact in ContactsInForwardList
+                                                 where contact.Email == principalEmail
                                                  select contact;
-                foreach (Contact contact in contactWithPersonalMessageInForward)
+                foreach (Contact contact in contactWithPersonalMessageInForwardList)
                 {
-                    contact.personalMessage = personal_message;
+                    contact.PersonalMessage = personalMessage;
                 }
             });
-            SeparateAndProcessCommandFromResponse(NextResponse, ubx_length);
+            SeparateAndProcessCommandFromResponse(nextResponse, ubxLength);
         }
 
-        public async Task HandleXFR()
+        public async Task HandleXfr()
         {
-            string[] XFRParams = CurrentResponse.Split(" ");
-            string[] address_and_port = XFRParams[3].Split(":");
-            string sb_address = address_and_port[0];
-            int sb_port;
-            int.TryParse(address_and_port[1], out sb_port);
-            string auth_string = "";
-            switch (MSNPVersion)
+            string[] xfrParameters = currentResponse.Split(" ");
+            string[] addressAndPort = xfrParameters[3].Split(":");
+            string sbAddress = addressAndPort[0];
+            int sbPort;
+            int.TryParse(addressAndPort[1], out sbPort);
+            string authString = "";
+            switch (MsnpVersion)
             {
                 case "MSNP12":
-                    auth_string = XFRParams.Last();
+                    authString = xfrParameters.Last();
                     break;
                 case "MSNP15":
-                    auth_string = XFRParams[5];
+                    authString = xfrParameters[5];
                     break;
                 default:
                     throw new Exceptions.VersionNotSelectedException();
             }
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, Email, auth_string, userInfo.displayName)
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sbAddress, sbPort, email, authString, UserInfo.DisplayName)
             {
                 KeepMessagingHistory = KeepMessagingHistoryInSwitchboard
             };
             await switchboardConnection.LoginToNewSwitchboardAsync();
-            await switchboardConnection.InvitePrincipal(ContactToChat.Email, ContactToChat.displayName);
+            await switchboardConnection.InvitePrincipal(ContactToChat.Email, ContactToChat.DisplayName);
             SwitchboardCreated?.Invoke(this, new SwitchboardEventArgs() { switchboard = switchboardConnection});
             switchboardConnection.FillMessageHistory();
         }
 
-        public void HandleRNG()
+        public void HandleRng()
         {
-            string[] RNGParams = CurrentResponse.Split(" ");
-            string sessionID = RNGParams[1];
-            string[] address_and_port = RNGParams[2].Split(":");
-            int sb_port;
-            string sb_address = address_and_port[0];
-            int.TryParse(address_and_port[1], out sb_port);
-            string authString = RNGParams[4];
-            string principalEmail = RNGParams[5];
-            string principalName = RNGParams[6];
-            int conv_id = random.Next(1000, 9999);
-            SBConversation conversation = new SBConversation(this, Convert.ToString(conv_id));
-            SBConversations.Add(conversation);
-            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sb_address, sb_port, Email, authString, userInfo.displayName, principalName, principalEmail, sessionID)
+            string[] rngParameters = currentResponse.Split(" ");
+            string sessionId = rngParameters[1];
+            string[] addressAndPort = rngParameters[2].Split(":");
+            int sbPort;
+            string sbAddress = addressAndPort[0];
+            int.TryParse(addressAndPort[1], out sbPort);
+            string authString = rngParameters[4];
+            string principalEmail = rngParameters[5];
+            string principalName = rngParameters[6];
+            int conversationId = random.Next(1000, 9999);
+            SBConversation conversation = new SBConversation(this, Convert.ToString(conversationId));
+            SbConversations.Add(conversation);
+            SwitchboardConnection switchboardConnection = new SwitchboardConnection(sbAddress, sbPort, email, authString, UserInfo.DisplayName, principalName, principalEmail, sessionId)
             {
                 KeepMessagingHistory = KeepMessagingHistoryInSwitchboard
             };
@@ -496,7 +496,7 @@ namespace UWPMessengerClient.MSNP
 
         private void ShowNewContactToast(Contact contact)
         {
-            string serialized_contact = JsonConvert.SerializeObject(contact);
+            string serializedContact = JsonConvert.SerializeObject(contact);
             var content = new ToastContentBuilder()
                 .AddToastActivationInfo("NewContact", ToastActivationType.Foreground)
                 .AddText($"{contact.Email}")
@@ -504,7 +504,7 @@ namespace UWPMessengerClient.MSNP
                 .AddButton("Add to your list", ToastActivationType.Background, new QueryString()
                 {
                     {"action", "acceptContact" },
-                    {"contact", serialized_contact }
+                    {"contact", serializedContact }
                 }.ToString())
                 .AddButton("Dismiss", ToastActivationType.Background, new QueryString() 
                 {

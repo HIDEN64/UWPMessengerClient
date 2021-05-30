@@ -19,35 +19,35 @@ namespace UWPMessengerClient.MSNP
 {
     public partial class NotificationServerConnection : INotifyPropertyChanged
     {
-        protected SocketCommands NSSocket;
-        public List<SBConversation> SBConversations { get; set; } = new List<SBConversation>();
+        private SocketCommands nsSocket;
+        public List<SBConversation> SbConversations { get; set; } = new List<SBConversation>();
         //notification server(escargot) address and address for SSO auth
-        protected string NSaddress = "m1.escargot.chat";
-        protected string NexusAddress = "https://m1.escargot.chat/nexus-mock";
+        private string nsAddress = "m1.escargot.chat";
+        private string nexusAddress = "https://m1.escargot.chat/nexus-mock";
         //local addresses are 127.0.0.1 for NSaddress and http://localhost/nexus-mock for nexus_address
-        protected readonly int Port = 1863;
-        private string Email;
-        private string Password;
-        protected Regex PlusCharactersRegex = new Regex("\\[(.*?)\\]");
-        public bool UsingLocalhost { get; protected set; } = false;
-        public string MSNPVersion { get; protected set; } = "MSNP15";
-        protected int TransactionID = 0;
-        protected uint ClientCapabilities = 0x84140428;
+        private readonly int port = 1863;
+        private string email;
+        private string password;
+        private Regex plusCharactersRegex = new Regex("\\[(.*?)\\]");
+        public bool UsingLocalhost { get; private set; } = false;
+        public string MsnpVersion { get; private set; } = "MSNP15";
+        private int transactionId = 0;
+        private uint clientCapabilities = 0x84140428;
         public Contact ContactToChat { get; set; }
         public string UserPresenceStatus { get; set; }
         public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;
-        public UserInfo userInfo { get; set; } = new UserInfo();
+        public UserInfo UserInfo { get; set; } = new UserInfo();
         private static Random random = new Random();
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler NotConnected;
-        protected Dictionary<string, Action> CommandHandlers;
-        private ObservableCollection<string> _errorLog = new ObservableCollection<string>();
+        private Dictionary<string, Action> CommandHandlers;
+        private ObservableCollection<string> errorLog = new ObservableCollection<string>();
         public ObservableCollection<string> ErrorLog
         {
-            get => _errorLog;
+            get => errorLog;
             private set
             {
-                _errorLog = value;
+                errorLog = value;
                 NotifyPropertyChanged();
             }
         }
@@ -56,46 +56,46 @@ namespace UWPMessengerClient.MSNP
         {
             CommandHandlers = new Dictionary<string, Action>()
             {
-                {"LST", () => HandleLST() },
-                {"ADC", () => HandleADC() },
-                {"ADL", () => HandleADL() },
-                {"PRP", () => HandlePRP() },
-                {"ILN", () => HandleILN() },
-                {"NLN", () => HandleNLN() },
-                {"FLN", () => HandleFLN() },
-                {"UBX", () => HandleUBX() },
-                {"XFR", async () => await HandleXFR() },
-                {"RNG", () => HandleRNG() }
+                {"LST", () => HandleLst() },
+                {"ADC", () => HandleAdc() },
+                {"ADL", () => HandleAdl() },
+                {"PRP", () => HandlePrp() },
+                {"ILN", () => HandleIln() },
+                {"NLN", () => HandleNln() },
+                {"FLN", () => HandleFln() },
+                {"UBX", () => HandleUbx() },
+                {"XFR", async () => await HandleXfr() },
+                {"RNG", () => HandleRng() }
             };
         }
 
-        public NotificationServerConnection(string messenger_email, string messenger_password, bool use_localhost, string msnp_version, string initial_status = PresenceStatuses.Available)
+        public NotificationServerConnection(string messengerEmail, string messengerPassword, bool useLocalhost, string msnpVersion, string initialStatus = PresenceStatuses.Available)
         {
             CommandHandlers = new Dictionary<string, Action>()
             {
-                {"LST", () => HandleLST() },
-                {"ADC", () => HandleADC() },
-                {"ADL", () => HandleADL() },
-                {"PRP", () => HandlePRP() },
-                {"ILN", () => HandleILN() },
-                {"NLN", () => HandleNLN() },
-                {"FLN", () => HandleFLN() },
-                {"UBX", () => HandleUBX() },
-                {"XFR", async () => await HandleXFR() },
-                {"RNG", () => HandleRNG() }
+                {"LST", () => HandleLst() },
+                {"ADC", () => HandleAdc() },
+                {"ADL", () => HandleAdl() },
+                {"PRP", () => HandlePrp() },
+                {"ILN", () => HandleIln() },
+                {"NLN", () => HandleNln() },
+                {"FLN", () => HandleFln() },
+                {"UBX", () => HandleUbx() },
+                {"XFR", async () => await HandleXfr() },
+                {"RNG", () => HandleRng() }
             };
-            Email = messenger_email;
-            Password = messenger_password;
-            UsingLocalhost = use_localhost;
-            MSNPVersion = msnp_version;
-            UserPresenceStatus = initial_status;
+            email = messengerEmail;
+            password = messengerPassword;
+            UsingLocalhost = useLocalhost;
+            MsnpVersion = msnpVersion;
+            UserPresenceStatus = initialStatus;
             if (UsingLocalhost)
             {
-                NSaddress = "127.0.0.1";
-                NexusAddress = "http://localhost/nexus-mock";
+                nsAddress = "127.0.0.1";
+                nexusAddress = "http://localhost/nexus-mock";
                 //setting local addresses
             }
-            SOAPRequests = new SOAPRequests(UsingLocalhost);
+            soapRequests = new SOAPRequests(UsingLocalhost);
         }
 
         public async Task AddToErrorLog(string error)
@@ -108,7 +108,7 @@ namespace UWPMessengerClient.MSNP
 
         public async Task LoginToMessengerAsync()
         {
-            switch (MSNPVersion)
+            switch (MsnpVersion)
             {
                 case "MSNP12":
                     await MSNP12LoginToMessengerAsync();
@@ -132,8 +132,8 @@ namespace UWPMessengerClient.MSNP
             if (status == "") { throw new ArgumentNullException("Status is empty"); }
             Action changePresence = new Action(() =>
             {
-                TransactionID++;
-                NSSocket.SendCommand($"CHG {TransactionID} {status} {ClientCapabilities}\r\n");
+                transactionId++;
+                nsSocket.SendCommand($"CHG {transactionId} {status} {clientCapabilities}\r\n");
             });
             UserPresenceStatus = status;
             await Task.Run(changePresence);
@@ -142,88 +142,88 @@ namespace UWPMessengerClient.MSNP
         public async Task ChangeUserDisplayName(string newDisplayName)
         {
             if (newDisplayName == "") { throw new ArgumentNullException("Display name is empty"); }
-            if (MSNPVersion == "MSNP15")
+            if (MsnpVersion == "MSNP15")
             {
-                SOAPRequests.ChangeUserDisplayNameRequest(newDisplayName);
+                soapRequests.ChangeUserDisplayNameRequest(newDisplayName);
             }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
-            TransactionID++;
-            await Task.Run(() => NSSocket.SendCommand($"PRP {TransactionID} MFN {urlEncodedNewDisplayName}\r\n"));
+            transactionId++;
+            await Task.Run(() => nsSocket.SendCommand($"PRP {transactionId} MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
         public async Task SendUserPersonalMessage(string newPersonalMessage)
         {
-            Action psm_action = new Action(() =>
+            Action psmAction = new Action(() =>
             {
                 string encodedPersonalMessage = newPersonalMessage.Replace("&", "&amp;");
-                string psm_payload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
-                int payload_length = Encoding.UTF8.GetBytes(psm_payload).Length;
-                TransactionID++;
-                NSSocket.SendCommand($"UUX {TransactionID} {payload_length}\r\n" + psm_payload);
+                string psmPayload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
+                int payloadLength = Encoding.UTF8.GetBytes(psmPayload).Length;
+                transactionId++;
+                nsSocket.SendCommand($"UUX {transactionId} {payloadLength}\r\n" + psmPayload);
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
-                    userInfo.personalMessage = newPersonalMessage;
+                    UserInfo.PersonalMessage = newPersonalMessage;
                 });
             });
-            await Task.Run(psm_action);
+            await Task.Run(psmAction);
         }
 
         public async Task<string> StartChat(Contact contactToChat)
         {
             ContactToChat = contactToChat;
             await InitiateSB();
-            int conv_id = random.Next(1000, 9999);
-            SBConversation conversation = new SBConversation(this, Convert.ToString(conv_id));
-            SBConversations.Add(conversation);
-            return conversation.ConversationID;
+            int conversationId = random.Next(1000, 9999);
+            SBConversation conversation = new SBConversation(this, Convert.ToString(conversationId));
+            SbConversations.Add(conversation);
+            return conversation.ConversationId;
         }
 
         public async Task Ping()
         {
-            bool IsConnected;
+            bool isConnected;
             do
             {
-                IsConnected = await Task.Run(() =>
+                isConnected = await Task.Run(() =>
                 {
                     try
                     {
-                        NSSocket.SendCommandWithException("PNG\r\n");
+                        nsSocket.SendCommandWithException("PNG\r\n");
                         return true;
                     }
                     catch (NotConnectedException)
                     {
-                        NSSocket.CloseSocket();
+                        nsSocket.CloseSocket();
                         NotConnected?.Invoke(this, new EventArgs());
                         return false;
                     }
                     catch (SocketException)
                     {
-                        NSSocket.CloseSocket();
+                        nsSocket.CloseSocket();
                         NotConnected?.Invoke(this, new EventArgs());
                         return false;
                     }
                 });
                 await Task.Delay(60000);
             }
-            while (IsConnected);
+            while (isConnected);
         }
 
-        protected async Task InitiateSB()
+        private async Task InitiateSB()
         {
-            TransactionID++;
-            await Task.Run(() => NSSocket.SendCommand($"XFR {TransactionID} SB\r\n"));
+            transactionId++;
+            await Task.Run(() => nsSocket.SendCommand($"XFR {transactionId} SB\r\n"));
         }
 
-        public SBConversation ReturnConversationFromConversationID(string conversation_id)
+        public SBConversation ReturnConversationFromConversationId(string conversationId)
         {
-            var conv_item = SBConversations.FirstOrDefault(sb => sb.ConversationID == conversation_id);
-            return conv_item;
+            var conversationItem = SbConversations.FirstOrDefault(sb => sb.ConversationId == conversationId);
+            return conversationItem;
         }
 
         public void Exit()
         {
-            NSSocket.SendCommand("OUT\r\n");
-            NSSocket.CloseSocket();
+            nsSocket.SendCommand("OUT\r\n");
+            nsSocket.CloseSocket();
         }
 
         ~NotificationServerConnection()

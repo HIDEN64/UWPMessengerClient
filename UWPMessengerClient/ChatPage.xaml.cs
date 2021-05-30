@@ -24,26 +24,26 @@ namespace UWPMessengerClient
 {
     public sealed partial class ChatPage : Page, INotifyPropertyChanged
     {
-        private NotificationServerConnection _notificationServerConnection;
-        private SBConversation _conversation;
-        private Message MessageInContext;
-        public string ConversationID { get; private set; }
+        private NotificationServerConnection notificationServerConnection;
+        private SBConversation conversation;
+        private Message messageInContext;
+        public string ConversationId { get; private set; }
         public event PropertyChangedEventHandler PropertyChanged;
-        private NotificationServerConnection notificationServerConnection
+        private NotificationServerConnection NotificationServerConnection
         {
-            get => _notificationServerConnection;
+            get => notificationServerConnection;
             set
             {
-                _notificationServerConnection = value;
+                notificationServerConnection = value;
                 NotifyPropertyChanged();
             }
         }
-        private SBConversation conversation
+        private SBConversation Conversation
         {
-            get => _conversation;
+            get => conversation;
             set
             {
-                _conversation = value;
+                conversation = value;
                 NotifyPropertyChanged();
             }
         }
@@ -58,12 +58,12 @@ namespace UWPMessengerClient
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            ChatPageNavigationParams navigationParams = (ChatPageNavigationParams)e.Parameter;
-            notificationServerConnection = navigationParams.notificationServerConnection;
-            ConversationID = navigationParams.SBConversationID;
-            conversation = notificationServerConnection.ReturnConversationFromConversationID(ConversationID);
-            notificationServerConnection.NotConnected += NotificationServerConnection_NotConnected;
-            conversation.MessageListUpdated += Conversation_MessageListUpdated;
+            ChatPageNavigationParameters navigationParameters = (ChatPageNavigationParameters)e.Parameter;
+            NotificationServerConnection = navigationParameters.NotificationServerConnection;
+            ConversationId = navigationParameters.SbConversationId;
+            Conversation = NotificationServerConnection.ReturnConversationFromConversationId(ConversationId);
+            NotificationServerConnection.NotConnected += NotificationServerConnection_NotConnected;
+            Conversation.MessageListUpdated += Conversation_MessageListUpdated;
             BackButton.IsEnabled = Frame.CanGoBack;
             await GroupMessages();
             base.OnNavigatedTo(e);
@@ -71,8 +71,8 @@ namespace UWPMessengerClient
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            notificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
-            conversation.MessageListUpdated -= Conversation_MessageListUpdated;
+            NotificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
+            Conversation.MessageListUpdated -= Conversation_MessageListUpdated;
             base.OnNavigatedFrom(e);
         }
 
@@ -100,8 +100,8 @@ namespace UWPMessengerClient
 
         private async Task GroupMessages()
         {
-            if (conversation.Messages is null) { return; }
-            var groups = from message in conversation.Messages
+            if (Conversation.Messages is null) { return; }
+            var groups = from message in Conversation.Messages
                          group message by message.IsHistory into message_group
                          select new GroupInfoList(message_group) { Key = message_group.Key };
             await Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -114,7 +114,7 @@ namespace UWPMessengerClient
         {
             if (messageBox.Text != "")
             {
-                await conversation.SendTextMessage(messageBox.Text);
+                await Conversation.SendTextMessage(messageBox.Text);
                 messageBox.Text = "";
                 await GroupMessages();
             }
@@ -145,13 +145,13 @@ namespace UWPMessengerClient
         {
             if (messageBox.Text != "")
             {
-                await conversation.SendTypingUser();
+                await Conversation.SendTypingUser();
             }
         }
 
         private async void nudgeButton_Click(object sender, RoutedEventArgs e)
         {
-            await conversation.SendNudge();
+            await Conversation.SendNudge();
         }
 
         public async Task ShowDialog(string title, string message)
@@ -173,17 +173,17 @@ namespace UWPMessengerClient
                 {
                     await inkCanvas.InkPresenter.StrokeContainer.SaveAsync(stream);
                 }
-                byte[] ink_bytes = memoryStream.ToArray();
-                await conversation.SendInk(ink_bytes);
+                byte[] inkBytes = memoryStream.ToArray();
+                await Conversation.SendInk(inkBytes);
             }
             inkCanvas.InkPresenter.StrokeContainer.Clear();
         }
 
         private async Task LoadReceivedInk()
         {
-            if (MessageInContext.InkBytes != null)
+            if (messageInContext.InkBytes != null)
             {
-                using (MemoryStream memoryStream = new MemoryStream(MessageInContext.InkBytes))
+                using (MemoryStream memoryStream = new MemoryStream(messageInContext.InkBytes))
                 {
                     using (IRandomAccessStream stream = memoryStream.AsRandomAccessStream())
                     {
@@ -196,13 +196,13 @@ namespace UWPMessengerClient
 
         private async void messageList_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            MessageInContext = (Message)((FrameworkElement)e.OriginalSource).DataContext;
+            messageInContext = (Message)((FrameworkElement)e.OriginalSource).DataContext;
             await LoadReceivedInk();
         }
 
         private async void messageList_Holding(object sender, HoldingRoutedEventArgs e)
         {
-            MessageInContext = (Message)((FrameworkElement)e.OriginalSource).DataContext;
+            messageInContext = (Message)((FrameworkElement)e.OriginalSource).DataContext;
             await LoadReceivedInk();
         }
     }

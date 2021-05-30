@@ -23,17 +23,17 @@ namespace UWPMessengerClient
 {
     public sealed partial class ContactList : Page, INotifyPropertyChanged
     {
-        private NotificationServerConnection _notificationServerConnection;
+        private NotificationServerConnection notificationServerConnection;
         private ApplicationDataContainer roamingSettings = ApplicationData.Current.RoamingSettings;
-        private Contact ContactInContext;
+        private Contact contactInContext;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private NotificationServerConnection notificationServerConnection
+        private NotificationServerConnection NotificationServerConnection
         {
-            get => _notificationServerConnection;
+            get => notificationServerConnection;
             set
             {
-                _notificationServerConnection = value;
+                notificationServerConnection = value;
                 NotifyPropertyChanged();
             }
         }
@@ -45,9 +45,9 @@ namespace UWPMessengerClient
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            notificationServerConnection = (NotificationServerConnection)e.Parameter;
-            notificationServerConnection.NotConnected += NotificationServerConnection_NotConnected;
-            string status = notificationServerConnection.UserPresenceStatus;
+            NotificationServerConnection = (NotificationServerConnection)e.Parameter;
+            NotificationServerConnection.NotConnected += NotificationServerConnection_NotConnected;
+            string status = NotificationServerConnection.UserPresenceStatus;
             string fullStatus = null;
             switch (status)
             {
@@ -65,16 +65,16 @@ namespace UWPMessengerClient
                     break;
             }
             Presence.SelectedItem = fullStatus;
-            if (roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"] != null)
+            if (roamingSettings.Values[$"{NotificationServerConnection.UserInfo.Email}_PersonalMessage"] != null)
             {
-                _ = notificationServerConnection.SendUserPersonalMessage((string)roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"]);
+                _ = NotificationServerConnection.SendUserPersonalMessage((string)roamingSettings.Values[$"{NotificationServerConnection.UserInfo.Email}_PersonalMessage"]);
             }
             base.OnNavigatedTo(e);
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            notificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
+            NotificationServerConnection.NotConnected -= NotificationServerConnection_NotConnected;
             base.OnNavigatedFrom(e);
         }
 
@@ -97,22 +97,22 @@ namespace UWPMessengerClient
 
         private async void Presence_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (notificationServerConnection != null)
+            if (NotificationServerConnection != null)
             {
                 string selectedStatus = e.AddedItems[0].ToString();
                 switch (selectedStatus)
                 {
                     case "Available":
-                        await notificationServerConnection.ChangePresence(PresenceStatuses.Available);
+                        await NotificationServerConnection.ChangePresence(PresenceStatuses.Available);
                         break;
                     case "Busy":
-                        await notificationServerConnection.ChangePresence(PresenceStatuses.Busy);
+                        await NotificationServerConnection.ChangePresence(PresenceStatuses.Busy);
                         break;
                     case "Away":
-                        await notificationServerConnection.ChangePresence(PresenceStatuses.Away);
+                        await NotificationServerConnection.ChangePresence(PresenceStatuses.Away);
                         break;
                     case "Invisible":
-                        await notificationServerConnection.ChangePresence(PresenceStatuses.Hidden);
+                        await NotificationServerConnection.ChangePresence(PresenceStatuses.Hidden);
                         break;
                 }
             }
@@ -124,11 +124,11 @@ namespace UWPMessengerClient
             {
                 try
                 {
-                    string conversationID = await notificationServerConnection.StartChat(ContactInContext);
-                    Frame.Navigate(typeof(ChatPage), new ChatPageNavigationParams()
+                    string conversationId = await NotificationServerConnection.StartChat(contactInContext);
+                    Frame.Navigate(typeof(ChatPage), new ChatPageNavigationParameters()
                     {
-                        notificationServerConnection = notificationServerConnection,
-                        SBConversationID = conversationID
+                        NotificationServerConnection = NotificationServerConnection,
+                        SbConversationId = conversationId
                     });
                 }
                 catch (Exception e)
@@ -144,13 +144,13 @@ namespace UWPMessengerClient
 
         private void Exit()
         {
-            notificationServerConnection.Exit();
+            NotificationServerConnection.Exit();
             this.Frame.Navigate(typeof(LoginPage));
         }
 
         private async void start_chat_button_Click(object sender, RoutedEventArgs e)
         {
-            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            contactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
             await StartChat();
         }
 
@@ -158,7 +158,7 @@ namespace UWPMessengerClient
         {
             try
             {
-                await notificationServerConnection.ChangeUserDisplayName(ChangeUserDisplayNameTextBox.Text);
+                await NotificationServerConnection.ChangeUserDisplayName(ChangeUserDisplayNameTextBox.Text);
                 ChangeUserDisplayNameTextBox.Text = "";
                 DisplayNameErrors.Text = "";
                 ChangeFlyout.Hide();
@@ -178,7 +178,7 @@ namespace UWPMessengerClient
         {
             try
             {
-                await notificationServerConnection.AddNewContact(contactEmailBox.Text, contactDisplayNameBox.Text);
+                await NotificationServerConnection.AddNewContact(contactEmailBox.Text, contactDisplayNameBox.Text);
                 contactDisplayNameBox.Text = "";
                 contactEmailBox.Text = "";
                 AddContactErrors.Text = "";
@@ -202,7 +202,7 @@ namespace UWPMessengerClient
 
         private void settings_button_Click(object sender, RoutedEventArgs e)
         {
-            this.Frame.Navigate(typeof(SettingsPage), notificationServerConnection);
+            this.Frame.Navigate(typeof(SettingsPage), NotificationServerConnection);
         }
 
         private void addContactFlyout_Closed(object sender, object e)
@@ -224,11 +224,11 @@ namespace UWPMessengerClient
         {
             try
             {
-                await notificationServerConnection.SendUserPersonalMessage(ChangeUserPersonalMessageTextBox.Text);
+                await NotificationServerConnection.SendUserPersonalMessage(ChangeUserPersonalMessageTextBox.Text);
                 ChangeUserDisplayNameTextBox.Text = "";
                 PersonalMessageErrors.Text = "";
                 personalMessageFlyout.Hide();
-                roamingSettings.Values[$"{notificationServerConnection.userInfo.Email}_PersonalMessage"] = ChangeUserPersonalMessageTextBox.Text;
+                roamingSettings.Values[$"{NotificationServerConnection.UserInfo.Email}_PersonalMessage"] = ChangeUserPersonalMessageTextBox.Text;
             }
             catch (Exception ex)
             {
@@ -256,10 +256,10 @@ namespace UWPMessengerClient
         {
             ListView contactListView = (ListView)sender;
             ContactMenuFlyout.ShowAt(contactListView, e.GetPosition(contactListView));
-            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
-            if (ContactInContext != null)
+            contactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            if (contactInContext != null)
             {
-                if (ContactInContext.onBlock)
+                if (contactInContext.OnBlock)
                 {
                     UnblockItem.Visibility = Visibility.Visible;
                     BlockItem.Visibility = Visibility.Collapsed;
@@ -274,7 +274,7 @@ namespace UWPMessengerClient
 
         private async void contactListView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            contactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
             await StartChat();
         }
 
@@ -282,10 +282,10 @@ namespace UWPMessengerClient
         {
             ListView contactListView = (ListView)sender;
             ContactMenuFlyout.ShowAt(contactListView, e.GetPosition(contactListView));
-            ContactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
-            if (ContactInContext != null)
+            contactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
+            if (contactInContext != null)
             {
-                if (ContactInContext.onBlock)
+                if (contactInContext.OnBlock)
                 {
                     UnblockItem.Visibility = Visibility.Visible;
                     BlockItem.Visibility = Visibility.Collapsed;
@@ -302,39 +302,39 @@ namespace UWPMessengerClient
         {
             try
             {
-                await notificationServerConnection.RemoveContact(ContactInContext);
+                await NotificationServerConnection.RemoveContact(contactInContext);
             }
             catch (Exception ex)
             {
                 await ShowDialog("Error", ex.Message);
             }
-            ContactInContext = null;
+            contactInContext = null;
         }
 
         private async void BlockItem_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                await notificationServerConnection.BlockContact(ContactInContext);
+                await NotificationServerConnection.BlockContact(contactInContext);
             }
             catch (Exception ex)
             {
                 await ShowDialog("Error", ex.Message);
             }
-            ContactInContext = null;
+            contactInContext = null;
         }
 
         private async void UnblockItem_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                await notificationServerConnection.UnblockContact(ContactInContext);
+                await NotificationServerConnection.UnblockContact(contactInContext);
             }
             catch (Exception ex)
             {
                 await ShowDialog("Error", ex.Message);
             }
-            ContactInContext = null;
+            contactInContext = null;
         }
     }
 }

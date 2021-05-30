@@ -15,16 +15,16 @@ namespace UWPMessengerClient.MSNP
 {
     public class Message : INotifyPropertyChanged
     {
-        private string _message_text;
-        private string _sender;
-        private string _receiver;
-        private string _sender_email;
-        private string _receiver_email;
-        private bool _IsHistory;
-        private int NumberOfInkChunks;
-        private List<InkChunk> InkChunks = new List<InkChunk>();
+        private string messageText;
+        private string sender;
+        private string receiver;
+        private string senderEmail;
+        private string receiverEmail;
+        private bool isHistory;
+        private int numberOfInkChunks;
+        private List<InkChunk> inkChunks = new List<InkChunk>();
         public byte[] InkBytes { get; private set; }
-        private BitmapImage _InkImage;
+        private BitmapImage inkImage;
         public string InkMessageID { get; private set; }
         public string Base64Ink { get; private set; }
         public event PropertyChangedEventHandler PropertyChanged;
@@ -34,87 +34,87 @@ namespace UWPMessengerClient.MSNP
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public string message_text
+        public string MessageText
         {
-            get => _message_text;
+            get => messageText;
             set
             {
-                _message_text = value;
+                messageText = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public string sender
+        public string Sender
         {
-            get => _sender;
+            get => sender;
             set
             {
-                _sender = value;
+                sender = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public string receiver
+        public string Receiver
         {
-            get => _receiver;
+            get => receiver;
             set
             {
-                _receiver = value;
+                receiver = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public string sender_email
+        public string SenderEmail
         {
-            get => _sender_email;
+            get => senderEmail;
             set
             {
-                _sender_email = value;
+                senderEmail = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public string receiver_email
+        public string ReceiverEmail
         {
-            get => _receiver_email;
+            get => receiverEmail;
             set
             {
-                _receiver_email = value;
+                receiverEmail = value;
                 NotifyPropertyChanged();
             }
         }
 
         public bool IsHistory
         {
-            get => _IsHistory;
+            get => isHistory;
             set
             {
-                _IsHistory = value;
+                isHistory = value;
                 NotifyPropertyChanged();
             }
         }
 
         public BitmapImage InkImage
         {
-            get => _InkImage;
+            get => inkImage;
             set
             {
-                _InkImage = value;
+                inkImage = value;
                 NotifyPropertyChanged();
             }
         }
 
-        public void ReceiveSingleInk(string encoded_ink)
+        public void ReceiveSingleInk(string encodedInk)
         {
-            encoded_ink = encoded_ink.Replace("base64:", "");
-            Base64Ink = encoded_ink;
-            InkBytes = Convert.FromBase64String(encoded_ink);
+            encodedInk = encodedInk.Replace("base64:", "");
+            Base64Ink = encodedInk;
+            InkBytes = Convert.FromBase64String(encodedInk);
         }
 
-        public void ReceiveFirstInkChunk(int chunks, string message_id, string chunk)
+        public void ReceiveFirstInkChunk(int chunks, string messageId, string chunk)
         {
-            NumberOfInkChunks = chunks;
-            InkMessageID = message_id;
+            numberOfInkChunks = chunks;
+            InkMessageID = messageId;
             chunk = chunk.Replace("base64:", "");
             InkChunk inkChunk = new InkChunk()
             {
@@ -122,23 +122,23 @@ namespace UWPMessengerClient.MSNP
                 MessageID = InkMessageID,
                 EncodedChunk = chunk
             };
-            InkChunks.Add(inkChunk);
+            inkChunks.Add(inkChunk);
         }
 
-        public void ReceiveInkChunk(int chunk_number, string chunk)
+        public void ReceiveInkChunk(int chunkNumber, string chunk)
         {
-            if (chunk_number > NumberOfInkChunks)
+            if (chunkNumber > numberOfInkChunks)
             {
                 throw new Exception();
             }
             InkChunk inkChunk = new InkChunk()
             {
-                ChunkNumber = chunk_number,
+                ChunkNumber = chunkNumber,
                 MessageID = InkMessageID,
                 EncodedChunk = chunk
             };
-            InkChunks.Add(inkChunk);
-            if (chunk_number == (NumberOfInkChunks - 1))
+            inkChunks.Add(inkChunk);
+            if (chunkNumber == (numberOfInkChunks - 1))
             {
                 JoinChunks();
             }
@@ -146,13 +146,13 @@ namespace UWPMessengerClient.MSNP
 
         public void JoinChunks()
         {
-            string joined_chunks = "";
-            foreach (InkChunk inkChunk in InkChunks)
+            string joinedChunks = "";
+            foreach (InkChunk inkChunk in inkChunks)
             {
-                joined_chunks += inkChunk.EncodedChunk;
+                joinedChunks += inkChunk.EncodedChunk;
             }
-            Base64Ink = joined_chunks;
-            InkBytes = Convert.FromBase64String(joined_chunks);
+            Base64Ink = joinedChunks;
+            InkBytes = Convert.FromBase64String(joinedChunks);
         }
     }
 }

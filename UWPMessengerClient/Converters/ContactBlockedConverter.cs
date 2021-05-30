@@ -11,8 +11,8 @@ namespace UWPMessengerClient
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            string ContactBlocked = (bool)value ? " - Blocked" : "";
-            return ContactBlocked;
+            string contactBlocked = (bool)value ? " - Blocked" : "";
+            return contactBlocked;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

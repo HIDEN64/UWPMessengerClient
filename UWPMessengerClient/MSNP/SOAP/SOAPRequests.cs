@@ -11,42 +11,42 @@ namespace UWPMessengerClient.MSNP.SOAP
 {
     partial class SOAPRequests
     {
-        protected string RST_address = "https://m1.escargot.chat/RST.srf";
+        private string rstAddress = "https://m1.escargot.chat/RST.srf";
         public string TicketToken { get; set; }
-        public bool UsingLocalhost { get; protected set; }
+        public bool UsingLocalhost { get; private set; }
 
-        public SOAPRequests(bool use_localhost = false)
+        public SOAPRequests(bool useLocalhost = false)
         {
-            UsingLocalhost = use_localhost;
+            UsingLocalhost = useLocalhost;
             if (UsingLocalhost)
             {
-                RST_address = "http://localhost/RST.srf";
-                SharingService_url = "http://localhost/abservice/SharingService.asmx";
-                abservice_url = "http://localhost/abservice/abservice.asmx";
+                rstAddress = "http://localhost/RST.srf";
+                sharingServiceUrl = "http://localhost/abservice/SharingService.asmx";
+                AbServiceUrl = "http://localhost/abservice/abservice.asmx";
                 //setting local addresses
             }
         }
 
-        public static HttpWebRequest CreateSOAPRequest(string soap_action, string address)
+        public static HttpWebRequest CreateSoapRequest(string soapAction, string address)
         {
             HttpWebRequest request = WebRequest.CreateHttp(address);
-            request.Headers.Add($@"SOAPAction:{soap_action}");
+            request.Headers.Add($@"SOAPAction:{soapAction}");
             request.ContentType = "text/xml;charset=\"utf-8\"";
             request.Accept = "text/xml";
             request.Method = "POST";
             return request;
         }
 
-        public static string MakeSOAPRequest(string SOAP_body, string address, string soap_action)
+        public static string MakeSoapRequest(string soapBody, string address, string soapAction)
         {
-            HttpWebRequest SOAPRequest = CreateSOAPRequest(soap_action, address);
-            XmlDocument SoapXMLBody = new XmlDocument();
-            SoapXMLBody.LoadXml(SOAP_body);
-            using (Stream stream = SOAPRequest.GetRequestStream())
+            HttpWebRequest soapRequest = CreateSoapRequest(soapAction, address);
+            XmlDocument soapXmlBody = new XmlDocument();
+            soapXmlBody.LoadXml(soapBody);
+            using (Stream stream = soapRequest.GetRequestStream())
             {
-                SoapXMLBody.Save(stream);
+                soapXmlBody.Save(stream);
             }
-            using (WebResponse webResponse = SOAPRequest.GetResponse())
+            using (WebResponse webResponse = soapRequest.GetResponse())
             {
                 using (StreamReader rd = new StreamReader(webResponse.GetResponseStream()))
                 {
@@ -56,9 +56,9 @@ namespace UWPMessengerClient.MSNP.SOAP
             }
         }
 
-        public string SSORequest(string email, string password, string MBIKeyOldNonce)
+        public string SsoRequest(string email, string password, string mbiKeyOldNonce)
         {
-            string SSO_XML = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
+            string ssoXml = $@"<?xml version=""1.0"" encoding=""utf-8"" ?>
             <Envelope xmlns=""http://schemas.xmlsoap.org/soap/envelope/""
                 xmlns:wsse=""http://schemas.xmlsoap.org/ws/2003/06/secext""
                 xmlns:saml=""urn:oasis:names:tc:SAML:1.0:assertion""
@@ -75,7 +75,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                         <ps:BinaryVersion>4</ps:BinaryVersion>
                         <ps:UIVersion>1</ps:UIVersion>
                         <ps:Cookies></ps:Cookies>
-                        <ps:RequestParams>AQAAAAIAAABsYwQAAAAxMDMz</ps:RequestParams>
+                        <ps:RequestParameters>AQAAAAIAAABsYwQAAAAxMDMz</ps:RequestParameters>
                     </ps:AuthInfo>
                     <wsse:Security>
                         <wsse:UsernameToken Id=""user"">
@@ -103,7 +103,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                                     <wsa:Address>messengerclear.live.com</wsa:Address>
                                 </wsa:EndpointReference>
                             </wsp:AppliesTo>
-                            <wsse:PolicyReference URI=""{MBIKeyOldNonce}""></wsse:PolicyReference>
+                            <wsse:PolicyReference URI=""{mbiKeyOldNonce}""></wsse:PolicyReference>
                         </wst:RequestSecurityToken>
                         <wst:RequestSecurityToken Id=""RST2"">
                             <wst:RequestType>http://schemas.xmlsoap.org/ws/2004/04/security/trust/Issue</wst:RequestType>
@@ -118,7 +118,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </ps:RequestMultipleSecurityTokens>
                 </Body>
             </Envelope>";
-            return MakeSOAPRequest(SSO_XML, RST_address, "http://www.msn.com/webservices/storage/w10/");
+            return MakeSoapRequest(ssoXml, rstAddress, "http://www.msn.com/webservices/storage/w10/");
         }
     }
 }

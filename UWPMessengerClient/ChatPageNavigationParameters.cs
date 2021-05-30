@@ -7,9 +7,9 @@ using UWPMessengerClient.MSNP;
 
 namespace UWPMessengerClient
 {
-    class ChatPageNavigationParams
+    class ChatPageNavigationParameters
     {
-        public NotificationServerConnection notificationServerConnection;
-        public string SBConversationID;
+        public NotificationServerConnection NotificationServerConnection;
+        public string SbConversationId;
     }
 }
