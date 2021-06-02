@@ -120,25 +120,22 @@ namespace UWPMessengerClient
 
         private async Task StartChat()
         {
-            if (contactListView.SelectedIndex >= 0)
+            try
             {
-                try
+                if (contactInContext is null)
                 {
-                    string conversationId = await NotificationServerConnection.StartChat(contactInContext);
-                    Frame.Navigate(typeof(ChatPage), new ChatPageNavigationParameters()
-                    {
-                        NotificationServerConnection = NotificationServerConnection,
-                        SbConversationId = conversationId
-                    });
+                    throw new NullReferenceException("Contact is null!");
                 }
-                catch (Exception e)
+                string conversationId = await NotificationServerConnection.StartChat(contactInContext);
+                Frame.Navigate(typeof(ChatPage), new ChatPageNavigationParameters()
                 {
-                    await ShowDialog("Error", $"There was an error, please try again. Error: {e.Message}");
-                }
+                    NotificationServerConnection = NotificationServerConnection,
+                    SbConversationId = conversationId
+                });
             }
-            else
+            catch (Exception e)
             {
-                return;
+                await ShowDialog("Error", $"There was an error, please try again. Error: {e.Message}");
             }
         }
 
@@ -150,8 +147,11 @@ namespace UWPMessengerClient
 
         private async void start_chat_button_Click(object sender, RoutedEventArgs e)
         {
-            contactInContext = (Contact)((FrameworkElement)e.OriginalSource).DataContext;
-            await StartChat();
+            if (contactListView.SelectedIndex >= 0)
+            {
+                contactInContext = (Contact)contactListView.SelectedItem;
+                await StartChat();
+            }
         }
 
         private async void ChangeUserDisplayNameConfirmationButton_Click(object sender, RoutedEventArgs e)
