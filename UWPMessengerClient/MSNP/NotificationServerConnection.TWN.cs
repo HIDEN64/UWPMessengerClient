@@ -17,7 +17,7 @@ namespace UWPMessengerClient.MSNP
         private async Task MSNP12LoginToMessengerAsync()
         {
             httpClient = new HttpClient();
-            nsSocket = new SocketCommands(nsAddress, port);
+            nsSocket = new SocketCommands(NsAddress, port);
             Action loginAction = new Action(() =>
             {
                 //sequence of commands to login to escargot
@@ -27,20 +27,20 @@ namespace UWPMessengerClient.MSNP
                 GetContactsFromDatabase();
                 //begin receiving from escargot
                 nsSocket.BeginReceiving(receivedBytes, new AsyncCallback(ReceivingCallback), this);
-                transactionId++;
-                nsSocket.SendCommand($"VER {transactionId} MSNP12 CVR0\r\n");//send msnp version
-                transactionId++;
-                nsSocket.SendCommand($"CVR {transactionId} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");//send client information
-                transactionId++;
-                nsSocket.SendCommand($"USR {transactionId} TWN I {email}\r\n");//sends email to get a string for use in authentication
-                transactionId++;
+                TransactionId++;
+                nsSocket.SendCommand($"VER {TransactionId} MSNP12 CVR0\r\n");//send msnp version
+                TransactionId++;
+                nsSocket.SendCommand($"CVR {TransactionId} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");//send client information
+                TransactionId++;
+                nsSocket.SendCommand($"USR {TransactionId} TWN I {email}\r\n");//sends email to get a string for use in authentication
+                TransactionId++;
                 Task<string> tokenTask = GetNexusTokenAsync(httpClient);
                 token = tokenTask.Result;
-                nsSocket.SendCommand($"USR {transactionId} TWN S t={token}\r\n");//sending authentication token
-                transactionId++;
-                nsSocket.SendCommand($"SYN {transactionId} 0 0\r\n");//sync contact list
-                transactionId++;
-                nsSocket.SendCommand($"CHG {transactionId} {UserPresenceStatus} {clientCapabilities}\r\n");//set presence as available
+                nsSocket.SendCommand($"USR {TransactionId} TWN S t={token}\r\n");//sending authentication token
+                TransactionId++;
+                nsSocket.SendCommand($"SYN {TransactionId} 0 0\r\n");//sync contact list
+                TransactionId++;
+                nsSocket.SendCommand($"CHG {TransactionId} {UserPresenceStatus} {ClientCapabilities}\r\n");//setting selected presence status
             });
             await Task.Run(loginAction);
         }
@@ -48,7 +48,7 @@ namespace UWPMessengerClient.MSNP
         public async Task<string> GetNexusTokenAsync(HttpClient httpClient)
         {
             //makes a request to the nexus and gets the Www-Authenticate header
-            HttpResponseMessage response = await httpClient.GetAsync(nexusAddress);
+            HttpResponseMessage response = await httpClient.GetAsync(NexusAddress);
             response.EnsureSuccessStatusCode();
             HttpResponseHeaders responseHeaders = response.Headers;
             //parsing the response headers to extract the login server adress

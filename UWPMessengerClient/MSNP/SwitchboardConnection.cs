@@ -14,9 +14,9 @@ namespace UWPMessengerClient.MSNP
     public partial class SwitchboardConnection : INotifyPropertyChanged
     {
         private SocketCommands sbSocket;
-        private string sbAddress;
-        private int sbPort = 0;
-        private int transactionId = 0;
+        public string SbAddress { get; private set; }
+        public int SbPort { get; private set; } = 1864;
+        public int TransactionId { get; private set; } = 0;
         private string authString;
         public string SessionID { get; private set; }
         public UserInfo PrincipalInfo { get; set; } = new UserInfo();
@@ -31,7 +31,7 @@ namespace UWPMessengerClient.MSNP
         private int maximumInkSize = 1140;
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler HistoryLoaded;
-        Dictionary<string, Action> commandHandlers;
+        private Dictionary<string, Action> commandHandlers;
         private ObservableCollection<string> errorLog = new ObservableCollection<string>();
         public ObservableCollection<string> ErrorLog
         {
@@ -54,8 +54,8 @@ namespace UWPMessengerClient.MSNP
                 {"IRO", () => PrincipalsConnected++ },
                 {"MSG", () => HandleMsg() }
             };
-            sbAddress = address;
-            sbPort = port;
+            SbAddress = address;
+            SbPort = port;
             UserInfo.Email = email;
             this.authString = authString;
             UserInfo.DisplayName = userDisplayName;
@@ -72,8 +72,8 @@ namespace UWPMessengerClient.MSNP
                 {"IRO", () => PrincipalsConnected++ },
                 {"MSG", () => HandleMsg() }
             };
-            sbAddress = address;
-            sbPort = port;
+            SbAddress = address;
+            SbPort = port;
             UserInfo.Email = email;
             this.authString = authString;
             SessionID = sessionID;
@@ -99,11 +99,11 @@ namespace UWPMessengerClient.MSNP
         {
             Action sbConnect = new Action(() =>
             {
-                sbSocket = new SocketCommands(sbAddress, sbPort);
+                sbSocket = new SocketCommands(SbAddress, SbPort);
                 sbSocket.ConnectSocket();
                 sbSocket.BeginReceiving(OutputBuffer, new AsyncCallback(ReceivingCallback), this);
-                transactionId++;
-                sbSocket.SendCommand($"USR {transactionId} {UserInfo.Email} {authString}\r\n");
+                TransactionId++;
+                sbSocket.SendCommand($"USR {TransactionId} {UserInfo.Email} {authString}\r\n");
             });
             await Task.Run(sbConnect);
             Connected = true;
@@ -132,10 +132,10 @@ namespace UWPMessengerClient.MSNP
             if (Connected)
             {
                 PrincipalInfo.Email = principalEmail;
-                transactionId++;
+                TransactionId++;
                 await Task.Run(() =>
                 {
-                    sbSocket.SendCommand($"CAL {transactionId} {principalEmail}\r\n");
+                    sbSocket.SendCommand($"CAL {TransactionId} {principalEmail}\r\n");
                 });
             }
             else
@@ -149,10 +149,10 @@ namespace UWPMessengerClient.MSNP
             if (Connected)
             {
                 PrincipalInfo.Email = principalEmail;
-                transactionId++;
+                TransactionId++;
                 await Task.Run(() =>
                 {
-                    sbSocket.SendCommand($"CAL {transactionId} {principalEmail}\r\n");
+                    sbSocket.SendCommand($"CAL {TransactionId} {principalEmail}\r\n");
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         PrincipalInfo.DisplayName = principalDisplayName;
@@ -173,8 +173,8 @@ namespace UWPMessengerClient.MSNP
                 {
                     string message = "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nX-MMS-IM-Format: FN=Arial; EF=; CO=0; CS=0; PF=22\r\n\r\n" + messageText;
                     byte[] byteMessage = Encoding.UTF8.GetBytes(message);
-                    transactionId++;
-                    sbSocket.SendCommand($"MSG {transactionId} N {byteMessage.Length}\r\n{message}");
+                    TransactionId++;
+                    sbSocket.SendCommand($"MSG {TransactionId} N {byteMessage.Length}\r\n{message}");
                     Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                     {
                         Message newMessage = new Message()
@@ -231,8 +231,8 @@ namespace UWPMessengerClient.MSNP
                 {
                     string message = $"MIME-Version: 1.0\r\nContent-Type: text/x-msmsgscontrol\r\nTypingUser: {UserInfo.Email}\r\n\r\n\r\n";
                     byte[] byteMessage = Encoding.UTF8.GetBytes(message);
-                    transactionId++;
-                    sbSocket.SendCommand($"MSG {transactionId} U {byteMessage.Length}\r\n{message}");
+                    TransactionId++;
+                    sbSocket.SendCommand($"MSG {TransactionId} U {byteMessage.Length}\r\n{message}");
                 });
                 waitingTyping = true;
                 //sending TypingUser every 5 seconds only
@@ -253,8 +253,8 @@ namespace UWPMessengerClient.MSNP
                         {
                             string nudgeMessage = "MIME-Version: 1.0\r\nContent-Type: text/x-msnmsgr-datacast\r\n\r\nID: 1\r\n";
                             byte[] byteMessage = Encoding.UTF8.GetBytes(nudgeMessage);
-                            transactionId++;
-                            sbSocket.SendCommand($"MSG {transactionId} A {byteMessage.Length}\r\n{nudgeMessage}");
+                            TransactionId++;
+                            sbSocket.SendCommand($"MSG {TransactionId} A {byteMessage.Length}\r\n{nudgeMessage}");
                         });
                         string nudgeText = $"You sent {PrincipalInfo.DisplayName} a nudge";
                         Message newMessage = new Message()
@@ -359,9 +359,9 @@ namespace UWPMessengerClient.MSNP
             {
                 string messageId = GenerateMessageID();
                 List<InkChunk> inkChunks = DivideInkIntoChunks(inkBytes, messageId);
-                transactionId++;
+                TransactionId++;
                 string inkChunkMessagePayload = $"Mime-Version: 1.0\r\nContent-Type: application/x-ms-ink\r\nMessage-ID: {messageId}\r\nChunks: {inkChunks.Count}\r\n\r\n{inkChunks[0].EncodedChunk}";
-                string inkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(inkChunkMessagePayload).Length}\r\n{inkChunkMessagePayload}";
+                string inkChunkMessage = $"MSG {TransactionId} N {Encoding.UTF8.GetBytes(inkChunkMessagePayload).Length}\r\n{inkChunkMessagePayload}";
                 try
                 {
                     sbSocket.SendCommand(inkChunkMessage);
@@ -380,9 +380,9 @@ namespace UWPMessengerClient.MSNP
                 }
                 for (int i = 1; i < inkChunks.Count; i++)
                 {
-                    transactionId++;
+                    TransactionId++;
                     inkChunkMessagePayload = $"Message-ID: {messageId}\r\nChunk: {inkChunks[i].ChunkNumber}\r\n\r\n{inkChunks[i].EncodedChunk}";
-                    inkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(inkChunkMessagePayload).Length}\r\n{inkChunkMessagePayload}";
+                    inkChunkMessage = $"MSG {TransactionId} N {Encoding.UTF8.GetBytes(inkChunkMessagePayload).Length}\r\n{inkChunkMessagePayload}";
                     try
                     {
                         sbSocket.SendCommand(inkChunkMessage);
@@ -404,9 +404,9 @@ namespace UWPMessengerClient.MSNP
             }
             else
             {
-                transactionId++;
+                TransactionId++;
                 string inkChunkMessagePayload = $"Mime-Version: 1.0\r\nContent-Type: application/x-ms-ink\r\n\r\n{"base64:" + Convert.ToBase64String(inkBytes)}";
-                string inkChunkMessage = $"MSG {transactionId} N {Encoding.UTF8.GetBytes(inkChunkMessagePayload).Length}\r\n{inkChunkMessagePayload}";
+                string inkChunkMessage = $"MSG {TransactionId} N {Encoding.UTF8.GetBytes(inkChunkMessagePayload).Length}\r\n{inkChunkMessagePayload}";
                 try
                 {
                     sbSocket.SendCommand(inkChunkMessage);
@@ -440,11 +440,11 @@ namespace UWPMessengerClient.MSNP
         {
             await Task.Run(() =>
             {
-                sbSocket = new SocketCommands(sbAddress, sbPort);
+                sbSocket = new SocketCommands(SbAddress, SbPort);
                 sbSocket.ConnectSocket();
                 sbSocket.BeginReceiving(OutputBuffer, new AsyncCallback(ReceivingCallback), this);
-                transactionId++;
-                sbSocket.SendCommand($"ANS {transactionId} {UserInfo.Email} {authString} {SessionID}\r\n");
+                TransactionId++;
+                sbSocket.SendCommand($"ANS {TransactionId} {UserInfo.Email} {authString} {SessionID}\r\n");
             });
         }
 

@@ -11,7 +11,7 @@ namespace UWPMessengerClient.MSNP.SOAP
 {
     partial class SOAPRequests
     {
-        private string rstAddress = "https://m1.escargot.chat/RST.srf";
+        public string RstAddress { get; private set; } = "https://m1.escargot.chat/RST.srf";
         public string TicketToken { get; set; }
         public bool UsingLocalhost { get; private set; }
 
@@ -20,9 +20,9 @@ namespace UWPMessengerClient.MSNP.SOAP
             UsingLocalhost = useLocalhost;
             if (UsingLocalhost)
             {
-                rstAddress = "http://localhost/RST.srf";
-                sharingServiceUrl = "http://localhost/abservice/SharingService.asmx";
-                abServiceUrl = "http://localhost/abservice/abservice.asmx";
+                RstAddress = "http://localhost/RST.srf";
+                SharingServiceUrl = "http://localhost/abservice/SharingService.asmx";
+                AbServiceUrl = "http://localhost/abservice/abservice.asmx";
                 //setting local addresses
             }
         }
@@ -118,7 +118,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </ps:RequestMultipleSecurityTokens>
                 </Body>
             </Envelope>";
-            return MakeSoapRequest(ssoXml, rstAddress, "http://www.msn.com/webservices/storage/w10/");
+            return MakeSoapRequest(ssoXml, RstAddress, "http://www.msn.com/webservices/storage/w10/");
         }
     }
 }

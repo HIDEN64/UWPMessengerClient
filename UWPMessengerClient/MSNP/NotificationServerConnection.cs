@@ -21,18 +21,18 @@ namespace UWPMessengerClient.MSNP
     {
         private SocketCommands nsSocket;
         public List<SBConversation> SbConversations { get; set; } = new List<SBConversation>();
-        //notification server(escargot) address and address for SSO auth
-        private string nsAddress = "m1.escargot.chat";
-        private string nexusAddress = "https://m1.escargot.chat/nexus-mock";
-        //local addresses are 127.0.0.1 for nsAddress and http://localhost/nexus-mock for nexusAddress
-        private readonly int port = 1863;
+        //notification server(escargot) address and nexus address(TWN authentication)
+        public string NsAddress { get; private set; } = "m1.escargot.chat";
+        public string NexusAddress { get; private set; } = "https://m1.escargot.chat/nexus-mock";
+        //local addresses are 127.0.0.1 for NsAddress and http://localhost/nexus-mock for NexusAddress
+        public readonly int port = 1863;
         private string email;
         private string password;
         private Regex plusCharactersRegex = new Regex("\\[(.*?)\\]");
         public bool UsingLocalhost { get; private set; } = false;
         public string MsnpVersion { get; private set; } = "MSNP15";
-        private int transactionId = 0;
-        private uint clientCapabilities = 0x84140428;
+        public int TransactionId { get; private set; } = 0;
+        public uint ClientCapabilities { get; private set; } = 0x84140428;
         public Contact ContactToChat { get; set; }
         public string UserPresenceStatus { get; set; }
         public bool KeepMessagingHistoryInSwitchboard { get; set; } = true;
@@ -40,7 +40,7 @@ namespace UWPMessengerClient.MSNP
         private static Random random = new Random();
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler NotConnected;
-        private Dictionary<string, Action> CommandHandlers;
+        private Dictionary<string, Action> commandHandlers;
         private ObservableCollection<string> errorLog = new ObservableCollection<string>();
         public ObservableCollection<string> ErrorLog
         {
@@ -54,7 +54,7 @@ namespace UWPMessengerClient.MSNP
 
         public NotificationServerConnection()
         {
-            CommandHandlers = new Dictionary<string, Action>()
+            commandHandlers = new Dictionary<string, Action>()
             {
                 {"LST", () => HandleLst() },
                 {"ADC", () => HandleAdc() },
@@ -71,7 +71,7 @@ namespace UWPMessengerClient.MSNP
 
         public NotificationServerConnection(string messengerEmail, string messengerPassword, bool useLocalhost, string msnpVersion, string initialStatus = PresenceStatuses.Available)
         {
-            CommandHandlers = new Dictionary<string, Action>()
+            commandHandlers = new Dictionary<string, Action>()
             {
                 {"LST", () => HandleLst() },
                 {"ADC", () => HandleAdc() },
@@ -91,8 +91,8 @@ namespace UWPMessengerClient.MSNP
             UserPresenceStatus = initialStatus;
             if (UsingLocalhost)
             {
-                nsAddress = "127.0.0.1";
-                nexusAddress = "http://localhost/nexus-mock";
+                NsAddress = "127.0.0.1";
+                NexusAddress = "http://localhost/nexus-mock";
                 //setting local addresses
             }
             soapRequests = new SOAPRequests(UsingLocalhost);
@@ -132,8 +132,8 @@ namespace UWPMessengerClient.MSNP
             if (status == "") { throw new ArgumentNullException("Status is empty"); }
             Action changePresence = new Action(() =>
             {
-                transactionId++;
-                nsSocket.SendCommand($"CHG {transactionId} {status} {clientCapabilities}\r\n");
+                TransactionId++;
+                nsSocket.SendCommand($"CHG {TransactionId} {status} {ClientCapabilities}\r\n");
             });
             UserPresenceStatus = status;
             await Task.Run(changePresence);
@@ -147,8 +147,8 @@ namespace UWPMessengerClient.MSNP
                 soapRequests.ChangeUserDisplayNameRequest(newDisplayName);
             }
             string urlEncodedNewDisplayName = Uri.EscapeUriString(newDisplayName);
-            transactionId++;
-            await Task.Run(() => nsSocket.SendCommand($"PRP {transactionId} MFN {urlEncodedNewDisplayName}\r\n"));
+            TransactionId++;
+            await Task.Run(() => nsSocket.SendCommand($"PRP {TransactionId} MFN {urlEncodedNewDisplayName}\r\n"));
         }
 
         public async Task SendUserPersonalMessage(string newPersonalMessage)
@@ -158,8 +158,8 @@ namespace UWPMessengerClient.MSNP
                 string encodedPersonalMessage = newPersonalMessage.Replace("&", "&amp;");
                 string psmPayload = $@"<Data><PSM>{encodedPersonalMessage}</PSM><CurrentMedia></CurrentMedia></Data>";
                 int payloadLength = Encoding.UTF8.GetBytes(psmPayload).Length;
-                transactionId++;
-                nsSocket.SendCommand($"UUX {transactionId} {payloadLength}\r\n" + psmPayload);
+                TransactionId++;
+                nsSocket.SendCommand($"UUX {TransactionId} {payloadLength}\r\n" + psmPayload);
                 Windows.Foundation.IAsyncAction task = Windows.ApplicationModel.Core.CoreApplication.MainView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     UserInfo.PersonalMessage = newPersonalMessage;
@@ -171,7 +171,7 @@ namespace UWPMessengerClient.MSNP
         public async Task<string> StartChat(Contact contactToChat)
         {
             ContactToChat = contactToChat;
-            await InitiateSB();
+            await RequestSB();
             int conversationId = random.Next(1000, 9999);
             SBConversation conversation = new SBConversation(this, Convert.ToString(conversationId));
             SbConversations.Add(conversation);
@@ -208,10 +208,10 @@ namespace UWPMessengerClient.MSNP
             while (isConnected);
         }
 
-        private async Task InitiateSB()
+        private async Task RequestSB()
         {
-            transactionId++;
-            await Task.Run(() => nsSocket.SendCommand($"XFR {transactionId} SB\r\n"));
+            TransactionId++;
+            await Task.Run(() => nsSocket.SendCommand($"XFR {TransactionId} SB\r\n"));
         }
 
         public SBConversation ReturnConversationFromConversationId(string conversationId)

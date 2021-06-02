@@ -8,8 +8,8 @@ namespace UWPMessengerClient.MSNP.SOAP
 {
     partial class SOAPRequests
     {
-        private string sharingServiceUrl = "https://m1.escargot.chat/abservice/SharingService.asmx";
-        //local address is http://localhost/abservice/SharingService.asmx for sharingServiceUrl
+        public string SharingServiceUrl { get; private set; } = "https://m1.escargot.chat/abservice/SharingService.asmx";
+        //local address is http://localhost/abservice/SharingService.asmx for SharingServiceUrl
 
         public string FindMembership()
         {
@@ -38,7 +38,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                    </FindMembership>
                </soap:Body>
             </soap:Envelope>";
-            return MakeSoapRequest(membershipListsXml, sharingServiceUrl, "http://www.msn.com/webservices/AddressBook/FindMembership");
+            return MakeSoapRequest(membershipListsXml, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/FindMembership");
         }
 
         public string AddMember(string contactEmail, string memberRole)
@@ -81,7 +81,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </AddMember>
                 </soap:Body>
             </soap:Envelope>";
-            return MakeSoapRequest(memberRoleXml, sharingServiceUrl, "http://www.msn.com/webservices/AddressBook/AddMember");
+            return MakeSoapRequest(memberRoleXml, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/AddMember");
         }
 
         public string DeleteMember(string membershipId, string memberRole)
@@ -124,7 +124,7 @@ namespace UWPMessengerClient.MSNP.SOAP
                     </DeleteMember>
                 </soap:Body>
             </soap:Envelope>";
-            return MakeSoapRequest(memberRoleXml, sharingServiceUrl, "http://www.msn.com/webservices/AddressBook/DeleteMember");
+            return MakeSoapRequest(memberRoleXml, SharingServiceUrl, "http://www.msn.com/webservices/AddressBook/DeleteMember");
         }
 
         public void BlockContactRequests(Contact contact)

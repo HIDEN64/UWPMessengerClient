@@ -16,28 +16,28 @@ namespace UWPMessengerClient.MSNP
 
         private async Task MSNP15LoginToMessengerAsync()
         {
-            nsSocket = new SocketCommands(nsAddress, port);
+            nsSocket = new SocketCommands(NsAddress, port);
             Action loginAction = new Action(() =>
             {
                 nsSocket.ConnectSocket();
                 nsSocket.SetReceiveTimeout(25000);
-                transactionId++;
-                nsSocket.SendCommand($"VER {transactionId} MSNP15 CVR0\r\n");
+                TransactionId++;
+                nsSocket.SendCommand($"VER {TransactionId} MSNP15 CVR0\r\n");
                 outputString = nsSocket.ReceiveMessage(receivedBytes);//receive VER response
-                transactionId++;
-                nsSocket.SendCommand($"CVR {transactionId} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");
+                TransactionId++;
+                nsSocket.SendCommand($"CVR {TransactionId} 0x0409 winnt 10 i386 UWPMESSENGER 0.6 msmsgs\r\n");
                 outputString = nsSocket.ReceiveMessage(receivedBytes);//receive CVR response
-                transactionId++;
-                nsSocket.SendCommand($"USR {transactionId} SSO I {email}\r\n");
+                TransactionId++;
+                nsSocket.SendCommand($"USR {TransactionId} SSO I {email}\r\n");
                 outputString = nsSocket.ReceiveMessage(receivedBytes);//receive GCF
                 outputString = nsSocket.ReceiveMessage(receivedBytes);//receive USR response with nonce
-                transactionId++;
+                TransactionId++;
                 UserInfo.Email = email;
                 GetMbiKeyOldNonce();
                 soapResult = soapRequests.SsoRequest(email, password, mbiKeyOldNonce);
                 GetContactsFromDatabase();
                 string responseStruct = GetSsoReturnValue();
-                nsSocket.SendCommand($"USR {transactionId} SSO S {ssoTicket} {responseStruct}\r\n");//sending response to USR
+                nsSocket.SendCommand($"USR {TransactionId} SSO S {ssoTicket} {responseStruct}\r\n");//sending response to USR
                 outputString = nsSocket.ReceiveMessage(receivedBytes);//receive USR OK
                 nsSocket.BeginReceiving(receivedBytes, new AsyncCallback(ReceivingCallback), this);
                 membershipLists = soapRequests.FindMembership();
@@ -47,8 +47,8 @@ namespace UWPMessengerClient.MSNP
                 SendBLP();
                 SendInitialADL();
                 SendUserDisplayName();
-                transactionId++;
-                nsSocket.SendCommand($"CHG {transactionId} {UserPresenceStatus} {clientCapabilities}\r\n");//setting presence as available
+                TransactionId++;
+                nsSocket.SendCommand($"CHG {TransactionId} {UserPresenceStatus} {ClientCapabilities}\r\n");//setting selected presence status
             });
             await Task.Run(loginAction);
         }

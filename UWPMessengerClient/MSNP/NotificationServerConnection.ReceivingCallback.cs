@@ -39,7 +39,7 @@ namespace UWPMessengerClient.MSNP
                 }
                 try
                 {
-                    notificationServerConnection.CommandHandlers[resParameters[0]]();
+                    notificationServerConnection.commandHandlers[resParameters[0]]();
                 }
                 catch (KeyNotFoundException)
                 {
@@ -71,7 +71,7 @@ namespace UWPMessengerClient.MSNP
             {
                 currentResponse = newCommand;
                 string[] commandParameters = newCommand.Split(" ");
-                CommandHandlers[commandParameters[0]]();
+                commandHandlers[commandParameters[0]]();
             }
         }
 
