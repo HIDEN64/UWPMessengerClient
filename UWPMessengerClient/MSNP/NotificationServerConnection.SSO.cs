@@ -58,10 +58,10 @@ namespace UWPMessengerClient.MSNP
             return first.Concat(second).ToArray();
         }
 
-        private byte[] GetResultFromSSOHashs(byte[] key, string wsSecure)
+        private byte[] GetResultFromSsoHashes(byte[] key, string wsSecure)
         {
             HMACSHA1 hMACSHA1 = new HMACSHA1(key);
-            byte[] wsSecureBytes = Encoding.ASCII.GetBytes(wsSecure);
+            byte[] wsSecureBytes = Encoding.UTF8.GetBytes(wsSecure);
             byte[] hash1 = hMACSHA1.ComputeHash(wsSecureBytes);
             byte[] hash2 = hMACSHA1.ComputeHash(JoinBytes(hash1, wsSecureBytes));
             byte[] hash3 = hMACSHA1.ComputeHash(hash1);
@@ -134,10 +134,10 @@ namespace UWPMessengerClient.MSNP
             string ticket = ReturnTicket();
             GetTicketToken();
             ssoTicket = ticket;
-            byte[] nonceBytes = Encoding.ASCII.GetBytes(mbiKeyOldNonce);
+            byte[] nonceBytes = Encoding.UTF8.GetBytes(mbiKeyOldNonce);
             byte[] key1 = Convert.FromBase64String(binarySecret);
-            byte[] key2 = GetResultFromSSOHashs(key1, "WS-SecureConversationSESSION KEY HASH");
-            byte[] key3 = GetResultFromSSOHashs(key1, "WS-SecureConversationSESSION KEY ENCRYPTION");
+            byte[] key2 = GetResultFromSsoHashes(key1, "WS-SecureConversationSESSION KEY HASH");
+            byte[] key3 = GetResultFromSsoHashes(key1, "WS-SecureConversationSESSION KEY ENCRYPTION");
             HMACSHA1 hMACSHA1 = new HMACSHA1(key2);
             byte[] key2Hash = hMACSHA1.ComputeHash(nonceBytes);
             byte[] eight8Bytes = { 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08 };

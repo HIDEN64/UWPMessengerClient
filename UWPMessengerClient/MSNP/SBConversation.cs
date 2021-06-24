@@ -24,7 +24,7 @@ namespace UWPMessengerClient.MSNP
         { get; private set; }
         public event EventHandler MessageListUpdated;
         public event PropertyChangedEventHandler PropertyChanged;
-        public ObservableCollection<Message> messages;
+        private ObservableCollection<Message> messages;
         public ObservableCollection<Message> Messages
         {
             get => messages;
