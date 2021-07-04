@@ -312,44 +312,31 @@ namespace UWPMessengerClient.MSNP
         private List<InkChunk> DivideInkIntoChunks(byte[] inkBytes, string messageId)
         {
             List<InkChunk> inkChunks = new List<InkChunk>();
-            double numberOfChunksDouble = inkBytes.Length / maximumInkSize;
-            numberOfChunksDouble = Math.Ceiling(numberOfChunksDouble);
-            int numberOfChunks = Convert.ToInt32(numberOfChunksDouble);
-            int numberOfFullChunks = numberOfChunks;
-            if (inkBytes.Length % maximumInkSize > 0)
-            {
-                numberOfFullChunks--;
-            }
-            int inkPos = 0;
+            double numberOfChunksDouble = Convert.ToDouble(inkBytes.Length) / maximumInkSize;
+            int numberOfChunks = Convert.ToInt32(Math.Ceiling(numberOfChunksDouble));
+            int inkPosition = 0;
             byte[] inkChunk = new byte[maximumInkSize];
-            Buffer.BlockCopy(inkBytes, inkPos, inkChunk, 0, maximumInkSize);
-            inkChunks.Add(new InkChunk()
+            for (int i = 0; i < numberOfChunks - 1; i++)
             {
-                ChunkNumber = 0,
-                MessageID = messageId,
-                EncodedChunk = "base64:" + Convert.ToBase64String(inkChunk)
-            });
-            inkPos += maximumInkSize;
-            for (int i = 1; i <= numberOfFullChunks; i++)
-            {
-                Buffer.BlockCopy(inkBytes, inkPos, inkChunk, 0, maximumInkSize);
+                Buffer.BlockCopy(inkBytes, inkPosition, inkChunk, 0, maximumInkSize);
                 inkChunks.Add(new InkChunk()
                 {
                     ChunkNumber = i,
                     MessageID = messageId,
                     EncodedChunk = Convert.ToBase64String(inkChunk)
                 });
-                inkPos += maximumInkSize;
+                inkPosition += maximumInkSize;
             }
-            int lastChunkLength = inkBytes.Length - inkPos;
+            int lastChunkLength = inkBytes.Length - inkPosition;
             inkChunk = new byte[lastChunkLength];
-            Buffer.BlockCopy(inkBytes, inkPos, inkChunk, 0, lastChunkLength);
+            Buffer.BlockCopy(inkBytes, inkPosition, inkChunk, 0, lastChunkLength);
             inkChunks.Add(new InkChunk()
             {
-                ChunkNumber = numberOfChunks,
+                ChunkNumber = numberOfChunks - 1,
                 MessageID = messageId,
                 EncodedChunk = Convert.ToBase64String(inkChunk)
             });
+            inkChunks[0].EncodedChunk = "base64:" + inkChunks[0].EncodedChunk;
             return inkChunks;
         }
 
