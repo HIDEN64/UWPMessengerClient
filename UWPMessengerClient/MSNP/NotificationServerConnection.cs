@@ -21,9 +21,9 @@ namespace UWPMessengerClient.MSNP
     {
         private SocketCommands nsSocket;
         public List<SBConversation> SbConversations { get; set; } = new List<SBConversation>();
-        //notification server(escargot) address and nexus address(TWN authentication)
-        public string NsAddress { get; private set; } = "m1.escargot.chat";
-        public string NexusAddress { get; private set; } = "https://m1.escargot.chat/nexus-mock";
+        // Notification Server address and Nexus (used for TWN auth) address
+        public string NsAddress { get; private set; } = "crosstalksrv.hiden.pw";
+        public string NexusAddress { get; private set; } = "https://crosstalksrv.hiden.pw/nexus-mock";
         //local addresses are 127.0.0.1 for NsAddress and http://localhost/nexus-mock for NexusAddress
         public readonly int port = 1863;
         private string email;

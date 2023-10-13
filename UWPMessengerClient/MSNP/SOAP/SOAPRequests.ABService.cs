@@ -8,7 +8,7 @@ namespace UWPMessengerClient.MSNP.SOAP
 {
     partial class SOAPRequests
     {
-        public string AbServiceUrl { get; private set; } = "https://m1.escargot.chat/abservice/abservice.asmx";
+        public string AbServiceUrl { get; private set; } = "https://crosstalksrv.hiden.pw/abservice/abservice.asmx";
         //local address is http://localhost/abservice/abservice.asmx for AbServiceUrl
 
         public string AbFindAll()

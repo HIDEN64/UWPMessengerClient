@@ -8,7 +8,7 @@ namespace UWPMessengerClient.MSNP.SOAP
 {
     partial class SOAPRequests
     {
-        public string SharingServiceUrl { get; private set; } = "https://m1.escargot.chat/abservice/SharingService.asmx";
+        public string SharingServiceUrl { get; private set; } = "https://crosstalksrv.hiden.pw/abservice/SharingService.asmx";
         //local address is http://localhost/abservice/SharingService.asmx for SharingServiceUrl
 
         public string FindMembership()

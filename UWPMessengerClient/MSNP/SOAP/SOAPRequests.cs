@@ -11,7 +11,7 @@ namespace UWPMessengerClient.MSNP.SOAP
 {
     partial class SOAPRequests
     {
-        public string RstAddress { get; private set; } = "https://m1.escargot.chat/RST.srf";
+        public string RstAddress { get; private set; } = "https://crosstalksrv.hiden.pw/RST.srf";
         public string TicketToken { get; set; }
         public bool UsingLocalhost { get; private set; }
 

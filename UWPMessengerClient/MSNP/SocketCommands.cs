@@ -30,7 +30,7 @@ namespace UWPMessengerClient.MSNP
             //creates a tcp socket then connects it to the server
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             IPHostEntry iPHostEntry = Dns.GetHostEntry(serverAddress);
-            IPAddress iPAddress = iPHostEntry.AddressList[1];
+            IPAddress iPAddress = iPHostEntry.AddressList[0];
             IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, serverPort);
             socket.Connect(iPEndPoint);
         }
